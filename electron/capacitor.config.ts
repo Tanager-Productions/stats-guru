@@ -37,7 +37,7 @@ const config: CapacitorElectronConfig  = {
     // Switch on/off if the main window should be hidden until brought to the front by the tray menu, etc.
     hideMainWindowOnLaunch: true,
     // Switch on/off whether or not to use deeplinking in your app.
-    deepLinkingEnabled: false,
+    deepLinkingEnabled: true,
     // Custom protocol to be used with deeplinking for your app.
     deepLinkingCustomProtocol: 'mycapacitorapp',
   },

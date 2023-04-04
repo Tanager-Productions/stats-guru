@@ -10,6 +10,9 @@ import { SqlService } from './services/sql/sql.service';
 import { CrudService } from './services/crud/crud.service';
 import { TestPageComponent } from './test/test-page/test-page.component';
 
+//1123627a-6283-4c6e-bdf3-394167cd2e84
+//capacitor-electron://login
+
 @NgModule({
   declarations: [
     AppComponent,
