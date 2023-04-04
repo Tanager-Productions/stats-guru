@@ -7,11 +7,13 @@ import { CommonService } from './services/common/common.service';
 import { ApiService } from './services/api/api.service';
 import { SyncService } from './services/sync/sync.service';
 import { SqlService } from './services/sql/sql.service';
-import { TgsDatabaseService } from './services/tgs/tgs-database.service';
+import { CrudService } from './services/crud/crud.service';
+import { TestPageComponent } from './test/test-page/test-page.component';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    TestPageComponent
   ],
   imports: [
     BrowserModule,
@@ -23,7 +25,7 @@ import { TgsDatabaseService } from './services/tgs/tgs-database.service';
     ApiService,
     SyncService,
     SqlService,
-    TgsDatabaseService
+    CrudService
   ],
   bootstrap: [AppComponent]
 })

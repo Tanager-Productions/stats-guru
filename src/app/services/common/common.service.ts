@@ -1,7 +1,12 @@
 import { Injectable } from '@angular/core';
-import { TgsDatabaseService } from '../tgs/tgs-database.service';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { Game } from 'src/app/interfaces/game.interface';
+import { Player } from 'src/app/interfaces/player.interface';
+import { Play } from 'src/app/interfaces/play.interface';
+import { Team } from 'src/app/interfaces/team.interface';
+import { Stat } from 'src/app/interfaces/stat.interface';
+import { CrudService } from '../crud/crud.service';
+import { SqlService } from '../sql/sql.service';
 
 @Injectable({
   providedIn: 'root'
@@ -9,16 +14,16 @@ import { Game } from 'src/app/interfaces/game.interface';
 export class CommonService {
   private gamesSubject: BehaviorSubject<Game[]> = new BehaviorSubject<Game[]>([]);
   private isGamesReady: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  private playersSubject: BehaviorSubject<Game[]> = new BehaviorSubject<Game[]>([]);
+  private playersSubject: BehaviorSubject<Player[]> = new BehaviorSubject<Player[]>([]);
   private isPlayersReady: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  private playsSubject: BehaviorSubject<Game[]> = new BehaviorSubject<Game[]>([]);
+  private playsSubject: BehaviorSubject<Play[]> = new BehaviorSubject<Play[]>([]);
   private isPlaysReady: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  private teamsSubject: BehaviorSubject<Game[]> = new BehaviorSubject<Game[]>([]);
+  private teamsSubject: BehaviorSubject<Team[]> = new BehaviorSubject<Team[]>([]);
   private isTeamsReady: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  private statsSubject: BehaviorSubject<Game[]> = new BehaviorSubject<Game[]>([]);
+  private statsSubject: BehaviorSubject<Stat[]> = new BehaviorSubject<Stat[]>([]);
   private isStatsReady: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
-  constructor(private dbContext: TgsDatabaseService) { }
+  constructor(private crud: CrudService, private sql:SqlService) { }
 
   public async initializeService() {
     await this.fetchGames();
@@ -30,7 +35,10 @@ export class CommonService {
   }
 
   public async fetchGames() {
-    let games = await this.dbContext.getGames();
+    let db = await this.sql.createConnection();
+    await db.open();
+    let games: Game[] = await this.crud.query(db, "games", false, undefined, "gameDate", false);
+    await db.close();
     this.gamesSubject.next(games);
   }
 

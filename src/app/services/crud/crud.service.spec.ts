@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { TgsDatabaseService } from './tgs-database.service';
+import { CrudService } from './crud.service';
 
-describe('TgsDatabaseService', () => {
-  let service: TgsDatabaseService;
+describe('CrudService', () => {
+  let service: CrudService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(TgsDatabaseService);
+    service = TestBed.inject(CrudService);
   });
 
   it('should be created', () => {

@@ -1,3 +1,6 @@
+export const currentDatabaseVersion = 1;
+export const databaseName = "tgs";
+
 export const version1: string[] = [
   `
     CREATE TABLE IF NOT EXISTS Teams (
@@ -7,9 +10,9 @@ export const version1: string[] = [
       logo TEXT NULL,
       isMale TEXT NOT NULL,
       official TEXT NOT NULL,
-      added TEXT NOT NULL,
-      modified TEXT NOT NULL,
-      deleted TEXT NOT NULL,
+      added TEXT NOT NULL DEFAULT "false",
+      modified TEXT NOT NULL DEFAULT "false",
+      deleted TEXT NOT NULL DEFAULT "false",
       PRIMARY KEY (name, isMale)
     );
   `,
@@ -24,9 +27,9 @@ export const version1: string[] = [
       picture TEXT NULL,
       team TEXT NOT NULL,
       isMale bit NOT NULL,
-      added TEXT NOT NULL,
-      modified TEXT NOT NULL,
-      deleted TEXT NOT NULL
+      added TEXT NOT NULL DEFAULT "false",
+      modified TEXT NOT NULL DEFAULT "false",
+      deleted TEXT NOT NULL DEFAULT "false"
     );
   `,
 
@@ -56,9 +59,9 @@ export const version1: string[] = [
       awayTeamTOL INTEGER NOT NULL,
       period TEXT NULL,
       gameLink TEXT NULL,
-      added TEXT NOT NULL,
-      modified TEXT NOT NULL,
-      deleted TEXT NOT NULL
+      added TEXT NOT NULL DEFAULT "false",
+      modified TEXT NOT NULL DEFAULT "false",
+      deleted TEXT NOT NULL DEFAULT "false"
     );
   `,
 
@@ -66,9 +69,9 @@ export const version1: string[] = [
     CREATE TABLE IF NOT EXISTS Plays (
       data TEXT NOT NULL,
       gameId INTEGER NOT NULL,
-      added TEXT NOT NULL,
-      modified TEXT NOT NULL,
-      deleted TEXT NOT NULL
+      added TEXT NOT NULL DEFAULT "false",
+      modified TEXT NOT NULL DEFAULT "false",
+      deleted TEXT NOT NULL DEFAULT "false"
     );
   `,
 
@@ -93,9 +96,9 @@ export const version1: string[] = [
       plusOrMinus INTEGER NULL,
       offensiveRebounds INTEGER NULL,
       defensiveRebounds INTEGER NULL,
-      added TEXT NOT NULL,
-      modified TEXT NOT NULL,
-      deleted TEXT NOT NULL,
+      added TEXT NOT NULL DEFAULT "false",
+      modified TEXT NOT NULL DEFAULT "false",
+      deleted TEXT NOT NULL DEFAULT "false",
       PRIMARY KEY (player, game)
     );
   `

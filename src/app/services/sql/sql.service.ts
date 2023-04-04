@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core';
 import { CapacitorSQLite, SQLiteDBConnection, SQLiteConnection, capSQLiteSet,
          capSQLiteChanges, capSQLiteValues, capEchoResult, capSQLiteResult,
          capNCDatabasePathResult } from '@capacitor-community/sqlite';
+import { currentDatabaseVersion, databaseName } from 'src/app/upgrades/version1';
 
 @Injectable({
   providedIn: 'root'
@@ -39,24 +40,6 @@ export class SqlService {
     return this.sqlite.echo(value);
   }
 
-  async isSecretStored(): Promise<capSQLiteResult> {
-    this.ensureIsNativePlatform();
-    this.ensureConnectionIsOpen();
-    return this.sqlite.isSecretStored();
-  }
-
-  async setEncryptionSecret(passphrase: string): Promise<void> {
-    this.ensureIsNativePlatform();
-    this.ensureConnectionIsOpen();
-    return this.sqlite.setEncryptionSecret(passphrase);
-  }
-
-  async changeEncryptionSecret(passphrase: string, oldpassphrase: string): Promise<void> {
-    this.ensureIsNativePlatform();
-    this.ensureConnectionIsOpen();
-    return this.sqlite.changeEncryptionSecret(passphrase, oldpassphrase);
-  }
-
   async addUpgradeStatement(database: string, toVersion: number, statements: string[]): Promise<void> {
     this.ensureConnectionIsOpen();
     return this.sqlite.addUpgradeStatement(database, toVersion, statements);
@@ -69,9 +52,9 @@ export class SqlService {
    * @param mode
    * @param version
    */
-  async createConnection(database: string, encrypted: boolean, mode: string, version: number): Promise<SQLiteDBConnection> {
+  async createConnection(): Promise<SQLiteDBConnection> {
     this.ensureConnectionIsOpen();
-    const db: SQLiteDBConnection = await this.sqlite.createConnection(database, encrypted, mode, version, false);
+    const db: SQLiteDBConnection = await this.sqlite.createConnection(databaseName, false, "no-encryption", currentDatabaseVersion, false);
     if ( db == null ) {
       throw new Error(`no db returned is null`);
     }
@@ -148,40 +131,6 @@ export class SqlService {
   }
 
   /**
-   * Get Migratable databases List
-   */
-  async getMigratableDbList(folderPath?: string): Promise<capSQLiteValues> {
-    this.ensureIsNativePlatform();
-    this.ensureConnectionIsOpen();
-    if ( !folderPath || folderPath.length === 0 ) {
-      throw new Error(`You must provide a folder path`);
-    }
-    return this.sqlite.getMigratableDbList(folderPath);
-  }
-
-  /**
-   * Add "SQLite" suffix to old database's names
-   */
-  async addSQLiteSuffix(folderPath?: string, dbNameList?: string[]): Promise<void> {
-    this.ensureIsNativePlatform();
-    this.ensureConnectionIsOpen();
-    const path: string = folderPath ? folderPath : 'default';
-    const dbList: string[] = dbNameList ? dbNameList : [];
-    return this.sqlite.addSQLiteSuffix(path, dbList);
-  }
-
-  /**
-   * Delete old databases
-   */
-  async deleteOldDatabases(folderPath?: string, dbNameList?: string[]): Promise<void> {
-    this.ensureIsNativePlatform();
-    this.ensureConnectionIsOpen();
-    const path: string = folderPath ? folderPath : 'default';
-    const dbList: string[] = dbNameList ? dbNameList : [];
-    return this.sqlite.deleteOldDatabases(path, dbList);
-  }
-
-  /**
    * Import from a Json Object
    * @param jsonstring
    */
@@ -209,37 +158,9 @@ export class SqlService {
     return this.sqlite.copyFromAssets(mOverwrite);
   }
 
-  async initWebStore(): Promise<void> {
-    this.ensureIsWebPlatform();
-    this.ensureConnectionIsOpen();
-    return this.sqlite.initWebStore();
-  }
-
-  /**
-   * Save a database to store
-   * @param database
-   */
-  async saveToStore(database: string): Promise<void> {
-    this.ensureIsWebPlatform();
-    this.ensureConnectionIsOpen();
-    return this.sqlite.saveToStore(database);
-  }
-
   private ensureConnectionIsOpen() {
     if ( this.sqlite == null ) {
       throw new Error(`no connection open`);
-    }
-  }
-
-  private ensureIsNativePlatform() {
-    if ( !this.native ) {
-      throw new Error(`Not implemented for ${this.platform} platform`);
-    }
-  }
-
-  private ensureIsWebPlatform() {
-    if ( this.platform !== 'web' ) {
-      throw new Error(`Not implemented for ${this.platform} platform`);
     }
   }
 }

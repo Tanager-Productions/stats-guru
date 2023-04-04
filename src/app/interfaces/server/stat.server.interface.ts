@@ -14,7 +14,7 @@ export interface ServerStat {
   threesAttempted: number;
   freeThrowsMade: number;
   freeThrowsAttempted: number;
-  points: number;
+  points?: number;
   turnovers: number;
   fouls: number;
   plusOrMinus: number;
