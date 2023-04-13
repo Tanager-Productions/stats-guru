@@ -35,9 +35,9 @@ const config: CapacitorElectronConfig  = {
     // Custom image name in the electron/assets folder to use as splash image (.gif included)
     splashScreenImageName: 'splash.gif',
     // Switch on/off if the main window should be hidden until brought to the front by the tray menu, etc.
-    hideMainWindowOnLaunch: true,
+    hideMainWindowOnLaunch: false,
     // Switch on/off whether or not to use deeplinking in your app.
-    deepLinkingEnabled: true,
+    deepLinkingEnabled: false,
     // Custom protocol to be used with deeplinking for your app.
     deepLinkingCustomProtocol: 'mycapacitorapp',
   },
