@@ -56,6 +56,7 @@ export class LoginComponent {
         });
       },
       error: async (error) => {
+        console.error(error);
         await this.openToast('An error occurred with microsoft', true, error);
         this.loading = false;
       }
