@@ -15,11 +15,12 @@ const routes: Routes = [
     component: TestPageComponent
   },
   {
-    pathMatch: 'full',
     path: '',
+    pathMatch: 'full',
     redirectTo: 'test'
-  }
+  },
 ];
+
 @NgModule({
   imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule]
