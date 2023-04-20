@@ -26,8 +26,16 @@ export class CommonService {
   constructor(private crud: CrudService, private sql:SqlService) { }
 
   public async initializeService() {
+    await this.fetchPlayers();
     await this.fetchGames();
+    await this.fetchPlays();
+    await this.fetchStats();
+    await this.fetchTeams();
     this.isGamesReady.next(true);
+    this.isPlayersReady.next(true);
+    this.isPlaysReady.next(true);
+    this.isStatsReady.next(true);
+    this.isTeamsReady.next(true);
   }
 
   public gameState() {
@@ -44,5 +52,69 @@ export class CommonService {
 
   public getGames() {
     return this.gamesSubject.asObservable();
+  }
+
+  public playerState() {
+    return this.isPlayersReady.asObservable();
+  }
+
+  public async fetchPlayers() {
+    let db = await this.sql.createConnection();
+    await db.open();
+    let players: Player[] = await this.crud.query(db, "players", false, undefined, "lastName", false);
+    await db.close();
+    this.playersSubject.next(players);
+  }
+
+  public getPlayers() {
+    return this.playersSubject.asObservable();
+  }
+
+  public playState() {
+    return this.isPlaysReady.asObservable();
+  }
+
+  public async fetchPlays() {
+    let db = await this.sql.createConnection();
+    await db.open();
+    let plays: Play[] = await this.crud.query(db, "plays", false, undefined, "gameId", false);
+    await db.close();
+    this.playsSubject.next(plays);
+  }
+
+  public getPlays() {
+    return this.playsSubject.asObservable();
+  }
+
+  public teamState() {
+    return this.isTeamsReady.asObservable();
+  }
+
+  public async fetchTeams() {
+    let db = await this.sql.createConnection();
+    await db.open();
+    let teams: Team[] = await this.crud.query(db, "teams", false, undefined, "name", false);
+    await db.close();
+    this.teamsSubject.next(teams);
+  }
+
+  public getTeams() {
+    return this.teamsSubject.asObservable();
+  }
+
+  public statState() {
+    return this.isStatsReady.asObservable();
+  }
+
+  public async fetchStats() {
+    let db = await this.sql.createConnection();
+    await db.open();
+    let stats: Stat[] = await this.crud.query(db, "stats", false, undefined, "player", false);
+    await db.close();
+    this.statsSubject.next(stats);
+  }
+
+  public getStats() {
+    return this.statsSubject.asObservable();
   }
 }
