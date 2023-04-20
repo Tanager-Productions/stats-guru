@@ -2,7 +2,8 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { LoginComponent } from './login/login.component';
 import { TestPageComponent } from './test/test-page/test-page.component';
-
+import { GamecastComponent } from './pages/home/gamecast/gamecast.component';
+import { GamesComponent } from './pages/home/games/games.component';
 const routes: Routes = [
   {
     path: 'login',
@@ -17,8 +18,9 @@ const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'test'
+    component: GamesComponent
   },
+  { path: 'gamecast/:gameId', component: GamecastComponent },
 ];
 
 @NgModule({

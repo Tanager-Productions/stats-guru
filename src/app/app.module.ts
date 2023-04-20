@@ -19,6 +19,7 @@ import { StorageService } from './services/storage/storage.service';
 import { CommonModule } from '@angular/common';
 import { ErrorModalComponent } from './components/error.component';
 import { HeaderComponent } from './shared/header/header.component';
+import { HomeModule } from './pages/home/home.module';
 
 
 const isIE = window.navigator.userAgent.indexOf('MSIE ') > -1 || window.navigator.userAgent.indexOf('Trident/') > -1;
@@ -36,6 +37,7 @@ const isIE = window.navigator.userAgent.indexOf('MSIE ') > -1 || window.navigato
     AppRoutingModule,
     MatSnackBarModule,
     HttpClientModule,
+    HomeModule,
     NgbModule,
     CommonModule,
     MsalModule.forRoot(new PublicClientApplication({
