@@ -16,17 +16,17 @@ export class SyncService {
 
   public async beginSync() {
     try {
-      let db = await this.sqlService.createConnection();
-      await db.open();
-      let res = await db.exportToJson('full');
-      let httpResponse = await this.api.postSync(res.export!);
-      console.log(httpResponse.status == 200);
-      await db.close();
-      //await this.fetchAndInsertTeams();
-      //await this.fetchAndInsertPlayers();
-      //await this.fetchAndInsertGames();
-      //await this.fetchAndInsertStats();
-      //await this.fetchAndInsertPlays();
+      //let db = await this.sqlService.createConnection();
+      //await db.open();
+      //let res = await db.exportToJson('full');
+      //let httpResponse = await this.api.postSync(res.export!);
+      //console.log(httpResponse.status == 200);
+      //await db.close();
+      await this.fetchAndInsertTeams();
+      await this.fetchAndInsertPlayers();
+      await this.fetchAndInsertGames();
+      await this.fetchAndInsertStats();
+      await this.fetchAndInsertPlays();
     } catch (error) {
       console.log(error);
     }
