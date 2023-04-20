@@ -18,6 +18,7 @@ import { LoginComponent } from './login/login.component';
 import { StorageService } from './services/storage/storage.service';
 import { CommonModule } from '@angular/common';
 import { ErrorModalComponent } from './components/error.component';
+import { HeaderComponent } from './shared/header/header.component';
 
 
 const isIE = window.navigator.userAgent.indexOf('MSIE ') > -1 || window.navigator.userAgent.indexOf('Trident/') > -1;
@@ -27,7 +28,8 @@ const isIE = window.navigator.userAgent.indexOf('MSIE ') > -1 || window.navigato
     AppComponent,
     TestPageComponent,
     LoginComponent,
-    ErrorModalComponent
+    ErrorModalComponent,
+    HeaderComponent
   ],
   imports: [
     BrowserModule,
