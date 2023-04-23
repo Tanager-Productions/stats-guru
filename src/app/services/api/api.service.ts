@@ -3,6 +3,7 @@ import { JsonSQLite } from '@capacitor-community/sqlite';
 import { CapacitorHttp, HttpHeaders, HttpOptions, HttpResponse } from "@capacitor/core";
 import { Admin } from 'src/app/types/admin.type';
 import { HttpClient } from '@angular/common/http';
+import { Game } from 'src/app/interfaces/game.interface';
 
 
 @Injectable({
@@ -90,6 +91,10 @@ export class ApiService {
 
   public getAdmin() {
     return this.http.get<Admin>(`${this.serverUrl}Admins/GetAdmin`, {withCredentials: true});
+  }
+
+  public saveGame(gameToUpdate:Game) {
+    return this.http.post(this.serverUrl+'Games/SaveGame', gameToUpdate, {withCredentials: true});
   }
 
   

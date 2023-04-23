@@ -1,3 +1,13 @@
 ion-toolbar {
     --background: #007bff; 
   }
+  .card-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+  }
+  
+  ion-grid {
+    display: inline-grid;
+  }
