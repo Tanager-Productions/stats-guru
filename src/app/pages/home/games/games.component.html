@@ -4,22 +4,35 @@
   </ion-toolbar>
 </ion-header>
 
-
 <ion-content>
-  <ion-toolbar class="button-toolbar" color="white">
-    <ion-buttons slot="end">
-      <ion-button slot="fixed" (click)="navigateToAddGame()" > Add Game </ion-button>
-    </ion-buttons>
+  <!-- Breadcrumbs toolbar -->
+  <ion-toolbar color="white">
+    <ion-breadcrumbs>
+      <ion-breadcrumb href="/">Home</ion-breadcrumb>
+      <ion-breadcrumb>Games</ion-breadcrumb>
+    </ion-breadcrumbs>
   </ion-toolbar>
 
-  
-<ng-container *ngIf="games$">
-  <ion-card *ngFor="let item of games$ | async" (click)="navigateToGamecast(item.gameId)">
-    <ion-card-header>
-      <ion-card-title>{{item.homeTeam}} - {{item.awayTeam}}</ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      <p>{{item.gameDate | date: "long"}}</p>
-    </ion-card-content>
-  </ion-card>
-</ng-container>
+  <ion-toolbar class="button-toolbar" color="white">
+    <ion-buttons slot="end">
+      <ion-button slot="fixed" (click)="navigateToAddGame()"> Add Game </ion-button>
+    </ion-buttons>
+    <ion-select placeholder="Filter by Event">
+      <ion-select-option value="1">Event 1</ion-select-option>
+      <ion-select-option value="2">Event 2</ion-select-option>
+      <ion-select-option value="3">Event 3</ion-select-option>
+      <ion-select-option value="4">Event 4</ion-select-option>
+    </ion-select>
+  </ion-toolbar>
+
+  <ng-container *ngIf="games$">
+    <ion-card *ngFor="let item of games$ | async" (click)="navigateToGamecast(item.gameId)">
+      <ion-card-header>
+        <ion-card-title>{{item.homeTeam}} - {{item.awayTeam}}</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p>{{item.gameDate | date: "long"}}</p>
+      </ion-card-content>
+    </ion-card>
+  </ng-container>
+</ion-content>
