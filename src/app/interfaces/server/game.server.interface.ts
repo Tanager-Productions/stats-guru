@@ -23,4 +23,5 @@ export interface ServerGame {
   awayFinal?: number | null;
   period: string | null;
   gameLink: string | null;
+  eventId: number | null;
 }

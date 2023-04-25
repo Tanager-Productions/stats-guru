@@ -17,9 +17,14 @@ const routes: Routes = [
     component: TestPageComponent
   },
   {
-    path: '',
+    path: 'games',
     pathMatch: 'full',
     component: GamesComponent
+  },
+  {
+    path: '',
+    pathMatch: 'full',
+    redirectTo: 'games'
   },
   { path: 'gamecast/:gameId', component: GamecastComponent },
   { path: 'add-game', component: AddGamesComponent },
