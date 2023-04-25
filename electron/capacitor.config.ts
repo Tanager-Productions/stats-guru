@@ -21,7 +21,7 @@ const config: CapacitorElectronConfig  = {
         biometricSubTitle : "Log in using your biometric"
       },
       electronWindowsLocation: "C:\\ProgramData\\CapacitorDatabases",
-      electronMacLocation: "YOUR_VOLUME/CapacitorDatabases",
+      electronMacLocation: "CapacitorDatabases",
       electronLinuxLocation: "Databases"
     }
   },

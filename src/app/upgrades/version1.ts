@@ -59,6 +59,7 @@ export const version1: string[] = [
       awayTeamTOL INTEGER NOT NULL,
       period TEXT NULL,
       gameLink TEXT NULL,
+      eventId INTEGER NULL,
       added TEXT NOT NULL DEFAULT "false",
       modified TEXT NOT NULL DEFAULT "false",
       deleted TEXT NOT NULL DEFAULT "false"
@@ -67,6 +68,7 @@ export const version1: string[] = [
 
   `
     CREATE TABLE IF NOT EXISTS Plays (
+      playId INTEGER NOT NULL,
       data TEXT NOT NULL,
       gameId INTEGER NOT NULL,
       added TEXT NOT NULL DEFAULT "false",
