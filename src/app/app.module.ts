@@ -4,7 +4,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { IonicModule } from '@ionic/angular';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
-import { MatSnackBarModule, MAT_SNACK_BAR_DEFAULT_OPTIONS } from '@angular/material/snack-bar';
+//import { MatSnackBarModule, MAT_SNACK_BAR_DEFAULT_OPTIONS } from '@angular/material/snack-bar';
 import { PublicClientApplication, InteractionType } from '@azure/msal-browser';
 import { MsalGuard, MsalInterceptor, MsalModule, MsalService } from '@azure/msal-angular';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
@@ -35,7 +35,7 @@ const isIE = window.navigator.userAgent.indexOf('MSIE ') > -1 || window.navigato
   imports: [
     BrowserModule,
     AppRoutingModule,
-    MatSnackBarModule,
+    //MatSnackBarModule,
     HttpClientModule,
     HomeModule,
     NgbModule,
@@ -68,10 +68,10 @@ const isIE = window.navigator.userAgent.indexOf('MSIE ') > -1 || window.navigato
     CrudService,
     MsalService,
     StorageService,
-    {
-      provide: MAT_SNACK_BAR_DEFAULT_OPTIONS, 
-      useValue: {duration: 2500}
-    },
+    // {
+    //   provide: MAT_SNACK_BAR_DEFAULT_OPTIONS, 
+    //   useValue: {duration: 2500}
+    // },
     {
       provide: HTTP_INTERCEPTORS,
       useClass: MsalInterceptor,

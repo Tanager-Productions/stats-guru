@@ -1,5 +1,19 @@
 <ion-header>
-    <ion-toolbar >
-      <ion-title>Stats Guru</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <ion-toolbar>
+    <ion-title>Stats Guru</ion-title>
+    <ion-button fill="clear" size="large" slot="end" id="click-trigger">
+      <ion-icon name="person-circle-outline"></ion-icon>
+    </ion-button>
+    <ion-popover trigger="click-trigger" triggerAction="click">
+      <ng-template>
+        <ion-list>
+          <ion-content>
+            <a href="https://dbm.thegrindsession.com"><ion-item button="true" detail="false">DBM</ion-item></a>
+            <ion-item button="true" detail="false">Settings</ion-item>
+            <ion-item button="true" detail="false">Log Out</ion-item>
+          </ion-content>
+        </ion-list>
+      </ng-template>
+    </ion-popover>
+  </ion-toolbar>
+</ion-header>

@@ -1,7 +1,22 @@
 ion-toolbar {
-    --background: #007bff; 
-  }
+  --background: #007bff; 
+}
 
-  ion-toolbar {
-    --color: #ffffff; // Bright white
-  }
+ion-toolbar {
+  --color: #ffffff; // Bright white
+}
+
+ ion-button {
+  --background: none;
+  --border-width: 0px !important;
+  --border-color: none;
+  --color: white;
+}
+
+ion-icon {
+  font-size: 35px;
+}
+
+a {
+  text-decoration: none;
+}
