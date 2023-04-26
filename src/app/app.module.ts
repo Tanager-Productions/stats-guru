@@ -6,7 +6,6 @@ import { IonicModule } from '@ionic/angular';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { PublicClientApplication, InteractionType } from '@azure/msal-browser';
 import { MsalGuard, MsalInterceptor, MsalModule, MsalService } from '@azure/msal-angular';
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { CommonService } from './services/common/common.service';
 import { ApiService } from './services/api/api.service';
 import { SyncService } from './services/sync/sync.service';
@@ -32,7 +31,6 @@ const isIE = window.navigator.userAgent.indexOf('MSIE ') > -1 || window.navigato
     AppRoutingModule,
     HttpClientModule,
     HomeModule,
-    NgbModule,
     CommonModule,
     IonicModule.forRoot({mode:'md'})
   ],
