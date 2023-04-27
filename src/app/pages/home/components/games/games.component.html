@@ -1,27 +1,55 @@
-<ion-breadcrumbs>
-  <ion-breadcrumb href="/">Home</ion-breadcrumb>
-  <ion-breadcrumb>Games</ion-breadcrumb>
-</ion-breadcrumbs>
 
-<ion-item>
-  <ion-select placeholder="Filter by Event">
-    <ion-select-option value="1">Event 1</ion-select-option>
-    <ion-select-option value="2">Event 2</ion-select-option>
-    <ion-select-option value="3">Event 3</ion-select-option>
-    <ion-select-option value="4">Event 4</ion-select-option>
-  </ion-select>
-  <ion-buttons slot="end">
-    <ion-button (click)="navigateToAddGame()"> Add Game </ion-button>
-  </ion-buttons>
-</ion-item>
+<ion-content style="position: relative;">
+  <ion-breadcrumbs>
+    <ion-breadcrumb href="/">Home</ion-breadcrumb>
+    <ion-breadcrumb>Games</ion-breadcrumb>
+  </ion-breadcrumbs>
 
-<ng-container *ngIf="games$">
-  <ion-card *ngFor="let item of games$ | async" (click)="navigateToGamecast(item.gameId)">
-    <ion-card-header>
-      <ion-card-title>{{item.homeTeam}} - {{item.awayTeam}}</ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      <p>{{item.gameDate | date: "long"}}</p>
-    </ion-card-content>
-  </ion-card>
-</ng-container>
+  <ion-item>
+    <ion-note slot="start" style="height: 36px; padding-top: 0; padding-bottom: 0;">
+      <ion-icon name="funnel" style="font-size: 36px;"></ion-icon>
+      <ion-select>
+        <ion-label slot="start">Filter by Event</ion-label>
+        <ion-select-option value="1">Event 1</ion-select-option>
+        <ion-select-option value="2">Event 2</ion-select-option>
+        <ion-select-option value="3">Event 3</ion-select-option>
+        <ion-select-option value="4">Event 4</ion-select-option>
+      </ion-select>
+    </ion-note>
+  </ion-item>
+
+  <ion-fab vertical="top" horizontal="end" edge slot="fixed" style="position: absolute; right: 16px; top: 16px;">
+    <ion-fab-button (click)="navigateToAddGame()">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+  <ng-container *ngIf="games$">
+    <ion-card *ngFor="let item of games$ | async" (click)="navigateToGamecast(item.gameId)">
+      <ion-card-header>
+        <ion-card-title class="team-container">
+          <div class="team-logo">
+            <img [src]="getLogo(item.homeTeam)">
+          </div>
+          <div>
+            {{ item.homeTeam }}&nbsp;
+          </div>
+          <div class="versus">
+             VS
+          </div>
+          <div>
+            {{ item.awayTeam }} 
+          </div>
+          <div class="team-logo">
+            <img [src]="getLogo(item.awayTeam)">
+          </div>
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p>{{ item.gameDate | date: "short" }}</p>
+      </ion-card-content>
+    </ion-card>
+  </ng-container>
+
+
+  <ion-content/>

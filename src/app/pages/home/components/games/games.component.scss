@@ -11,3 +11,17 @@ ion-toolbar {
   ion-grid {
     display: inline-grid;
   }
+
+
+  .team-container {
+    display: flex;
+    align-items: center;
+  }
+  
+  .team-logo {
+    margin-right: 10px;
+  }
+  
+  .versus {
+    margin-right: 10px;
+  }

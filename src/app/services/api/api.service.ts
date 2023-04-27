@@ -4,6 +4,7 @@ import { CapacitorHttp, HttpHeaders, HttpOptions, HttpResponse } from "@capacito
 import { Admin } from 'src/app/types/admin.type';
 import { HttpClient } from '@angular/common/http';
 import { Game } from 'src/app/interfaces/game.interface';
+import { Logo } from 'src/app/types/logo.type';
 
 
 @Injectable({
@@ -95,6 +96,10 @@ export class ApiService {
 
   public saveGame(gameToUpdate:Game) {
     return this.http.post(this.serverUrl+'Games/SaveGame', gameToUpdate, {withCredentials: true});
+  }
+
+  public getLogos() {
+    return this.http.get<Logo[]>(`${this.serverUrl}Teams/GetLogos`);
   }
 
   
