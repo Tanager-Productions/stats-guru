@@ -24,7 +24,7 @@ const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'games'
+    redirectTo: 'test'
   },
   { path: 'gamecast/:gameId', component: GamecastComponent },
   { path: 'add-game', component: AddGamesComponent },
