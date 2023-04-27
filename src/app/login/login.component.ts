@@ -2,10 +2,8 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { MsalService } from '@azure/msal-angular';
 import { ToastController } from '@ionic/angular';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { StorageService } from '../services/storage/storage.service';
 import { ApiService } from '../services/api/api.service';
-import { ErrorModalComponent } from '../components/error.component';
 import { Admin } from '../types/admin.type';
 
 
@@ -20,12 +18,11 @@ export class LoginComponent {
   loading:boolean = false;
 
   constructor(
-    private server: ApiService, 
-    private msal: MsalService, 
-    private router: Router, 
-    private toastCtrl: ToastController, 
-    private modalService: NgbModal,
-    private storageService: StorageService 
+    private server: ApiService,
+    private msal: MsalService,
+    private router: Router,
+    private toastCtrl: ToastController,
+    private storageService: StorageService
   ) {
     this.server.getAdmin().subscribe({
       next: (admin:Admin) => this.adminName = admin.name,
@@ -47,7 +44,7 @@ export class LoginComponent {
               Email: res.account?.username,
               FullName: res.account?.name
             };
-            this.storageService.storeUser(userDto); 
+            this.storageService.storeUser(userDto);
           },
           error: async (error) => {
             await this.openToast('An error occurred on the server', true, error);
@@ -79,23 +76,13 @@ export class LoginComponent {
     });
   }
 
-  async openToast(message: string, isError = false, error?: any) {  
+  async openToast(message: string, isError = false, error?: any) {
     const toast = await this.toastCtrl.create({
-      message: message,   
+      message: message,
       duration: 4000,
       color: isError ? 'danger' : 'primary'
-    });  
-    if (isError) {
-      toast.buttons = [{
-        text: "Error info",
-        side: 'end',
-        handler: () => {
-          const modalRef = this.modalService.open(ErrorModalComponent);
-          modalRef.componentInstance.error = error?.error;
-        }
-      }]
-    }
-    toast.present();  
-  } 
-  
+    });
+    toast.present();
+  }
+
 }
