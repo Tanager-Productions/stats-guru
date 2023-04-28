@@ -45,9 +45,7 @@ export class CommonService {
   public async fetchGames() {
     let db = await this.sql.createConnection();
     await db.open();
-    let games: Game[] = await this.crud.query(db, "games", false, undefined, "gameDate", false);
-    games.sort((a, b) => new Date(a.gameDate).getTime() - new Date(b.gameDate).getTime());
-    games.reverse();
+    let games: Game[] = await this.crud.query(db, "games", false, undefined, "gameDate", true);
     await db.close();
     this.gamesSubject.next(games);
   }
