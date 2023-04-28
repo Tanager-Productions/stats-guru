@@ -45,7 +45,7 @@ export class CommonService {
   public async fetchGames() {
     let db = await this.sql.createConnection();
     await db.open();
-    let games: Game[] = await this.crud.query(db, "games", false, undefined, "gameDate", true);
+    let games: Game[] = await this.crud.query(db, "games", false, undefined, "gameDate", 'desc');
     await db.close();
     this.gamesSubject.next(games);
   }
@@ -61,7 +61,7 @@ export class CommonService {
   public async fetchPlayers() {
     let db = await this.sql.createConnection();
     await db.open();
-    let players: Player[] = await this.crud.query(db, "players", false, undefined, "lastName", false);
+    let players: Player[] = await this.crud.query(db, "players", false, undefined, "lastName", 'asc');
     await db.close();
     this.playersSubject.next(players);
   }
@@ -77,7 +77,7 @@ export class CommonService {
   public async fetchPlays() {
     let db = await this.sql.createConnection();
     await db.open();
-    let plays: Play[] = await this.crud.query(db, "plays", false, undefined, "gameId", false);
+    let plays: Play[] = await this.crud.query(db, "plays", false, undefined, "gameId", 'asc');
     await db.close();
     this.playsSubject.next(plays);
   }
@@ -93,7 +93,7 @@ export class CommonService {
   public async fetchTeams() {
     let db = await this.sql.createConnection();
     await db.open();
-    let teams: Team[] = await this.crud.query(db, "teams", false, undefined, "name", false);
+    let teams: Team[] = await this.crud.query(db, "teams", false, undefined, "name", 'asc');
     await db.close();
     this.teamsSubject.next(teams);
   }
@@ -109,7 +109,7 @@ export class CommonService {
   public async fetchStats() {
     let db = await this.sql.createConnection();
     await db.open();
-    let stats: Stat[] = await this.crud.query(db, "stats", false, undefined, "player", false);
+    let stats: Stat[] = await this.crud.query(db, "stats", false, undefined, "player", 'asc');
     await db.close();
     this.statsSubject.next(stats);
   }

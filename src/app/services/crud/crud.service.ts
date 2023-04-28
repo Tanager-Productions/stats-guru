@@ -9,7 +9,7 @@ export class CrudService {
 
   constructor() { }
 
-  public async query(db:SQLiteDBConnection, table:string, where:boolean = false, params?: {[key: string]: string}, orderByColumn?:string, orderDescending:boolean = false) {
+  public async query(db:SQLiteDBConnection, table:string, where:boolean = false, params?: {[key: string]: string}, orderByColumn?:string, orderDirection:'desc' | 'asc' = 'asc') {
     let sqlcmd:string = `select * from ${table}`;
     if (where && params) {
       sqlcmd += " where ";
@@ -22,7 +22,7 @@ export class CrudService {
       }
     }
     if (orderByColumn) {
-      sqlcmd += ` order by ${orderByColumn} ${orderDescending ? 'desc' : 'asc'}`;
+      sqlcmd += ` order by ${orderByColumn} ${orderDirection}`;
     }
     let res = await db.query(sqlcmd);
     if (res.values == undefined) {
