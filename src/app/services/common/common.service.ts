@@ -7,111 +7,77 @@ import { Team } from 'src/app/interfaces/team.interface';
 import { Stat } from 'src/app/interfaces/stat.interface';
 import { CrudService } from '../crud/crud.service';
 import { SqlService } from '../sql/sql.service';
+import { SQLiteDBConnection } from '@capacitor-community/sqlite';
+
+export interface CommonSubject<table> {
+  ready: boolean
+  values: table[]
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class CommonService {
-  private gamesSubject: BehaviorSubject<Game[]> = new BehaviorSubject<Game[]>([]);
-  private isGamesReady: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  private playersSubject: BehaviorSubject<Player[]> = new BehaviorSubject<Player[]>([]);
-  private isPlayersReady: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  private playsSubject: BehaviorSubject<Play[]> = new BehaviorSubject<Play[]>([]);
-  private isPlaysReady: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  private teamsSubject: BehaviorSubject<Team[]> = new BehaviorSubject<Team[]>([]);
-  private isTeamsReady: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  private statsSubject: BehaviorSubject<Stat[]> = new BehaviorSubject<Stat[]>([]);
-  private isStatsReady: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+  private gamesSubject: BehaviorSubject<CommonSubject<Game>> = new BehaviorSubject<CommonSubject<Game>>({ready: false, values: []});
+  private playersSubject: BehaviorSubject<CommonSubject<Player>> = new BehaviorSubject<CommonSubject<Player>>({ready: false, values: []});
+  private playsSubject: BehaviorSubject<CommonSubject<Play>> = new BehaviorSubject<CommonSubject<Play>>({ready: false, values: []});
+  private teamsSubject: BehaviorSubject<CommonSubject<Team>> = new BehaviorSubject<CommonSubject<Team>>({ready: false, values: []});
+  private statsSubject: BehaviorSubject<CommonSubject<Stat>> = new BehaviorSubject<CommonSubject<Stat>>({ready: false, values: []});
 
   constructor(private crud: CrudService, private sql:SqlService) { }
 
   public async initializeService() {
-    await this.fetchPlayers();
-    await this.fetchGames();
-    await this.fetchPlays();
-    await this.fetchStats();
-    await this.fetchTeams();
-    this.isGamesReady.next(true);
-    this.isPlayersReady.next(true);
-    this.isPlaysReady.next(true);
-    this.isStatsReady.next(true);
-    this.isTeamsReady.next(true);
-  }
-
-  public gameState() {
-    return this.isGamesReady.asObservable();
-  }
-
-  public async fetchGames() {
     let db = await this.sql.createConnection();
     await db.open();
-    let games: Game[] = await this.crud.query(db, "games", false, undefined, "gameDate", 'desc');
-    await db.close();
-    this.gamesSubject.next(games);
+    await Promise.all([
+      this.fetchPlayers(db),
+      this.fetchGames(db),
+      this.fetchPlays(db),
+      this.fetchStats(db),
+      this.fetchTeams(db)
+    ]);
+    await db.close()
+  }
+
+  public async fetchGames(db: SQLiteDBConnection) {
+    let games: Game[] = await this.crud.query(db, "games", false, undefined, "gameDate", 'asc');
+    this.gamesSubject.next({ready: true, values: games});
   }
 
   public getGames() {
     return this.gamesSubject.asObservable();
   }
 
-  public playerState() {
-    return this.isPlayersReady.asObservable();
-  }
-
-  public async fetchPlayers() {
-    let db = await this.sql.createConnection();
-    await db.open();
-    let players: Player[] = await this.crud.query(db, "players", false, undefined, "lastName", 'asc');
-    await db.close();
-    this.playersSubject.next(players);
+  public async fetchPlayers(db: SQLiteDBConnection) {
+    let players: Player[] = await this.crud.query(db, "players", false, undefined, "lastName", 'desc');
+    this.playersSubject.next({ready: true, values: players});
   }
 
   public getPlayers() {
     return this.playersSubject.asObservable();
   }
 
-  public playState() {
-    return this.isPlaysReady.asObservable();
-  }
-
-  public async fetchPlays() {
-    let db = await this.sql.createConnection();
-    await db.open();
-    let plays: Play[] = await this.crud.query(db, "plays", false, undefined, "gameId", 'asc');
-    await db.close();
-    this.playsSubject.next(plays);
+  public async fetchPlays(db: SQLiteDBConnection) {
+    let plays: Play[] = await this.crud.query(db, "plays", false, undefined, "gameId", 'desc');
+    this.playsSubject.next({ready: true, values: plays});
   }
 
   public getPlays() {
     return this.playsSubject.asObservable();
   }
 
-  public teamState() {
-    return this.isTeamsReady.asObservable();
-  }
-
-  public async fetchTeams() {
-    let db = await this.sql.createConnection();
-    await db.open();
-    let teams: Team[] = await this.crud.query(db, "teams", false, undefined, "name", 'asc');
-    await db.close();
-    this.teamsSubject.next(teams);
+  public async fetchTeams(db: SQLiteDBConnection) {
+    let teams: Team[] = await this.crud.query(db, "teams", false, undefined, "name", 'desc');
+    this.teamsSubject.next({ready: true, values: teams});
   }
 
   public getTeams() {
     return this.teamsSubject.asObservable();
   }
 
-  public statState() {
-    return this.isStatsReady.asObservable();
-  }
-
-  public async fetchStats() {
-    let db = await this.sql.createConnection();
-    await db.open();
-    let stats: Stat[] = await this.crud.query(db, "stats", false, undefined, "player", 'asc');
-    await db.close();
-    this.statsSubject.next(stats);
+  public async fetchStats(db: SQLiteDBConnection) {
+    let stats: Stat[] = await this.crud.query(db, "stats", false, undefined, "player", 'desc');
+    this.statsSubject.next({ready: true, values: stats});
   }
 
   public getStats() {
