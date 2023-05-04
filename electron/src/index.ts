@@ -13,9 +13,23 @@ unhandled();
 
 // Define our menu templates (these are optional)
 const trayMenuTemplate: (MenuItemConstructorOptions | MenuItem)[] = [new MenuItem({ label: 'Quit App', role: 'quit' })];
-const appMenuBarMenuTemplate: (MenuItemConstructorOptions | MenuItem)[] = [
-  { role: process.platform === 'darwin' ? 'appMenu' : 'fileMenu' },
-  { role: 'viewMenu' },
+const appMenuBarMenuTemplate: (MenuItemConstructorOptions | MenuItem)[] = [{
+  label: "Application",
+  submenu: [
+      { label: "About Application", role: "about" },
+      { type: "separator" },
+      { label: "Quit", accelerator: "Command+Q", click: function() { app.quit(); }}
+  ]}, {
+  label: "Edit",
+  submenu: [
+      { label: "Undo", accelerator: "CmdOrCtrl+Z", role: "undo" },
+      { label: "Redo", accelerator: "Shift+CmdOrCtrl+Z", role: "redo" },
+      { type: "separator" },
+      { label: "Cut", accelerator: "CmdOrCtrl+X", role: "cut" },
+      { label: "Copy", accelerator: "CmdOrCtrl+C", role: "copy" },
+      { label: "Paste", accelerator: "CmdOrCtrl+V", role: "paste" },
+      { label: "Select All", accelerator: "CmdOrCtrl+A", role: "selectAll" }
+  ]}
 ];
 
 // Get Config options from capacitor.config
