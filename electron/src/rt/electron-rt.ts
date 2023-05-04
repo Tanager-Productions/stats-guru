@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { ipcRenderer, contextBridge } from 'electron';
+import { ipcRenderer, contextBridge, shell, safeStorage } from 'electron';
 import { EventEmitter } from 'events';
 
 ////////////////////////////////////////////////////////
@@ -82,8 +82,15 @@ Object.keys(plugins).forEach((pluginKey) => {
     });
 });
 
+const keytar = require('keytar');
+
 contextBridge.exposeInMainWorld('CapacitorCustomPlatform', {
   name: 'electron',
   plugins: contextApi,
+  openExternal: (url:string) => shell.openExternal(url),
+  getPassword: (service:string, account:string) => keytar.getPassword(service, account),
+  setPassword: (service:string, account:string, password:string) => keytar.setPassword(service, account, password),
+  encrypt: (plainText:string) => safeStorage.encryptString(plainText),
+  decrypt: (encrypted:any) => safeStorage.decryptString(encrypted)
 });
 ////////////////////////////////////////////////////////

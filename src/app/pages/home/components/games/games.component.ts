@@ -23,13 +23,10 @@ export class GamesComponent implements OnInit {
     this.common.gameState().subscribe(ready => {
       if (ready) {
         this.games$ = this.common.getGames();
-        this.apiService.getLogos().subscribe(logos => {
-          this.logos = logos;
-        });
       }
-    })
+    });
   }
-  
+
 
   public async initCommon() {
     await this.common.initializeService();
@@ -41,12 +38,6 @@ export class GamesComponent implements OnInit {
 
   navigateToGamecast(gameId: number) {
     this.router.navigateByUrl(`/gamecast/${gameId}`);
-  }
-
-  public getLogo(teamName: string): string {
-    const logo = this.logos.find(l => l.team.toLowerCase() === teamName.toLowerCase());
-    console.log('teamName:', teamName, 'logo:', logo);
-    return logo ? logo.src : '';
   }
 
 

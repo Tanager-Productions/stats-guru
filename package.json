@@ -6,7 +6,9 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "electron:start": "ng build && npx cap sync @capacitor-community/electron && npx cap open @capacitor-community/electron",
+    "electron:reload": "ng build && npx cap sync @capacitor-community/electron"
   },
   "private": true,
   "dependencies": {

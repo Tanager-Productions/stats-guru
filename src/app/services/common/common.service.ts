@@ -44,7 +44,7 @@ export class CommonService {
   }
 
   public async fetchGames(db: SQLiteDBConnection) {
-    let games: Game[] = await this.crud.query(db, "games", false, undefined, "gameDate", 'asc');
+    let games: Game[] = await this.crud.query(db, "games", false, undefined, "gameDate", 'desc');
     this.gamesSubject.next(games);
     this.isGamesReady.next(true);
   }

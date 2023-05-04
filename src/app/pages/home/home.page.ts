@@ -11,7 +11,7 @@ export class HomePage {
 
   public seconds = 10;
   public isModalOpen = false;
-  
+
   constructor() {}
 
   timeRemaining$ = timer(0, 1000).pipe(
@@ -25,7 +25,8 @@ export class HomePage {
 
   navigateToDBM(): void {
     //shell.openExternal("https://dbm.thegrindsession.com/");
-    console.log("This takes you to the DBM website.");
+    console.log("This takes you to the DBM website....");
+    window.open("https://dbm.thegrindsession.com", "_blank", "top=500,left=200,frame=false,nodeIntegration=no");
   }
 
   startSync(): void {
