@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { ipcRenderer, contextBridge, shell, safeStorage } from 'electron';
+import { ipcRenderer, contextBridge, shell, safeStorage, BrowserWindow } from 'electron';
 import { EventEmitter } from 'events';
 
 ////////////////////////////////////////////////////////
@@ -87,10 +87,21 @@ const keytar = require('keytar');
 contextBridge.exposeInMainWorld('CapacitorCustomPlatform', {
   name: 'electron',
   plugins: contextApi,
+  isWin: process.platform === 'win32',
   openExternal: (url:string) => shell.openExternal(url),
   getPassword: (service:string, account:string) => keytar.getPassword(service, account),
   setPassword: (service:string, account:string, password:string) => keytar.setPassword(service, account, password),
   encrypt: (plainText:string) => safeStorage.encryptString(plainText),
-  decrypt: (encrypted:any) => safeStorage.decryptString(encrypted)
+  decrypt: (encrypted:any) => safeStorage.decryptString(encrypted),
+  close: () => {
+    ipcRenderer.send('close-main-window');
+  },
+  maximize: () => {
+    ipcRenderer.send('maximize-main-window');
+  },
+  minimize: () => {
+    ipcRenderer.send('minimize-main-window');
+  }
 });
 ////////////////////////////////////////////////////////
+

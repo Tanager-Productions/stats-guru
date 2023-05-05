@@ -115,6 +115,7 @@ export class ElectronCapacitorApp {
       y: this.mainWindowState.y,
       width: this.mainWindowState.width,
       height: this.mainWindowState.height,
+      titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'hidden',
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: true,

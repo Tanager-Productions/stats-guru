@@ -1,6 +1,17 @@
-<ion-header>
+<ion-header [mode]="isWin ? 'md' : 'ios'" class="drag">
   <ion-toolbar color="primary">
-    <ion-title>Stats Guru</ion-title>
+    <ion-title class="no-select">Stats Guru</ion-title>
+    <ion-buttons *ngIf="isWin" slot="end" class="no-drag">
+      <ion-button (click)="minimize()" class="hover">
+        <ion-icon slot="icon-only" name="remove"></ion-icon>
+      </ion-button>
+      <ion-button (click)="maximize()" class="hover">
+        <ion-icon slot="icon-only" name="square-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="close()" class="hover-danger">
+        <ion-icon slot="icon-only" name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 

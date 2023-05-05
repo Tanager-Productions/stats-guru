@@ -13,6 +13,7 @@ import { Router } from '@angular/router';
 export class LoginPage {
   loading:boolean = false;
   key:string = "";
+  isWin:boolean
 
   constructor(
     private server: ApiService,
@@ -20,7 +21,8 @@ export class LoginPage {
     private storageService: StorageService,
     private router: Router
   ) {
-
+    // @ts-ignore
+    this.isWin = window.CapacitorCustomPlatform.isWin;
   }
 
   async test() {
@@ -61,4 +63,18 @@ export class LoginPage {
     this.loading = false;
   }
 
+  close() {
+    // @ts-ignore
+    window.CapacitorCustomPlatform.close();
+  }
+
+  maximize() {
+    // @ts-ignore
+    window.CapacitorCustomPlatform.maximize();
+  }
+
+  minimize() {
+    // @ts-ignore
+    window.CapacitorCustomPlatform.minimize();
+  }
 }
