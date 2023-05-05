@@ -113,4 +113,13 @@ export class CrudService {
     }
   }
 
+  public async rawQuery(db:SQLiteDBConnection, query:string) {
+    let res = await db.query(query);
+    if (res.values == undefined) {
+      throw new Error("Query returned undefined");
+    } else {
+      return res.values;
+    }
+  }
+
 }
