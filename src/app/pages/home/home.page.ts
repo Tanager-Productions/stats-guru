@@ -24,9 +24,8 @@ export class HomePage {
   );
 
   navigateToDBM(): void {
-    //shell.openExternal("https://dbm.thegrindsession.com/");
-    console.log("This takes you to the DBM website....");
-    window.open("https://dbm.thegrindsession.com", "_blank", "top=500,left=200,frame=false,nodeIntegration=no");
+    // @ts-ignore
+    window.StatsGuru.openExternal("https://dbm.thegrindsession.com");
   }
 
   startSync(): void {

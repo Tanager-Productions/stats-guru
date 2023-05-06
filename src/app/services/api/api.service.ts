@@ -1,9 +1,6 @@
 import { Injectable } from '@angular/core';
 import { JsonSQLite } from '@capacitor-community/sqlite';
 import { CapacitorHttp, HttpHeaders, HttpOptions, HttpResponse } from "@capacitor/core";
-import { Admin } from 'src/app/types/admin.type';
-import { Game } from 'src/app/interfaces/game.interface';
-import { Logo } from 'src/app/types/logo.type';
 
 
 @Injectable({
@@ -11,7 +8,7 @@ import { Logo } from 'src/app/types/logo.type';
 })
 export class ApiService {
   private serverUrl:string = "http://localhost:57812";
-  //private serverUrl:string = "https://mobileapi.thegrindsession.com";
+  //private serverUrl:string = "https://api.thegrindsession.com";
 
   constructor() { }
 

@@ -27,7 +27,7 @@ const config: CapacitorElectronConfig  = {
   },
   electron: {
     // Custom scheme for your app to be served on in the electron window.
-    customUrlScheme: 'capacitor-electron',
+    customUrlScheme: 'stats-guru',
     // Switch on/off a tray icon and menu, which is customizable in the app.
     trayIconAndMenuEnabled: false,
     // Switch on/off whether or not a splashscreen will be used.

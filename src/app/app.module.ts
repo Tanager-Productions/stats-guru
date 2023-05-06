@@ -10,7 +10,7 @@ import { SyncService } from './services/sync/sync.service';
 import { SqlService } from './services/sql/sql.service';
 import { CrudService } from './services/crud/crud.service';
 import { TestPageComponent } from './test/test-page/test-page.component';
-import { StorageService } from './services/storage/storage.service';
+import { AuthService } from './services/auth/auth.service';
 import { CommonModule } from '@angular/common';
 
 @NgModule({
@@ -31,7 +31,7 @@ import { CommonModule } from '@angular/common';
     SyncService,
     SqlService,
     CrudService,
-    StorageService
+    AuthService
   ],
   bootstrap: [AppComponent]
 })

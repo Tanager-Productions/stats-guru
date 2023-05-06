@@ -82,11 +82,15 @@ Object.keys(plugins).forEach((pluginKey) => {
     });
 });
 
-const keytar = require('keytar');
-
 contextBridge.exposeInMainWorld('CapacitorCustomPlatform', {
   name: 'electron',
-  plugins: contextApi,
+  plugins: contextApi
+});
+////////////////////////////////////////////////////////
+
+const keytar = require('keytar');
+
+contextBridge.exposeInMainWorld('StatsGuru', {
   isWin: process.platform === 'win32',
   openExternal: (url:string) => shell.openExternal(url),
   getPassword: (service:string, account:string) => keytar.getPassword(service, account),
@@ -103,5 +107,3 @@ contextBridge.exposeInMainWorld('CapacitorCustomPlatform', {
     ipcRenderer.send('minimize-main-window');
   }
 });
-////////////////////////////////////////////////////////
-

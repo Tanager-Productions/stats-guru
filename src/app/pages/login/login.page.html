@@ -1,29 +1,8 @@
-<ion-header *ngIf="isWin" class="drag">
-  <ion-toolbar color="primary">
-    <ion-title class="no-select">Stats Guru</ion-title>
-    <ion-buttons slot="end" class="no-drag">
-      <ion-button (click)="minimize()" class="hover">
-        <ion-icon slot="icon-only" name="remove"></ion-icon>
-      </ion-button>
-      <ion-button (click)="maximize()" class="hover">
-        <ion-icon slot="icon-only" name="square-outline"></ion-icon>
-      </ion-button>
-      <ion-button (click)="close()" class="hover-danger">
-        <ion-icon slot="icon-only" name="close"></ion-icon>
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
-
-<ion-header *ngIf="!isWin" mode="ios" class="drag">
-  <ion-toolbar color="primary">
-    <ion-title class="no-select">Stats Guru</ion-title>
-  </ion-toolbar>
-</ion-header>
+<app-header></app-header>
 
 <ion-content color="light">
   <ion-grid class="fixed">
-    <ion-row>
+    <ion-row *ngIf="!checkingForKey">
       <ion-col size="3"></ion-col>
       <ion-col size="6">
         <ion-card class="ion-padding">
@@ -46,6 +25,11 @@
         </ion-card>
       </ion-col>
       <ion-col size="3"></ion-col>
+    </ion-row>
+    <ion-row *ngIf="checkingForKey">
+      <ion-col>
+        <ion-spinner name="crescent" style="height: 80px;  width: 80px;"></ion-spinner>
+      </ion-col>
     </ion-row>
   </ion-grid>
 </ion-content>
