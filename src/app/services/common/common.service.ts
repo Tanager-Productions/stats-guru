@@ -7,6 +7,7 @@ import { Team } from 'src/app/interfaces/team.interface';
 import { Stat } from 'src/app/interfaces/stat.interface';
 import { CrudService } from '../crud/crud.service';
 import { SqlService } from '../sql/sql.service';
+import { SQLiteDBConnection } from '@capacitor-community/sqlite';
 
 @Injectable({
   providedIn: 'root'
@@ -26,30 +27,26 @@ export class CommonService {
   constructor(private crud: CrudService, private sql:SqlService) { }
 
   public async initializeService() {
-    await this.fetchPlayers();
-    await this.fetchGames();
-    await this.fetchPlays();
-    await this.fetchStats();
-    await this.fetchTeams();
-    this.isGamesReady.next(true);
-    this.isPlayersReady.next(true);
-    this.isPlaysReady.next(true);
-    this.isStatsReady.next(true);
-    this.isTeamsReady.next(true);
+    let db = await this.sql.createConnection();
+    await db.open();
+    await Promise.all([
+      this.fetchPlayers(db),
+      this.fetchGames(db),
+      this.fetchPlays(db),
+      this.fetchStats(db),
+      this.fetchTeams(db)
+    ]);
+    await db.close();
   }
 
   public gameState() {
     return this.isGamesReady.asObservable();
   }
 
-  public async fetchGames() {
-    let db = await this.sql.createConnection();
-    await db.open();
-    let games: Game[] = await this.crud.query(db, "games", false, undefined, "gameDate", false);
-    games.sort((a, b) => new Date(a.gameDate).getTime() - new Date(b.gameDate).getTime());
-    games.reverse();
-    await db.close();
+  public async fetchGames(db: SQLiteDBConnection) {
+    let games: Game[] = await this.crud.query(db, "games", false, undefined, "gameDate", 'desc');
     this.gamesSubject.next(games);
+    this.isGamesReady.next(true);
   }
 
   public getGames() {
@@ -60,12 +57,10 @@ export class CommonService {
     return this.isPlayersReady.asObservable();
   }
 
-  public async fetchPlayers() {
-    let db = await this.sql.createConnection();
-    await db.open();
-    let players: Player[] = await this.crud.query(db, "players", false, undefined, "lastName", false);
-    await db.close();
+  public async fetchPlayers(db: SQLiteDBConnection) {
+    let players: Player[] = await this.crud.query(db, "players");
     this.playersSubject.next(players);
+    this.isPlayersReady.next(true);
   }
 
   public getPlayers() {
@@ -76,12 +71,10 @@ export class CommonService {
     return this.isPlaysReady.asObservable();
   }
 
-  public async fetchPlays() {
-    let db = await this.sql.createConnection();
-    await db.open();
-    let plays: Play[] = await this.crud.query(db, "plays", false, undefined, "gameId", false);
-    await db.close();
+  public async fetchPlays(db: SQLiteDBConnection) {
+    let plays: Play[] = await this.crud.query(db, "plays");
     this.playsSubject.next(plays);
+    this.isPlaysReady.next(true);
   }
 
   public getPlays() {
@@ -92,12 +85,10 @@ export class CommonService {
     return this.isTeamsReady.asObservable();
   }
 
-  public async fetchTeams() {
-    let db = await this.sql.createConnection();
-    await db.open();
-    let teams: Team[] = await this.crud.query(db, "teams", false, undefined, "name", false);
-    await db.close();
+  public async fetchTeams(db: SQLiteDBConnection) {
+    let teams: Team[] = await this.crud.query(db, "teams");
     this.teamsSubject.next(teams);
+    this.isTeamsReady.next(true);
   }
 
   public getTeams() {
@@ -108,12 +99,10 @@ export class CommonService {
     return this.isStatsReady.asObservable();
   }
 
-  public async fetchStats() {
-    let db = await this.sql.createConnection();
-    await db.open();
-    let stats: Stat[] = await this.crud.query(db, "stats", false, undefined, "player", false);
-    await db.close();
+  public async fetchStats(db: SQLiteDBConnection) {
+    let stats: Stat[] = await this.crud.query(db, "stats");
     this.statsSubject.next(stats);
+    this.isStatsReady.next(true);
   }
 
   public getStats() {

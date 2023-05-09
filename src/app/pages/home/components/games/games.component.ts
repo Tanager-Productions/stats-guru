@@ -32,7 +32,7 @@ export class GamesComponent implements OnInit {
           this.feed.push(...this.gamesList.slice(0, this.gameCount-1));
         });
       }
-    })
+    });
   }
 
   private async refresh() {

@@ -1,6 +1,6 @@
 import type { CapacitorElectronConfig } from '@capacitor-community/electron';
 import { getCapacitorElectronConfig, setupElectronDeepLinking } from '@capacitor-community/electron';
-import type { MenuItemConstructorOptions } from 'electron';
+import { MenuItemConstructorOptions, contextBridge, ipcMain } from 'electron';
 import { app, MenuItem } from 'electron';
 import electronIsDev from 'electron-is-dev';
 import unhandled from 'electron-unhandled';
@@ -13,9 +13,23 @@ unhandled();
 
 // Define our menu templates (these are optional)
 const trayMenuTemplate: (MenuItemConstructorOptions | MenuItem)[] = [new MenuItem({ label: 'Quit App', role: 'quit' })];
-const appMenuBarMenuTemplate: (MenuItemConstructorOptions | MenuItem)[] = [
-  { role: process.platform === 'darwin' ? 'appMenu' : 'fileMenu' },
-  { role: 'viewMenu' },
+const appMenuBarMenuTemplate: (MenuItemConstructorOptions | MenuItem)[] = [{
+  label: "Application",
+  submenu: [
+      { label: "About Application", role: "about" },
+      { type: "separator" },
+      { label: "Quit", accelerator: "Command+Q", click: function() { app.quit(); }}
+  ]}, {
+  label: "Edit",
+  submenu: [
+      { label: "Undo", accelerator: "CmdOrCtrl+Z", role: "undo" },
+      { label: "Redo", accelerator: "Shift+CmdOrCtrl+Z", role: "redo" },
+      { type: "separator" },
+      { label: "Cut", accelerator: "CmdOrCtrl+X", role: "cut" },
+      { label: "Copy", accelerator: "CmdOrCtrl+C", role: "copy" },
+      { label: "Paste", accelerator: "CmdOrCtrl+V", role: "paste" },
+      { label: "Select All", accelerator: "CmdOrCtrl+A", role: "selectAll" }
+  ]}
 ];
 
 // Get Config options from capacitor.config
@@ -41,8 +55,26 @@ if (electronIsDev) {
 (async () => {
   // Wait for electron app to be ready.
   await app.whenReady();
+
+  ipcMain.on('minimize-main-window', () => {
+    myCapacitorApp.getMainWindow().minimize();
+  });
+
+  ipcMain.on('maximize-main-window', () => {
+    if (myCapacitorApp.getMainWindow().isMaximized()) {
+      myCapacitorApp.getMainWindow().unmaximize();
+    } else {
+      myCapacitorApp.getMainWindow().maximize();
+    }
+  });
+
+  ipcMain.on('close-main-window', () => {
+    myCapacitorApp.getMainWindow().close();
+  });
+
   // Security - Set Content-Security-Policy based on whether or not we are in dev mode.
   //setupContentSecurityPolicy(myCapacitorApp.getCustomURLScheme());
+
   // Initialize our app, build windows, and load content.
   await myCapacitorApp.init();
   // Check for updates if we are in a packaged app.
@@ -68,3 +100,4 @@ app.on('activate', async function () {
 });
 
 // Place all ipc or other electron api calls and custom functionality under this line
+

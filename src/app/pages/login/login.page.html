@@ -1,0 +1,35 @@
+<app-header></app-header>
+
+<ion-content color="light">
+  <ion-grid class="fixed">
+    <ion-row *ngIf="!checkingForKey">
+      <ion-col size="3"></ion-col>
+      <ion-col size="6">
+        <ion-card class="ion-padding">
+          <ion-card-content class="ion-text-center">
+            <ion-label>
+              <h1>Go to <a (click)="open()">https://dbm.thegrindsession.com</a> and generate a key to register your application</h1>
+            </ion-label>
+            <ion-item class="ion-margin" lines="full">
+              <ion-input
+                class="ion-text-left"
+                [(ngModel)]="key"
+                label="Key"
+              ></ion-input>
+            </ion-item>
+            <ion-button [disabled]="key == ''">
+              <ion-label *ngIf="!loading" (click)="register()">Register</ion-label>
+              <ion-spinner *ngIf="loading"></ion-spinner>
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      <ion-col size="3"></ion-col>
+    </ion-row>
+    <ion-row *ngIf="checkingForKey">
+      <ion-col>
+        <ion-spinner name="crescent" style="height: 80px;  width: 80px;"></ion-spinner>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>
