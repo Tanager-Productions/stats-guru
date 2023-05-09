@@ -6,6 +6,7 @@ import { Game } from 'src/app/interfaces/game.interface';
 import { ApiService } from 'src/app/services/api/api.service';
 import { CommonService } from 'src/app/services/common/common.service';
 import { Logo } from 'src/app/types/logo.type';
+import { Team } from 'src/app/interfaces/team.interface';
 
 @Component({
   selector: 'app-games',
@@ -14,7 +15,6 @@ import { Logo } from 'src/app/types/logo.type';
 })
 export class GamesComponent implements OnInit {
   public games$?: Observable<Game[]>;
-  public logos: Logo[] = []
   public feed: Game[] = [];
   public gamesList: Game[] = [];
   private gameCount: number = 15;
@@ -30,9 +30,6 @@ export class GamesComponent implements OnInit {
         this.games$.subscribe(games => {
           this.gamesList = games;
           this.feed.push(...this.gamesList.slice(0, this.gameCount-1));
-        });
-        this.apiService.getLogos().subscribe(logos => {
-          this.logos = logos;
         });
       }
     })
@@ -70,10 +67,5 @@ export class GamesComponent implements OnInit {
     this.router.navigateByUrl(`/gamecast/${gameId}`);
   }
 
-  public getLogos(teamName: string): string {
-    const logo = this.logos.find(l => l.team.toLowerCase() === teamName.toLowerCase());
-    console.log('teamName:', teamName, 'logo:', logo);
-    return logo ? logo.src : '';
-  }
 
   }

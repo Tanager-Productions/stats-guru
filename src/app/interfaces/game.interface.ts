@@ -1,7 +1,9 @@
+import { Team } from "./team.interface";
+
 export interface Game {
   gameId: number;
-  homeTeam: string;
-  awayTeam: string;
+  homeTeam: Team;
+  awayTeam: Team;
   gameDate: string;
   homePointsQ1: number;
   awayPointsQ1: number;
@@ -27,4 +29,5 @@ export interface Game {
   added: string;
   modified: string;
   deleted:string;
+  
 }

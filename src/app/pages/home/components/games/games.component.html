@@ -60,8 +60,8 @@
           <ion-card class="game-card" *ngFor="let item of feed" (click)="navigateToGamecast(item.gameId)">
             <ion-card-header>
               <ion-card-title class="team-container">
-                <div class="team-logo">
-                  <img [src]="getLogos(item.homeTeam)">
+                <div class="team-logo-name">
+                  <img [src]="item.homeTeam.logo" class="team-logo">
                 </div>
                 <div>
                   {{ item.homeTeam }}&nbsp;
@@ -72,8 +72,8 @@
                 <div>
                   {{ item.awayTeam }} 
                 </div>
-                <div class="team-logo">
-                  <img [src]="getLogos(item.awayTeam)">
+                <div class="team-logo-name">
+                  <img [src]="item.awayTeam.logo" class="team-logo">
                 </div>
               </ion-card-title>
             </ion-card-header>

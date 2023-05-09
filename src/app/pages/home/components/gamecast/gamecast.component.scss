@@ -1,0 +1,68 @@
+.scoreboard {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .team-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    border: 1px solid #ccc;
+    margin: 0 10px;
+  }
+  
+  h2 {
+    font-size: 24px;
+    margin-bottom: 15px;
+  }
+  .team-score {
+    font-size: 72px;
+    font-weight: bold;
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+  
+  .digital-number {
+    font-family: 'Digital-7', monospace;
+  }
+  
+  .button-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  button {
+    font-size: 14px;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+  
+  .game-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  ion-card-content {
+    position: relative;
+  }
+  
+  .timer-reset-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1em;
+  }
+  
+  .reset-button {
+    position: absolute;
+    bottom: 1em;
+    right: 1em;
+  }

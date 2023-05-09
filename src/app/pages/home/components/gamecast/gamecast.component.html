@@ -8,6 +8,53 @@
   <ion-card-header>
     <ion-card-title>Game ID: {{ gameId }}</ion-card-title>
   </ion-card-header>
+  
   <ion-card-content>
+    <div class="scoreboard">
+      <!-- Home Team -->
+      <ng-container *ngIf="currentGame$ | async as currentGame">
+      <div class="team-container">
+        <h2>{{ currentGame.homeTeam}}</h2>
+        <p class="team-score digital-number">{{ homeTeamScore }}</p>
+        <p>Fouls: {{ homeTeamFouls }}</p>
+        <p>Timeouts left: {{ homeTeamTOL }}</p>
+        <button (click)="addPoints('home', 1)">+1 Point</button>
+        <button (click)="addPoints('home', 2)">+2 Points</button>
+        <button (click)="addPoints('home', 3)">+3 Points</button>
+        <button (click)="addFoul('home')">+1 Foul</button>
+        <button (click)="useTimeout('home', 30)">30s Timeout</button>
+        <button (click)="useTimeout('home', 60)">60s Timeout</button>
+      </div>
+      <!-- Guest Team -->
+      <div class="team-container">
+        <h2>{{currentGame.awayTeam}}</h2>
+        <p class="team-score digital-number">{{ awayTeamScore }}</p>
+        <p>Fouls: {{ awayTeamFouls }}</p>
+        <p>Timeouts left: {{ awayTeamTOL }}</p>
+        <button (click)="addPoints('away', 1)">+1 Point</button>
+        <button (click)="addPoints('away', 2)">+2 Points</button>
+        <button (click)="addPoints('away', 3)">+3 Points</button>
+        <button (click)="addFoul('away')">+1 Foul</button>
+        <button (click)="useTimeout('away', 30)">30s Timeout</button>
+        <button (click)="useTimeout('away', 60)">60s Timeout</button>
+      </div>
+    </ng-container>
+    </div>
+    
+
+    <div class="game-info">
+      <p>Period: {{ period }}</p>
+      <button (click)="nextPeriod()">Next Period</button>
+    </div>
+
+    <div class="game-timer">
+      <p>{{ timerDisplay || (timerDuration / 60) + ':00' }}</p>
+      <button (click)="startStopTimer()">{{ timerRunning ? 'Stop' : 'Start' }} Timer</button>
+    </div>
+  
+
+    <div class="reset-button">
+      <button (click)="resetGame()">Reset Game</button>
+    </div>
   </ion-card-content>
 </ion-card>
