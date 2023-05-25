@@ -1,6 +1,6 @@
 <ion-header *ngIf="isWin" class="drag">
-  <ion-toolbar color="primary">
-    <div *ngIf="showPopover; else no_popover">
+  <div *ngIf="showPopover; else no_popover">
+    <ion-toolbar color="primary">
       <ion-buttons class="no-drag" slot="start">
         <ion-button size="large" id="click-trigger">
           <ion-icon name="person-circle-outline"></ion-icon>
@@ -38,25 +38,36 @@
           </ng-template>
         </ion-popover>
         <ion-title class="no-select">Stats Guru</ion-title>
+        <ion-buttons slot="end" class="no-drag">
+          <ion-button (click)="minimize()" class="hover">
+            <ion-icon slot="icon-only" name="remove"></ion-icon>
+          </ion-button>
+          <ion-button (click)="maximize()" class="hover">
+            <ion-icon slot="icon-only" name="square-outline"></ion-icon>
+          </ion-button>
+          <ion-button (click)="close()" class="hover-danger">
+            <ion-icon slot="icon-only" name="close"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
     </div>
 
     <ng-template #no_popover>
-      <ion-title class="no-select">Stats Guru</ion-title>
+      <ion-toolbar>
+        <ion-title class="no-select">Stats Guru</ion-title>
+        <ion-buttons slot="end" class="no-drag">
+          <ion-button (click)="minimize()" class="hover">
+            <ion-icon slot="icon-only" name="remove"></ion-icon>
+          </ion-button>
+          <ion-button (click)="maximize()" class="hover">
+            <ion-icon slot="icon-only" name="square-outline"></ion-icon>
+          </ion-button>
+          <ion-button (click)="close()" class="hover-danger">
+            <ion-icon slot="icon-only" name="close"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
     </ng-template>
-    
-
-    <ion-buttons slot="end" class="no-drag">
-      <ion-button (click)="minimize()" class="hover">
-        <ion-icon slot="icon-only" name="remove"></ion-icon>
-      </ion-button>
-      <ion-button (click)="maximize()" class="hover">
-        <ion-icon slot="icon-only" name="square-outline"></ion-icon>
-      </ion-button>
-      <ion-button (click)="close()" class="hover-danger">
-        <ion-icon slot="icon-only" name="close"></ion-icon>
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
 </ion-header>
 
 <ion-header *ngIf="!isWin" mode="ios" class="drag">
