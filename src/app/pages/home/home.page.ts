@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { finalize, map, repeat, takeWhile, tap, timer } from 'rxjs';
+import { HeaderComponent } from 'src/app/shared/header/header.component';
 
 @Component({
   selector: 'app-home',
@@ -9,38 +9,6 @@ import { finalize, map, repeat, takeWhile, tap, timer } from 'rxjs';
 
 export class HomePage {
 
-  public seconds = 10;
-  public isModalOpen = false;
-
   constructor() {}
-
-  timeRemaining$ = timer(0, 1000).pipe(
-    map(n => (this.seconds - n) * 1000),
-    takeWhile(n => n >= 0),
-    finalize(() => {
-      console.log('Sync finished.')
-    }),
-    repeat()
-  );
-
-  navigateToDBM(): void {
-    // @ts-ignore
-    window.StatsGuru.openExternal("https://dbm.thegrindsession.com");
-  }
-
-  startSync(): void {
-    this.timeRemaining$ = timer(0, 1000).pipe(
-      map(n => (this.seconds - n) * 1000),
-      takeWhile(n => n >= 0),
-      finalize(() => {
-        console.log('Sync finished.')
-      }),
-      repeat()
-    );
-  }
-
-  setOpen(isOpen: boolean) {
-    this.isModalOpen = isOpen;
-  }
 
 }

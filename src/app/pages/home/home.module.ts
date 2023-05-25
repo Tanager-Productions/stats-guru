@@ -7,6 +7,7 @@ import { GamecastComponent } from './components/gamecast/gamecast.component';
 import { GamecastDetailComponent } from './components/gamecast-detail/gamecast-detail.component';
 import { AddGamesComponent } from './components/add-games/add-games.component';
 import { HomePage } from './home.page';
+import { SharedModule } from 'src/app/shared/shared.module';
 
 
 @NgModule({
@@ -20,7 +21,8 @@ import { HomePage } from './home.page';
   imports: [
     CommonModule,
     HomeRoutingModule,
-    IonicModule
+    IonicModule,
+    SharedModule
   ]
 })
 export class HomeModule { }

@@ -1,40 +1,34 @@
-ion-toolbar {
-    --background: #007bff; 
-  }
-  .card-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-  }
-  
-  ion-grid {
-    display: inline-grid;
-  }
+.card-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
 
+ion-grid {
+  display: inline-grid;
+}
 
-  .team-container {
-    display: flex;
-    align-items: center;
-  }
+.team-container {
+  display: flex;
+  align-items: center;
+}
 
-  
-  .versus {
-    margin-right: 10px;
-  }
-  
-  .funnel-icon {
-    margin-right: 15px;
-  }
+.versus {
+  margin-right: 10px;
+}
 
+.funnel-icon {
+  margin-right: 15px;
+}
 
-  .game-card {
-    width: 300%;
-    max-width: 500px;
-  }
+.game-card {
+  width: 300%;
+  max-width: 500px;
+}
 
-  .team-logo {
-    width: 30px;
-    height: 30px;
-    margin-right: 8px;
-  }
+.team-logo {
+  width: 30px;
+  height: 30px;
+  margin-right: 8px;
+}
