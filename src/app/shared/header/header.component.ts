@@ -1,5 +1,8 @@
 import { Component, Input, ViewChild } from '@angular/core';
+import { Router } from '@angular/router';
+import { PopoverController } from '@ionic/angular';
 import { finalize, map, repeat, takeWhile, tap, timer } from 'rxjs';
+import { AppRoutingModule } from 'src/app/app-routing.module';
 
 @Component({
   selector: 'app-header',
@@ -12,7 +15,10 @@ export class HeaderComponent {
   public isModalOpen = false;
   @Input() showPopover = false;
 
-  constructor() {
+  constructor(
+    private router: Router,
+    private popoverController: PopoverController
+  ) {
     // @ts-ignore
     this.isWin = window.StatsGuru.isWin;
   }
@@ -46,6 +52,11 @@ export class HeaderComponent {
     window.StatsGuru.openExternal("https://dbm.thegrindsession.com");
   }
 
+  navigateToLogin(): void {
+    this.router.navigate(['/login']);
+    this.popoverController.dismiss();
+  }
+
   startSync(): void {
     this.timeRemaining$ = timer(0, 1000).pipe(
       map(n => (this.seconds - n) * 1000),
@@ -56,10 +67,6 @@ export class HeaderComponent {
       repeat()
     );
   }
-
-  // setPopover (showPopover: boolean) {
-  //   return showPopover;
-  // }
 
   setOpen(isOpen: boolean) {
     this.isModalOpen = isOpen;

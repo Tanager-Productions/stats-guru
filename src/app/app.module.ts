@@ -12,6 +12,7 @@ import { CrudService } from './services/crud/crud.service';
 import { TestPageComponent } from './test/test-page/test-page.component';
 import { AuthService } from './services/auth/auth.service';
 import { CommonModule } from '@angular/common';
+import { HomeRoutingModule } from './pages/home/home-routing.module';
 
 @NgModule({
   declarations: [
@@ -23,6 +24,7 @@ import { CommonModule } from '@angular/common';
     AppRoutingModule,
     HttpClientModule,
     CommonModule,
+    HomeRoutingModule,
     IonicModule.forRoot({mode:'md'})
   ],
   providers: [
