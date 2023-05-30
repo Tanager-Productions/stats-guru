@@ -35,7 +35,10 @@ export class GamecastComponent {
   teams: Team[] = [];
   players: Player[] = [];
 
-  constructor(private route: ActivatedRoute, private common: CommonService) {}
+  constructor(
+    private route: ActivatedRoute, 
+    private common: CommonService
+    ) {}
 
   ngOnInit() {
     this.route.params.subscribe((params: { [x: string]: string | number; }) => {
