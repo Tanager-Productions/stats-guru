@@ -7,36 +7,64 @@
 <ion-card>
   <ion-card-header>
     <ion-card-title>Game ID: {{ gameId }}</ion-card-title>
+    <ion-card-title class="timer-style">{{ timerDisplay || (timerDuration / 60) + ':00' }}</ion-card-title>
   </ion-card-header>
   
   <ion-card-content>
     <div class="scoreboard">
       <!-- Home Team -->
       <ng-container *ngIf="currentGame$ | async as currentGame">
-      <div class="team-container">
+      <div id="home-team-container" class="team-container">
         <h2>{{ currentGame.homeTeam}}</h2>
         <p class="team-score digital-number">{{ homeTeamScore }}</p>
-        <p>Fouls: {{ homeTeamFouls }}</p>
+        <p>Fouls: {{ homeTeamFouls }} | Steals: {{ homeTeamSteals }}</p>
         <p>Timeouts left: {{ homeTeamTOL }}</p>
-        <button (click)="addPoints('home', 1)">+1 Point</button>
-        <button (click)="addPoints('home', 2)">+2 Points</button>
-        <button (click)="addPoints('home', 3)">+3 Points</button>
-        <button (click)="addFoul('home')">+1 Foul</button>
-        <button (click)="useTimeout('home', 30)">30s Timeout</button>
-        <button (click)="useTimeout('home', 60)">60s Timeout</button>
+        <div class="row-fluid">
+          <button class="number-button" id="home-button" (click)="addPoints('home', 1)">+1</button>
+          <button class="number-button" id="home-button" (click)="addPoints('home', 2)">+2</button>
+          <button class="number-button" id="home-button" (click)="addPoints('home', 3)">+3</button>  
+        </div>
+        <div class="row-fluid">
+          <button class="other-button" id="home-button" (click)="addFoul('home')">FOUL</button>
+          <button class="other-button" id="home-button" (click)="addSteal('home')">STL</button>
+          <button class="other-button" id="home-button" (click)="useTimeout('home', 30)">30s TO</button>
+          <button class="other-button" id="home-button" (click)="useTimeout('home', 60)">60s TO</button>  
+        </div>
+        <div class="row-fluid">
+          <button class="other-button" id="home-button">1</button>
+          <button class="other-button" id="home-button">3</button>
+          <button class="other-button" id="home-button">MISS</button>
+        </div>
       </div>
+
+      <!--Court(?)-->
+      <div id="court-container" class="team-container">
+        <h2>Court</h2>
+        <img src="assets/images/Court_Image.png">
+      </div>
+
       <!-- Guest Team -->
-      <div class="team-container">
+      <div id="away-team-container" class="team-container">
         <h2>{{currentGame.awayTeam}}</h2>
         <p class="team-score digital-number">{{ awayTeamScore }}</p>
-        <p>Fouls: {{ awayTeamFouls }}</p>
+        <p>Fouls: {{ awayTeamFouls }} | Steals: {{ awayTeamSteals }}</p>
         <p>Timeouts left: {{ awayTeamTOL }}</p>
-        <button (click)="addPoints('away', 1)">+1 Point</button>
-        <button (click)="addPoints('away', 2)">+2 Points</button>
-        <button (click)="addPoints('away', 3)">+3 Points</button>
-        <button (click)="addFoul('away')">+1 Foul</button>
-        <button (click)="useTimeout('away', 30)">30s Timeout</button>
-        <button (click)="useTimeout('away', 60)">60s Timeout</button>
+        <div class="row-fluid">
+          <button class="number-button" id="away-button" (click)="addPoints('away', 1)">+1</button>
+          <button class="number-button" id="away-button" (click)="addPoints('away', 2)">+2</button>
+          <button class="number-button" id="away-button" (click)="addPoints('away', 3)">+3</button>  
+        </div>
+        <div class="row-fluid">
+          <button class="other-button" id="away-button" (click)="addFoul('away')">FOUL</button>
+          <button class="other-button" id="away-button" (click)="addSteal('away')">STL</button>
+          <button class="other-button" id="away-button" (click)="useTimeout('away', 30)">30s TO</button>
+          <button class="other-button" id="away-button" (click)="useTimeout('away', 60)">60s TO</button>  
+        </div>
+        <div class="row-fluid">
+          <button class="other-button" id="away-button">1</button>
+          <button class="other-button" id="away-button">3</button>
+          <button class="other-button" id="away-button">MISS</button>
+        </div>
       </div>
     </ng-container>
     </div>
@@ -44,17 +72,16 @@
 
     <div class="game-info">
       <p>Period: {{ period }}</p>
-      <button (click)="nextPeriod()">Next Period</button>
+      <button id="normal-button" (click)="nextPeriod()">Next Period</button>
     </div>
 
     <div class="game-timer">
-      <p>{{ timerDisplay || (timerDuration / 60) + ':00' }}</p>
-      <button (click)="startStopTimer()">{{ timerRunning ? 'Stop' : 'Start' }} Timer</button>
+      <button id="normal-button" (click)="startStopTimer()">{{ timerRunning ? 'End' : 'Start' }} Game</button>
     </div>
   
 
     <div class="reset-button">
-      <button (click)="resetGame()">Reset Game</button>
+      <button id="normal-button" class="button-style" (click)="resetGame()">Reset Game</button>
     </div>
   </ion-card-content>
 </ion-card>

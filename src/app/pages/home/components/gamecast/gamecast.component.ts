@@ -18,6 +18,8 @@ export class GamecastComponent {
   homeTeamScore: number = 0;
   awayTeamScore: number = 0;
   homeTeamFouls: number = 0;
+  homeTeamSteals: number = 0;
+  awayTeamSteals: number = 0;
   timerSubscription?: Subscription;
   awayTeamFouls: number = 0;
   homeTeamTOL: number = 5;
@@ -55,7 +57,6 @@ export class GamecastComponent {
     
   }
 
-
   addPoints(team: string, points: number) {
     if (team === 'home') {
       this.homeTeamScore += points;
@@ -69,6 +70,14 @@ export class GamecastComponent {
       this.homeTeamFouls++;
     } else {
       this.awayTeamFouls++;
+    }
+  }
+
+  addSteal (team: string) {
+    if (team == 'home') {
+      this.homeTeamSteals++;
+    } else {
+      this.awayTeamSteals++;
     }
   }
 
@@ -131,6 +140,8 @@ export class GamecastComponent {
     this.awayTeamScore = 0;
     this.homeTeamFouls = 0;
     this.awayTeamFouls = 0;
+    this.homeTeamSteals = 0;
+    this.awayTeamSteals = 0;
     this.homeTeamTOL = 5;
     this.awayTeamTOL = 5;
     this.period = 1;

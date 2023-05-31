@@ -25,6 +25,11 @@ ion-grid {
 .game-card {
   width: 300%;
   max-width: 500px;
+  transition: all 1s;
+}
+
+.game-card:hover {
+  background-color: lightgrey;
 }
 
 .team-logo {

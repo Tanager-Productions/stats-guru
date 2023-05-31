@@ -6,18 +6,34 @@
   }
   
   .team-container {
+    height: auto;
+    width: auto;
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 20px;
-    border: 1px solid #ccc;
     margin: 0 10px;
+  }
+
+  #home-team-container {
+    border: 2px solid #4416fc;
+  }
+
+  #away-team-container {
+    border: 2px solid #fc1616;
+  }
+
+  #court-container {
+    border: 2px solid grey;
   }
   
   h2 {
     font-size: 24px;
     margin-bottom: 15px;
+    color: black;
   }
+
+
   .team-score {
     font-size: 72px;
     font-weight: bold;
@@ -65,4 +81,61 @@
     position: absolute;
     bottom: 1em;
     right: 1em;
+  }
+
+  .timer-style {
+    align-self: center;
+    text-align: center;
+    font-size: 50px;
+    font-weight: bold;
+    color: black;
+    width: 300px;
+    padding: 10px;
+    margin-bottom: 1rem;
+  }
+
+  button {
+    text-align: center;
+    color: white;
+    padding: 10px;
+    margin: 5px;
+    font-size: 18px;
+    border-radius: 10px;
+  }
+
+  .number-button {
+    width: 5rem;
+    height: 5rem;
+    font-size: 30px;
+    font-weight: bold;
+  }
+
+  .other-button {
+    font-size: 18px;
+    font-weight: bold;
+    width: 5rem;
+    height: 3.5rem;
+  }
+
+  #normal-button {
+    background-color: grey;
+    font-size: 30px;
+  }
+
+  #home-button {
+    background-color: #4416fc;
+  }
+
+  #away-button {
+    background-color: #fc1616;
+  }
+
+  p {
+    color: black;
+    font-size: 24px;
+  }
+
+  #start-timer {
+    font-size: 30px;
+    font-weight: 400;
   }
