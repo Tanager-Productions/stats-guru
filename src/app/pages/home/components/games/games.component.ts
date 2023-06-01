@@ -7,6 +7,8 @@ import { ApiService } from 'src/app/services/api/api.service';
 import { CommonService } from 'src/app/services/common/common.service';
 import { Logo } from 'src/app/types/logo.type';
 import { Team } from 'src/app/interfaces/team.interface';
+import { CrudService } from 'src/app/services/crud/crud.service';
+import { SqlService } from 'src/app/services/sql/sql.service';
 
 @Component({
   selector: 'app-games',
@@ -18,9 +20,10 @@ export class GamesComponent implements OnInit {
   public feed: Game[] = [];
   public gamesList: Game[] = [];
   private gameCount: number = 15;
- 
+  public logos: {name:string, isMale:boolean, logo:string}[] = [];
 
-  constructor(private common: CommonService, private router: Router, private apiService: ApiService) {}
+
+  constructor(private common: CommonService, private router: Router, private apiService: ApiService, private crud: CrudService, private sql:SqlService) {}
 
   async ngOnInit() {
     await this.initCommon();
@@ -33,6 +36,15 @@ export class GamesComponent implements OnInit {
         });
       }
     });
+    let db = await this.sql.createConnection();
+    await db.open();
+    this.logos = await this.crud.rawQuery(db, 'select Teams.name, Teams.isMale, Teams.logo from Teams;');
+    await db.close();
+    console.log(this.logos);
+  }
+
+  public getLogo(teamName:string, isMale:boolean) {
+    return this.logos.find(t => t.name == teamName && t.isMale == isMale)?.logo;
   }
 
   private async refresh() {
@@ -68,4 +80,4 @@ export class GamesComponent implements OnInit {
   }
 
 
-  }
+}

@@ -1,77 +1,64 @@
-<ion-header *ngIf="isWin" class="drag">
-  <div *ngIf="showPopover; else no_popover">
-    <ion-toolbar color="primary">
-      <ion-buttons class="no-drag" slot="start">
-        <ion-button size="large" id="click-trigger">
-          <ion-icon name="person-circle-outline"></ion-icon>
+<ion-header *ngIf="isWin" class="ion-no-border">
+    <ion-toolbar class="drag" color="tertiary">
+      <ion-buttons slot="start" *ngIf="showPopover">
+        <ion-button class="no-drag" id="click-trigger">
+          <ion-icon slot="icon-only" name="person-circle"></ion-icon>
         </ion-button>
       </ion-buttons>
-        <ion-popover trigger="click-trigger" triggerAction="click">
-          <ng-template>
-            <ion-content>
-              <ion-list>
-                <ion-item button="true" (click)="navigateToDBM()" detail="false">DBM</ion-item>
-                <ion-item button="true" (click)="setOpen(true)" detail="false">Settings</ion-item>
-                <ion-modal [isOpen]="isModalOpen">
-                  <ng-template>
-                    <ion-header>
-                      <ion-toolbar>
-                        <ion-title>Settings</ion-title>
-                        <ion-buttons slot="end">
-                          <ion-button (click)="setOpen(false)">Close</ion-button>
-                        </ion-buttons>
-                      </ion-toolbar>
-                    </ion-header>
-                    <ion-content class="ion-padding">
-                      <h4>Sync Timer:</h4>
-                      <p>
-                        {{ timeRemaining$ | async | date:'mm:ss' }}
-                      </p>
-                      <h4>Sync Button</h4>
-                      <ion-button expand="block" (click)="startSync()">SYNC</ion-button>
-                    </ion-content>
-                  </ng-template>
-                </ion-modal>
-                <ion-item button="true" detail="false" (click)="navigateToLogin()">Log Out</ion-item>
-              </ion-list>
-            </ion-content>
-          </ng-template>
-        </ion-popover>
-        <ion-title class="no-select">Stats Guru</ion-title>
-        <ion-buttons slot="end" class="no-drag">
-          <ion-button (click)="minimize()" class="hover">
-            <ion-icon slot="icon-only" name="remove"></ion-icon>
-          </ion-button>
-          <ion-button (click)="maximize()" class="hover">
-            <ion-icon slot="icon-only" name="square-outline"></ion-icon>
-          </ion-button>
-          <ion-button (click)="close()" class="hover-danger">
-            <ion-icon slot="icon-only" name="close"></ion-icon>
-          </ion-button>
-        </ion-buttons>
-      </ion-toolbar>
-    </div>
-
-    <ng-template #no_popover>
-      <ion-toolbar>
-        <ion-title class="no-select">Stats Guru</ion-title>
-        <ion-buttons slot="end" class="no-drag">
-          <ion-button (click)="minimize()" class="hover">
-            <ion-icon slot="icon-only" name="remove"></ion-icon>
-          </ion-button>
-          <ion-button (click)="maximize()" class="hover">
-            <ion-icon slot="icon-only" name="square-outline"></ion-icon>
-          </ion-button>
-          <ion-button (click)="close()" class="hover-danger">
-            <ion-icon slot="icon-only" name="close"></ion-icon>
-          </ion-button>
-        </ion-buttons>
-      </ion-toolbar>
-    </ng-template>
+      <ion-popover *ngIf="showPopover" trigger="click-trigger" triggerAction="click">
+        <ng-template>
+          <ion-content>
+            <ion-list>
+              <ion-item button="true" (click)="navigateToDBM()" detail="false">DBM</ion-item>
+              <ion-item button="true" (click)="setOpen(true)" detail="false">Settings</ion-item>
+              <ion-modal [isOpen]="isModalOpen">
+                <ng-template>
+                  <ion-header>
+                    <ion-toolbar>
+                      <ion-title>Settings</ion-title>
+                      <ion-buttons slot="end">
+                        <ion-button (click)="setOpen(false)">Close</ion-button>
+                      </ion-buttons>
+                    </ion-toolbar>
+                  </ion-header>
+                  <ion-content class="ion-padding">
+                    <h4>Sync Timer:</h4>
+                    <p>
+                      {{ timeRemaining$ | async | date:'mm:ss' }}
+                    </p>
+                    <h4>Sync Button</h4>
+                    <ion-button expand="block" (click)="startSync()">SYNC</ion-button>
+                  </ion-content>
+                </ng-template>
+              </ion-modal>
+              <ion-item button="true" detail="false" (click)="navigateToLogin()">Log Out</ion-item>
+            </ion-list>
+          </ion-content>
+        </ng-template>
+      </ion-popover>
+      <ion-title class="no-select">Stats Guru</ion-title>
+      <ion-buttons slot="end" class="no-drag">
+        <ion-button (click)="minimize()" class="hover">
+          <ion-icon slot="icon-only" name="remove"></ion-icon>
+        </ion-button>
+        <ion-button (click)="maximize()" class="hover">
+          <ion-icon slot="icon-only" name="square-outline"></ion-icon>
+        </ion-button>
+        <ion-button (click)="close()" class="hover-danger">
+          <ion-icon slot="icon-only" name="close"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    </ion-toolbar>
+    <ng-container [ngTemplateOutlet]="template"></ng-container>
 </ion-header>
 
 <ion-header *ngIf="!isWin" mode="ios" class="drag">
   <ion-toolbar color="primary">
     <ion-title class="no-select">Stats Guru</ion-title>
   </ion-toolbar>
+  <ng-container [ngTemplateOutlet]="template"></ng-container>
 </ion-header>
+
+<ng-template #template>
+	<ng-content></ng-content>
+</ng-template>

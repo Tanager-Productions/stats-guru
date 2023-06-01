@@ -1,102 +1,73 @@
-
-<ion-content style="position: relative;">
-  <ion-breadcrumbs>
-    <ion-breadcrumb href="/">Home</ion-breadcrumb>
-    <ion-breadcrumb>Games</ion-breadcrumb>
-  </ion-breadcrumbs>
-
-  <ion-toolbar>
-    <ion-buttons>
+<app-header [showPopover]="true">
+  <ion-toolbar color="primary">
+    <ion-breadcrumbs>
+      <ion-breadcrumb href="/">Home</ion-breadcrumb>
+      <ion-breadcrumb>Games</ion-breadcrumb>
+    </ion-breadcrumbs>
+    <ion-buttons slot="end">
       <ion-button id="click-trigger2">
-        <ion-icon class="funnel-icon" slot="icon-only" name="funnel"></ion-icon>
+        <ion-icon slot="icon-only" name="funnel"></ion-icon>
+      </ion-button>
+      <ion-popover trigger="click-trigger2">
+        <ng-template>
+          <ion-content>
+            <ion-list>
+              <ion-list-header>
+                Filter by Event
+              </ion-list-header>
+              <ion-item>
+                <ion-label>Event 1</ion-label>
+              </ion-item>
+              <ion-item>
+                <ion-label>Event 2</ion-label>
+              </ion-item>
+              <ion-item>
+                <ion-label>Event 3</ion-label>
+              </ion-item>
+              <ion-item>
+                <ion-label>Event 4</ion-label>
+              </ion-item>
+            </ion-list>
+          </ion-content>
+        </ng-template>
+      </ion-popover>
+      <ion-button (click)="navigateToAddGame()">
+        <ion-icon slot="icon-only" name="add"></ion-icon>
       </ion-button>
     </ion-buttons>
-  <ion-popover trigger="click-trigger2" triggerAction="click">
-    <ng-template>
-      <ion-content>
-        <ion-list>
-          <ion-list-header>
-            Filter by Event
-          </ion-list-header>
-          <ion-item>
-            <ion-label>Event 1</ion-label>
-          </ion-item>
-          <ion-item>
-            <ion-label>Event 2</ion-label>
-          </ion-item>
-          <ion-item>
-            <ion-label>Event 3</ion-label>
-          </ion-item>
-          <ion-item>
-            <ion-label>Event 4</ion-label>
-          </ion-item>
-        </ion-list>
-      </ion-content>
-    </ng-template>
-  </ion-popover>
   </ion-toolbar>
- 
-
-  <ion-fab vertical="top" horizontal="end" edge slot="fixed" style="position: absolute; right: 20px; top: 30px;">
-    <ion-fab-button (click)="navigateToAddGame()">
-      <ion-icon name="add"></ion-icon>
-    </ion-fab-button>
-  </ion-fab>
+</app-header>
 
 
+<ion-content color="light">
+  <ion-grid *ngIf="games$ && logos.length > 0">
+    <ion-row>
+      <ion-col size="1" size-lg="2"></ion-col>
+      <ion-col size="10" size-lg="8">
 
+        <ion-card *ngFor="let item of games$ | async" [button]="true" (click)="navigateToGamecast(item.gameId)">
+          <ion-card-header>
+            <ion-grid>
+              <ion-row class="ion-text-center ion-align-items-center">
+                <ion-col>
+                  <img height="40" width="40" [src]="getLogo(item.homeTeam, item.isMale == 'true')"> <br>
+                  {{item.homeTeam}}
+                </ion-col>
+                <ion-col>VS</ion-col>
+                <ion-col>
+                  <img height="40" width="40" [src]="getLogo(item.awayTeam, item.isMale == 'true')"> <br>
+                  {{item.awayTeam}}
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+          </ion-card-header>
+          <ion-card-content>
+            <p>{{ item.gameDate | date: "short" }}</p>
+          </ion-card-content>
+        </ion-card>
 
-
-  <ion-grid>
-    <ion-row class="ion-justify-content-center ion-padding">
-      <ion-col size="1" size-md="3"></ion-col>
-      <ion-col size="10" size-md="6">
-     
-  <ng-container *ngIf="games$">
-    <ion-grid>
-      <ion-row>
-        <ion-col size="1" size-md="3"></ion-col>
-        <ion-col size="10" size-md="8">
-          <ion-card class="game-card" *ngFor="let item of feed" (click)="navigateToGamecast(item.gameId)">
-            <ion-card-header>
-              <ion-card-title class="team-container">
-                <div class="team-logo-name">
-                  <img [src]="item.homeTeam.logo" class="team-logo">
-                </div>
-                <div>
-                  {{ item.homeTeam }}&nbsp;
-                </div>
-                <div class="versus">
-                  VS
-                </div>
-                <div>
-                  {{ item.awayTeam }} 
-                </div>
-                <div class="team-logo-name">
-                  <img [src]="item.awayTeam.logo" class="team-logo">
-                </div>
-              </ion-card-title>
-            </ion-card-header>
-            <ion-card-content>
-              <p>{{ item.gameDate | date: "short" }}</p>
-            </ion-card-content>
-          </ion-card>
-        </ion-col>
-        <ion-col size="1" size-md="3"></ion-col>
-      </ion-row>
-    </ion-grid>
-  </ng-container>
-  
       </ion-col>
-      <ion-col size="1" size-md="3"></ion-col>
+      <ion-col size="1" size-lg="2"></ion-col>
     </ion-row>
   </ion-grid>
-
-  
-  <ion-infinite-scroll (ionInfinite)="onIonInfinite($event)">
-		<ion-infinite-scroll-content
-			loadingText="Please wait..."
-			loadingSpinner="bubbles"
-		></ion-infinite-scroll-content>
-	</ion-infinite-scroll>
-  <ion-content/>
+</ion-content>
