@@ -32,10 +32,13 @@ export class GamecastComponent {
   homeTeam: Team | undefined;
   awayTeam: Team | undefined;
   players$: Observable<Player[]> | undefined;
+  currentPlayers$?: Observable<Player | undefined>;
   homeTeamPlayers: Player[] = [];
   awayTeamPlayers: Player[] = [];
   teams: Team[] = [];
   players: Player[] = [];
+  playerId: number | undefined;
+  team: string | undefined;
 
   constructor(
     private route: ActivatedRoute, 
@@ -53,8 +56,11 @@ export class GamecastComponent {
           map(games => games.find(game => game.gameId === this.gameId))
         );
       }
-    });
-    
+    }); 
+  }
+
+  getHomeTeamPlayers() {
+    this.homeTeamPlayers
   }
 
   addPoints(team: string, points: number) {
@@ -82,7 +88,7 @@ export class GamecastComponent {
   }
 
   useTimeout(team: string, duration: number) {
-    if (team === 'home' && this.homeTeamTOL > 0) {
+    if (team == 'home' && this.homeTeamTOL > 0) {
       this.homeTeamTOL--;
     } else if (team === 'away' && this.awayTeamTOL > 0) {
       this.awayTeamTOL--;
@@ -90,7 +96,10 @@ export class GamecastComponent {
   }
 
   nextPeriod() {
-    this.period++;
+    if (this.period < 4)
+    {
+      this.period++;
+    }
   }
 
 
