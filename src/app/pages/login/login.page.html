@@ -10,13 +10,12 @@
             <ion-label>
               <h1>Go to <a (click)="open()">https://dbm.thegrindsession.com</a> and generate a key to register your application</h1>
             </ion-label>
-            <ion-item class="ion-margin" lines="full">
-              <ion-input
-                class="ion-text-left"
-                [(ngModel)]="key"
-                label="Key"
-              ></ion-input>
-            </ion-item>
+            <ion-input
+              class="ion-text-left ion-margin-vertical"
+              [(ngModel)]="key"
+              label="Key"
+              fill="outline"
+            ></ion-input>
             <ion-button [disabled]="key == ''">
               <ion-label *ngIf="!loading" (click)="register()">Register</ion-label>
               <ion-spinner *ngIf="loading"></ion-spinner>
