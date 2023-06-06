@@ -1,8 +1,8 @@
 <app-header [showPopover]="false"></app-header>
 
 <ion-content color="light">
-  <ion-grid class="fixed">
-    <ion-row *ngIf="!checkingForKey">
+  <ion-grid *ngIf="!checkingForKey" class="fixed">
+    <ion-row>
       <ion-col size="3"></ion-col>
       <ion-col size="6">
         <ion-card class="ion-padding">
@@ -25,10 +25,8 @@
       </ion-col>
       <ion-col size="3"></ion-col>
     </ion-row>
-    <ion-row *ngIf="checkingForKey">
-      <ion-col>
-        <ion-spinner name="crescent" style="height: 80px;  width: 80px;"></ion-spinner>
-      </ion-col>
-    </ion-row>
   </ion-grid>
+  <div class="loader" *ngIf="checkingForKey">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
 </ion-content>
