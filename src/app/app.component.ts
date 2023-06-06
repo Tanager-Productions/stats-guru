@@ -3,6 +3,7 @@ import { Platform } from '@ionic/angular';
 import { SqlService } from './services/sql/sql.service';
 import { version1 } from './upgrades/version1';
 import { SyncService } from './services/sync/sync.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-root',
@@ -10,7 +11,7 @@ import { SyncService } from './services/sync/sync.service';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  constructor(platform: Platform, sqlite:SqlService) {
+  constructor(platform: Platform, sqlite:SqlService, private router: Router) {
     platform.ready().then(async () => {
       let ret = await sqlite.initializePlugin();
       console.log(`>>>>>>>> sqlite initialized: ${ret}`);

@@ -52,9 +52,9 @@
     <ng-container [ngTemplateOutlet]="template"></ng-container>
 </ion-header>
 
-<ion-header *ngIf="!isWin" mode="ios" class="drag">
-  <ion-toolbar color="tertiary">
-    <ion-buttons slot="start" *ngIf="showPopover">
+<ion-header *ngIf="!isWin" class="drag">
+  <ion-toolbar mode="ios" color="tertiary">
+    <ion-buttons slot="end" *ngIf="showPopover">
       <ion-button class="no-drag" id="click-trigger">
         <ion-icon slot="icon-only" name="person-circle"></ion-icon>
       </ion-button>
