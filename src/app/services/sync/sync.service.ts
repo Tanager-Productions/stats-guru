@@ -1,48 +1,134 @@
 import { Injectable } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import { SqlService } from '../sql/sql.service';
-import { ServerGame } from 'src/app/interfaces/server/game.server.interface';
 import { CrudService } from '../crud/crud.service';
-import { ServerPlayer } from 'src/app/interfaces/server/player.server.interface';
-import { ServerTeam } from 'src/app/interfaces/server/team.server.interface';
-import { ServerStat } from 'src/app/interfaces/server/stat.server.interface';
-import { ServerPlay } from 'src/app/interfaces/server/play.server.interface';
+import { SyncDto, SyncMode } from 'src/app/interfaces/sync.interface';
+import { currentDatabaseVersion } from 'src/app/upgrades/versions';
+import { SQLiteDBConnection } from '@capacitor-community/sqlite';
+import { SyncResult } from 'src/app/interfaces/syncResult.interface';
+import { BehaviorSubject, Observable, Subscription, finalize, interval, map, repeat, takeWhile } from 'rxjs';
+import { SyncHistory } from 'src/app/interfaces/syncHistory.interface';
+import { ServerGame } from 'src/app/interfaces/game.interface';
+import { ServerEvent } from 'src/app/interfaces/event.interface';
+import { ServerPlay } from 'src/app/interfaces/play.interface';
+import { ServerPlayer } from 'src/app/interfaces/player.interface';
+import { ServerStat } from 'src/app/interfaces/stat.interface';
+import { ServerTeam } from 'src/app/interfaces/team.interface';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SyncService {
+  private db?:SQLiteDBConnection;
+  private seconds = 600; //10 minutes
+  private timeRemaining$: Observable<number> = interval(1000).pipe(
+    map(n => (this.seconds - n) * 1000),
+    takeWhile(n => n >= 0),
+    finalize(() => {
+      if (this.gameCastInProgress == false) {
+        this.beginSync();
+      }
+    }),
+    repeat()
+  );
+  private initialSyncComplete:BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+  private timerSubscription?:Subscription;
+  public timeRemaining?: number;
+  public gameCastInProgress:boolean = false;
+  public syncing:boolean = false;
+
   constructor(private api:ApiService, private sqlService:SqlService, private crudService:CrudService) { }
 
-  public async beginSync() {
+  public async beginSync(isInitial:boolean = false) {
+    this.db = await this.sqlService.createConnection();
+    this.syncing = true;
     try {
-      //let db = await this.sqlService.createConnection();
-      //await db.open();
-      //let res = await db.exportToJson('full');
-      //let httpResponse = await this.api.postSync(res.export!);
-      //console.log(httpResponse.status == 200);
-      //await db.close();
-      await this.fetchAndInsertTeams();
-      await this.fetchAndInsertPlayers();
-      await this.fetchAndInsertGames();
-      await this.fetchAndInsertStats();
-      await this.fetchAndInsertPlays();
+      let res: SyncDto = {
+        version: currentDatabaseVersion,
+        mode: SyncMode.Full,
+        overwrite: null,
+        games: await this.crudService.query(this.db, "games"),
+        players: await this.crudService.query(this.db, "players"),
+        stats: await this.crudService.query(this.db, "stats"),
+        teams: await this.crudService.query(this.db, "teams"),
+        plays: await this.crudService.query(this.db, "plays"),
+        events: await this.crudService.query(this.db, "events")
+      }
+      let httpResponse = await this.api.postSync(res);
+      if (httpResponse.status == 200) {
+        let res: SyncResult = httpResponse.data;
+        let history:SyncHistory = {
+          dateOccurred: new Date().toUTCString(),
+          statsSynced: res.statsSynced ? 1 : 0,
+          gamesSynced: res.statsSynced ? 1 : 0,
+          playersSynced: res.statsSynced ? 1 : 0,
+          playsSynced: res.statsSynced ? 1 : 0,
+          teamsSynced: res.statsSynced ? 1 : 0,
+          eventsSynced: res.statsSynced ? 1 : 0,
+          errorMessages: JSON.stringify(res.errorMessages),
+          id: 0
+        };
+        await this.crudService.save(this.db, "syncHistory", history);
+        await this.db.execute(` delete from plays;
+                                delete from stats;
+                                delete from games;
+                                delete from players;
+                                delete from teams;
+                                delete from events;`, true);
+        await this.getData();
+      } else {
+        throw "Failed to post sync"
+      }
     } catch (error) {
       console.log(error);
     }
+    if (isInitial) {
+      this.initialSyncComplete.next(true);
+      this.setTimer();
+    }
+    this.syncing = false;
+  }
+
+  public syncComplete() {
+    return this.initialSyncComplete.asObservable();
+  }
+
+  public setTimer() {
+    if (this.timerSubscription) {
+      this.timerSubscription.unsubscribe();
+    }
+    this.timerSubscription = this.timeRemaining$.subscribe(t => this.timeRemaining = t);
+  }
+
+  private async getData() {
+    await this.fetchAndInsertTeams();
+    await this.fetchAndInsertPlayers();
+    await this.fetchAndInsertEvents();
+    await this.fetchAndInsertGames();
+    await this.fetchAndInsertStats();
+    await this.fetchAndInsertPlays();
   }
 
   private async fetchAndInsertGames() {
     let response = await this.api.getAllGames();
     if (response.status == 200) {
-      let db = await this.sqlService.createConnection();
-      await db.open();
-      for (let game of response.data as ServerGame[]) {
+      let games = response.data as ServerGame[];
+      for (let game of games) {
         delete game.homeFinal;
         delete game.awayFinal;
-        await this.crudService.save(db, "games", game);
       }
-      await db.close();
+      await this.crudService.bulkInsert(this.db!, "games", games);
+    } else {
+      throw new Error(`Failed to fetch games from server: ${response.data}`);
+    }
+  }
+
+  private async fetchAndInsertEvents() {
+    let response = await this.api.getAllEvents();
+    if (response.status == 200) {
+      let events = response.data as ServerEvent[];
+      if (events.length > 0)
+        await this.crudService.bulkInsert(this.db!, "games", events);
     } else {
       throw new Error(`Failed to fetch games from server: ${response.data}`);
     }
@@ -51,12 +137,9 @@ export class SyncService {
   private async fetchAndInsertPlayers() {
     let response = await this.api.getAllPlayers();
     if (response.status == 200) {
-      let db = await this.sqlService.createConnection();
-      await db.open();
-      for (let player of response.data as ServerPlayer[]) {
-        await this.crudService.save(db, "players", player);
-      }
-      await db.close();
+      let players = response.data as ServerPlayer[];
+      if (players.length > 0)
+        await this.crudService.bulkInsert(this.db!, "players", players);
     } else {
       throw new Error(`Failed to fetch games from server: ${response.data}`);
     }
@@ -65,12 +148,9 @@ export class SyncService {
   private async fetchAndInsertTeams() {
     let response = await this.api.getAllTeams();
     if (response.status == 200) {
-      let db = await this.sqlService.createConnection();
-      await db.open();
-      for (let team of response.data as ServerTeam[]) {
-        await this.crudService.save(db, "teams", team);
-      }
-      await db.close();
+      let teams = response.data as ServerTeam[];
+      if (teams.length > 0)
+        await this.crudService.bulkInsert(this.db!, "teams", teams);
     } else {
       throw new Error(`Failed to fetch games from server: ${response.data}`);
     }
@@ -83,16 +163,13 @@ export class SyncService {
       for (let stat of stats) {
         delete stat.points;
       }
-      let db = await this.sqlService.createConnection();
-      await db.open();
       for (var i = 0; i < stats.length; i = i + 50) {
         let end = i+50;
         if (end > stats.length) {
           end = stats.length-1;
         }
-        await this.crudService.bulkInsert(db, "stats", stats.slice(i, end));
+        await this.crudService.bulkInsert(this.db!, "stats", stats.slice(i, end));
       }
-      await db.close();
     } else {
       throw new Error(`Failed to fetch games from server: ${response.data}`);
     }
@@ -101,17 +178,14 @@ export class SyncService {
   private async fetchAndInsertPlays() {
     let response = await this.api.getAllPlays();
     if (response.status == 200) {
-      let db = await this.sqlService.createConnection();
-      await db.open();
       let plays = response.data as ServerPlay[];
       for (var i = 0; i < plays.length; i = i + 100) {
         let end = i+100;
         if (end > plays.length) {
           end = plays.length-1;
         }
-        await this.crudService.bulkInsert(db, "plays", plays.slice(i, end));
+        await this.crudService.bulkInsert(this.db!, "plays", plays.slice(i, end));
       }
-      await db.close();
     } else {
       throw new Error(`Failed to fetch games from server: ${response.data}`);
     }

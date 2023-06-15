@@ -6,3 +6,9 @@ export interface Play {
   modified: string;
   deleted:string;
 }
+
+export interface ServerPlay {
+  playId: number;
+  data: string;
+  gameId: number;
+}

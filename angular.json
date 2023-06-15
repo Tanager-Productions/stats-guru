@@ -150,30 +150,6 @@
             ],
             "scripts": []
           }
-        },
-        "ionic-cordova-serve": {
-          "builder": "@ionic/angular-toolkit:cordova-serve",
-          "options": {
-            "cordovaBuildTarget": "stats-guru:ionic-cordova-build",
-            "devServerTarget": "stats-guru:serve"
-          },
-          "configurations": {
-            "production": {
-              "cordovaBuildTarget": "stats-guru:ionic-cordova-build:production",
-              "devServerTarget": "stats-guru:serve:production"
-            }
-          }
-        },
-        "ionic-cordova-build": {
-          "builder": "@ionic/angular-toolkit:cordova-build",
-          "options": {
-            "browserTarget": "stats-guru:build"
-          },
-          "configurations": {
-            "production": {
-              "browserTarget": "stats-guru:build:production"
-            }
-          }
         }
       }
     }

@@ -9,15 +9,13 @@ import { ApiService } from './services/api/api.service';
 import { SyncService } from './services/sync/sync.service';
 import { SqlService } from './services/sql/sql.service';
 import { CrudService } from './services/crud/crud.service';
-import { TestPageComponent } from './test/test-page/test-page.component';
 import { AuthService } from './services/auth/auth.service';
 import { CommonModule } from '@angular/common';
 import { HomeRoutingModule } from './pages/home/home-routing.module';
 
 @NgModule({
   declarations: [
-    AppComponent,
-    TestPageComponent
+    AppComponent
   ],
   imports: [
     BrowserModule,

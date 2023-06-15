@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { UserDto } from 'src/app/interfaces/user-dto.interface';
+import { AccountDto } from 'src/app/interfaces/accountDto.interface';
 
 export enum Credentials {
   Key = "statsGuruKey",
@@ -22,11 +22,11 @@ export class AuthService {
     return await window.StatsGuru.getPassword(key, account);
   }
 
-  storeUser(user: UserDto) {
+  storeUser(user: AccountDto) {
     localStorage.setItem('user', JSON.stringify(user));
   }
 
-  getUser(): UserDto | null {
+  getUser(): AccountDto | null {
     const userJson = localStorage.getItem('user');
     return userJson !== null ? JSON.parse(userJson) : null;
   }

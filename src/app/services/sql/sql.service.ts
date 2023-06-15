@@ -2,8 +2,9 @@ import { Injectable } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { CapacitorSQLite, SQLiteDBConnection, SQLiteConnection, capSQLiteSet,
          capSQLiteChanges, capSQLiteValues, capEchoResult, capSQLiteResult,
-         capNCDatabasePathResult } from '@capacitor-community/sqlite';
-import { currentDatabaseVersion, databaseName } from 'src/app/upgrades/version1';
+         capNCDatabasePathResult,
+         CapacitorSQLitePlugin} from '@capacitor-community/sqlite';
+import { currentDatabaseVersion, databaseName, version1, version2, version3 } from 'src/app/upgrades/versions';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +13,7 @@ export class SqlService {
   sqlite!: SQLiteConnection;
   isService: boolean = false;
   platform?: string;
-  sqlitePlugin: any;
+  sqlitePlugin!: CapacitorSQLitePlugin;
   native: boolean = false;
 
   constructor() { }
@@ -40,9 +41,25 @@ export class SqlService {
     return this.sqlite.echo(value);
   }
 
-  async addUpgradeStatement(database: string, toVersion: number, statements: string[]): Promise<void> {
+  async upgradeDatabase(): Promise<void> {
     this.ensureConnectionIsOpen();
-    return this.sqlite.addUpgradeStatement(database, toVersion, statements);
+    return this.sqlitePlugin.addUpgradeStatement({
+      database: databaseName,
+      upgrade: [
+        {
+          toVersion: 1,
+          statements: version1
+        },
+        {
+          toVersion: 2,
+          statements: version2
+        },
+        {
+          toVersion: 3,
+          statements: version3
+        }
+      ]
+    });
   }
 
   /**
@@ -53,11 +70,15 @@ export class SqlService {
    * @param version
    */
   async createConnection(): Promise<SQLiteDBConnection> {
-    this.ensureConnectionIsOpen();
-    const db: SQLiteDBConnection = await this.sqlite.createConnection(databaseName, false, "no-encryption", currentDatabaseVersion, false);
-    if ( db == null ) {
-      throw new Error(`no db returned is null`);
+    let db: SQLiteDBConnection;
+    const retCC = (await this.sqlite.checkConnectionsConsistency()).result;
+    let isConn = (await this.sqlite.isConnection(databaseName, false)).result;
+    if(retCC && isConn) {
+      db = await this.sqlite.retrieveConnection(databaseName, false);
+    } else {
+      db = await this.sqlite.createConnection(databaseName, false, "no-encryption", currentDatabaseVersion, false);
     }
+    await db.open();
     return db;
   }
 

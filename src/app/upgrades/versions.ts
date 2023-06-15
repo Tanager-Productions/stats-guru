@@ -1,14 +1,14 @@
-export const currentDatabaseVersion = 1;
+export const currentDatabaseVersion = 3;
 export const databaseName = "tgs";
 
 export const version1: string[] = [
   `
     CREATE TABLE IF NOT EXISTS Teams (
       name TEXT NOT NULL,
+      isMale TEXT NOT NULL,
       city TEXT NOT NULL,
       state TEXT NOT NULL,
       logo TEXT NULL,
-      isMale TEXT NOT NULL,
       official TEXT NOT NULL,
       added TEXT NOT NULL DEFAULT "false",
       modified TEXT NOT NULL DEFAULT "false",
@@ -26,7 +26,7 @@ export const version1: string[] = [
       position TEXT NOT NULL,
       picture TEXT NULL,
       team TEXT NOT NULL,
-      isMale bit NOT NULL,
+      isMale TEXT NOT NULL,
       added TEXT NOT NULL DEFAULT "false",
       modified TEXT NOT NULL DEFAULT "false",
       deleted TEXT NOT NULL DEFAULT "false"
@@ -69,11 +69,12 @@ export const version1: string[] = [
   `
     CREATE TABLE IF NOT EXISTS Plays (
       playId INTEGER NOT NULL,
-      data TEXT NOT NULL,
       gameId INTEGER NOT NULL,
+      data TEXT NOT NULL,
       added TEXT NOT NULL DEFAULT "false",
       modified TEXT NOT NULL DEFAULT "false",
-      deleted TEXT NOT NULL DEFAULT "false"
+      deleted TEXT NOT NULL DEFAULT "false",
+      PRIMARY KEY (playId, gameId)
     );
   `,
 
@@ -105,3 +106,35 @@ export const version1: string[] = [
     );
   `
 ];
+
+export const version2: string[] = [
+  `
+    CREATE TABLE IF NOT EXISTS Events (
+      eventId INTEGER PRIMARY KEY AUTOINCREMENT,
+      startDate TEXT NULL,
+      endDate TEXT NULL,
+      state TEXT NULL,
+      title TEXT NULL,
+      city TEXT NULL,
+      added TEXT NOT NULL DEFAULT "false",
+      modified TEXT NOT NULL DEFAULT "false",
+      deleted TEXT NOT NULL DEFAULT "false"
+    );
+  `
+];
+
+export const version3: string[] = [
+  `
+    CREATE TABLE IF NOT EXISTS SyncHistory (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      dateOccurred TEXT NOT NULL,
+      playsSynced INTEGER NOT NULL,
+      playersSynced INTEGER NOT NULL,
+      teamsSynced INTEGER NOT NULL,
+      gamesSynced INTEGER NOT NULL,
+      statsSynced INTEGER NOT NULL,
+      eventsSynced INTEGER NOT NULL,
+      errorMessages TEXT NOT NULL
+    );
+  `
+]

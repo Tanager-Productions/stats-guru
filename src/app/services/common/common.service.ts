@@ -28,7 +28,6 @@ export class CommonService {
 
   public async initializeService() {
     let db = await this.sql.createConnection();
-    await db.open();
     await Promise.all([
       this.fetchPlayers(db),
       this.fetchGames(db),
@@ -36,7 +35,6 @@ export class CommonService {
       this.fetchStats(db),
       this.fetchTeams(db)
     ]);
-    await db.close();
   }
 
   public gameState() {

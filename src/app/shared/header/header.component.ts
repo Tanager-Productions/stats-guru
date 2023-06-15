@@ -1,26 +1,45 @@
-import { Component, Input, ViewChild } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { PopoverController } from '@ionic/angular';
 import { finalize, map, repeat, takeWhile, tap, timer } from 'rxjs';
-import { AppRoutingModule } from 'src/app/app-routing.module';
+import { SyncHistory } from 'src/app/interfaces/syncHistory.interface';
+import { AccountDto } from 'src/app/interfaces/accountDto.interface';
+import { AuthService } from 'src/app/services/auth/auth.service';
+import { CrudService } from 'src/app/services/crud/crud.service';
+import { SqlService } from 'src/app/services/sql/sql.service';
+import { SyncService } from 'src/app/services/sync/sync.service';
 
 @Component({
   selector: 'app-header',
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
 })
-export class HeaderComponent {
-  isWin: boolean;
+export class HeaderComponent implements OnInit {
+  public isWin: boolean;
   public seconds = 10;
-  public isModalOpen = false;
   @Input() showPopover = false;
+  public user:AccountDto | null;
+  public modalOpen:boolean = false;
+  public syncHistory?: SyncHistory[];
 
   constructor(
     private router: Router,
-    private popoverController: PopoverController
+    auth:AuthService,
+    public sync:SyncService,
+    private sql:SqlService,
+    private crud:CrudService
   ) {
+    this.user = auth.getUser();
     // @ts-ignore
     this.isWin = window.StatsGuru.isWin;
+  }
+
+  ngOnInit() {
+    this.sync.syncComplete().subscribe(async complete => {
+      if (complete) {
+        let db = await this.sql.createConnection();
+        this.syncHistory = await this.crud.query(db, "SyncHistory", false, undefined, "dateOccurred", "desc");
+      }
+    })
   }
 
   close() {
@@ -38,15 +57,6 @@ export class HeaderComponent {
     window.StatsGuru.minimize();
   }
 
-  timeRemaining$ = timer(0, 1000).pipe(
-    map(n => (this.seconds - n) * 1000),
-    takeWhile(n => n >= 0),
-    finalize(() => {
-      console.log('Sync finished.')
-    }),
-    repeat()
-  );
-
   navigateToDBM(): void {
     // @ts-ignore
     window.StatsGuru.openExternal("https://dbm.thegrindsession.com");
@@ -54,22 +64,10 @@ export class HeaderComponent {
 
   navigateToLogin(): void {
     this.router.navigate(['/login']);
-    this.popoverController.dismiss();
   }
 
   startSync(): void {
-    this.timeRemaining$ = timer(0, 1000).pipe(
-      map(n => (this.seconds - n) * 1000),
-      takeWhile(n => n >= 0),
-      finalize(() => {
-        console.log('Sync finished.')
-      }),
-      repeat()
-    );
-  }
-
-  setOpen(isOpen: boolean) {
-    this.isModalOpen = isOpen;
+    this.sync.setTimer();
   }
 
 }
