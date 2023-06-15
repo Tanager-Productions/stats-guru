@@ -1,8 +1,11 @@
-<ion-breadcrumbs>
-  <ion-breadcrumb routerLink="/home/games">Games</ion-breadcrumb>
-  <ion-breadcrumb routerLink="/home/gamecast/{{ gameId }}">Gamecast</ion-breadcrumb>
-  <ion-breadcrumb>GameId: {{ gameId }}</ion-breadcrumb>
-</ion-breadcrumbs>
+<app-header [showPopover]="true">
+  <ion-toolbar color="primary">
+    <ion-breadcrumbs>
+      <ion-breadcrumb routerLink="/home/games">Games</ion-breadcrumb>
+      <ion-breadcrumb routerLink="/home/gamecast/{{ gameId }}">Gamecast: {{ gameId }}</ion-breadcrumb>
+    </ion-breadcrumbs>
+  </ion-toolbar>
+</app-header>
 
 <ion-card>
   <ion-card-header>
@@ -68,54 +71,55 @@
           </div>
         </div>
 
-        <!--Court(?)-->
-        <div id="court-container" class="team-container">
-          <img src="assets/images/Court_Image.png">
-        </div>
+          <!--Court(?)-->
+          <div id="court-container" class="team-container">
+            <img src="assets/images/Court_Image.png">
+          </div>
 
-      <!-- Guest Team -->
-      <div id="away-team-container" class="team-container">
-        <h2 class="away-font" id="school-title">{{currentGame.awayTeam}}</h2>
-        <p class="team-score digital-number; away-font">{{ awayTeamScore }}</p>
-        <p class="away-font">Fouls: {{ awayTeamFouls }} | Steals: {{ awayTeamSteals }} | Timeouts left: {{ awayTeamTOL }}</p>
-        <div class="row-fluid">
-          <button class="number-button" id="away-button" (click)="addPoints('away', 1)">+1</button>
-          <button class="number-button" id="away-button" (click)="addPoints('away', 2)">+2</button>
-          <button class="number-button" id="away-button" (click)="addPoints('away', 3)">+3</button>  
-        </div>
-        <div class="row-fluid">
-          <button class="other-button" id="away-button">1</button>
-          <button class="other-button" id="away-button">3</button>
-          <button class="other-button" id="away-button">MISS</button>
-        </div>
-        <div class="row-fluid">
-          <button class="other-button" id="away-button" (click)="addFoul('away')">FOUL</button>
-          <button class="other-button" id="away-button" (click)="addSteal('away')">STL</button>
-          <button class="other-button" id="away-button" (click)="useTimeout('away', 30)">30s</button>
-          <button class="other-button" id="away-button" (click)="useTimeout('away', 60)">60s</button>  
-        </div>
-        <div class="row-fluid">
-          <button class="small-button" id="away-button">AST</button>
-          <button class="small-button" id="away-button">PB+</button>
-          <button class="small-button" id="away-button">PB-</button>
-          <button class="small-button" id="away-button">BLK</button>
-          <button class="small-button" id="away-button">OR</button>
-          <button class="small-button" id="away-button">DR</button>
-        </div>
-      </div>
-    </ng-container>
-    <div class="column">
-      <p class="away-font" id="players-text">Players</p>
-      <ng-container>
-        <div class="players-container" id="away-players-container">
+        <!-- Guest Team -->
+        <div id="away-team-container" class="team-container">
+          <h2 class="away-font" id="school-title">{{currentGame.awayTeam}}</h2>
+          <p class="team-score digital-number; away-font">{{ awayTeamScore }}</p>
+          <p class="away-font">Fouls: {{ awayTeamFouls }} | Steals: {{ awayTeamSteals }} | Timeouts left: {{ awayTeamTOL }}</p>
+          <div class="row-fluid">
+            <button class="number-button" id="away-button" (click)="addPoints('away', 1)">+1</button>
+            <button class="number-button" id="away-button" (click)="addPoints('away', 2)">+2</button>
+            <button class="number-button" id="away-button" (click)="addPoints('away', 3)">+3</button>
+          </div>
+          <div class="row-fluid">
+            <button class="other-button" id="away-button">1</button>
+            <button class="other-button" id="away-button">3</button>
+            <button class="other-button" id="away-button">MISS</button>
+          </div>
+          <div class="row-fluid">
+            <button class="other-button" id="away-button" (click)="addFoul('away')">FOUL</button>
+            <button class="other-button" id="away-button" (click)="addSteal('away')">STL</button>
+            <button class="other-button" id="away-button" (click)="useTimeout('away', 30)">30s</button>
+            <button class="other-button" id="away-button" (click)="useTimeout('away', 60)">60s</button>
+          </div>
+          <div class="row-fluid">
+            <button class="small-button" id="away-button">AST</button>
+            <button class="small-button" id="away-button">PB+</button>
+            <button class="small-button" id="away-button">PB-</button>
+            <button class="small-button" id="away-button">BLK</button>
+            <button class="small-button" id="away-button">OR</button>
+            <button class="small-button" id="away-button">DR</button>
+          </div>
         </div>
       </ng-container>
-    </div>
-    </div>
-    <div class="bottom-button-container">
-      <button id="normal-button" (click)="startStopTimer()">{{ timerRunning ? 'End' : 'Start' }} Game</button>
-      <button id="normal-button" (click)="resetGame()">Reset Game</button>
-    </div>
-  </ion-card-content>
-  <p>This is here to display the button presses.</p>
-</ion-card>
+      <div class="column">
+        <p class="away-font" id="players-text">Players</p>
+        <ng-container>
+          <div class="players-container" id="away-players-container">
+          </div>
+        </ng-container>
+      </div>
+      </div>
+      <div class="bottom-button-container">
+        <button id="normal-button" (click)="startStopTimer()">{{ timerRunning ? 'End' : 'Start' }} Game</button>
+        <button id="normal-button" (click)="resetGame()">Reset Game</button>
+      </div>
+    </ion-card-content>
+    <p>This is here to display the button presses.</p>
+  </ion-card>
+</ion-content>
