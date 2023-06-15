@@ -125,7 +125,7 @@
 
   .bottom-button-container {
     padding-top: 1rem;
-    width: 80%;
+    width: 85%;
     justify-content: space-between;
     display: flex;
     margin: auto;
@@ -151,26 +151,26 @@
   }
 
   .number-button {
-    width: 5rem;
-    height: 5rem;
-    font-size: 30px;
+    width: 4.2rem;
+    height: 4.2rem;
+    font-size: 22px;
     font-weight: bolder;
     transition: all 1s;
   }
 
   .other-button {
-    font-size: 20px;
+    font-size: 16px;
     font-weight: bold;
-    width: 5rem;
-    height: 4rem;
+    width: 4rem;
+    height: 3.5rem;
     transition: all 1s;
   }
 
   .small-button {
-    font-size: 18px;
+    font-size: 12px;
     font-weight: bold;
-    width: 4rem;
-    height: 3rem;
+    width: 3rem;
+    height: 2.5rem;
     transition: all 1s;
   }
 
@@ -190,6 +190,11 @@
 
   .away-font {
     color: #fc1616;
+  }
+
+  #team-numbers {
+    font-size: 18px;
+    vertical-align: middle;
   }
 
   #home-button {

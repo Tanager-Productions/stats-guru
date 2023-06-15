@@ -14,11 +14,17 @@
     </div>
   </ion-card-header>
   <div class="benched-width">
-    <ng-container>
-      <div class="benched-container" id="home-benched-container"></div>
-    </ng-container> 
-    <ng-container>
-      <div class="benched-container" id="away-benched-container"></div>
+    <ng-container *ngIf="currentGame$ | async as currentGame">
+      <div class="benched-container" id="home-benched-container"> 
+        <span class="home-font" id="team-numbers">
+          {{getTeamPlayers(currentGame.homeTeam)}} 
+        </span>     
+      </div>
+      <div class="benched-container" id="away-benched-container">
+        <span class="away-font" id="team-numbers">
+          {{getTeamPlayers(currentGame.awayTeam)}}
+        </span>
+      </div>
     </ng-container>
   </div>
   <ion-card-content>

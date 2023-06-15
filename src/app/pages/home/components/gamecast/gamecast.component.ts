@@ -1,10 +1,12 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { Observable, Subscription, interval, map } from 'rxjs';
+import { Observable, Subscription, async, interval, map } from 'rxjs';
 import { Game } from 'src/app/interfaces/game.interface';
 import { Player } from 'src/app/interfaces/player.interface';
 import { Team } from 'src/app/interfaces/team.interface';
 import { CommonService } from 'src/app/services/common/common.service';
+import { CrudService } from 'src/app/services/crud/crud.service';
+import { SqlService } from 'src/app/services/sql/sql.service';
 
 @Component({
   selector: 'app-gamecast',
@@ -31,22 +33,28 @@ export class GamecastComponent {
   timerRunning: boolean = false;
   homeTeam: Team | undefined;
   awayTeam: Team | undefined;
-  players$: Observable<Player[]> | undefined;
+  players$?: Observable<Player[]> | undefined;
   currentPlayers$?: Observable<Player | undefined>;
-  homeTeamPlayers: Player[] = [];
+  homeTeamPlayers: String[] = [];
   awayTeamPlayers: Player[] = [];
   teams: Team[] = [];
   players: Player[] = [];
   playerId: number | undefined;
   team: string | undefined;
+  number: number = 0;
+  teamMemberNumbers: number[] = [];
+  awayTeamNumbers: number[] = [];
+  teamPlayers: any[] = [];
 
   constructor(
     private route: ActivatedRoute, 
-    private common: CommonService
+    private common: CommonService,
+    private crud: CrudService, 
+    private sql: SqlService
     ) {}
 
   ngOnInit() {
-    this.route.params.subscribe((params: { [x: string]: string | number; }) => {
+    this.route.params.subscribe((params: { [x: string]: string | number;}) => {
       this.gameId = +params['gameId'];
       this.games$ = this.common.getGames();
       this.common.getTeams().subscribe(teams => this.teams = teams);
@@ -59,8 +67,35 @@ export class GamecastComponent {
     }); 
   }
 
-  getHomeTeamPlayers() {
-    this.homeTeamPlayers
+  getTeamPlayers(name: string) {
+    this.teamPlayers = this.players.filter(function(currentPlayers) {
+      return currentPlayers.team == name && currentPlayers.isMale == "1";
+    })
+    for (const player of this.teamPlayers) {
+      this.teamMemberNumbers.push(player.number);
+    }
+    console.log([... new Set(this.teamMemberNumbers)]);
+    return [... new Set(this.teamMemberNumbers)];
+  }
+
+  public async fetchPlayersUsingQuery() {
+    let db = await this.sql.createConnection();
+    let playersForTeam1: Player[] = await this.crud.query(db, "players", true, {"team": "home", "isMale": "true"});
+    let playersForTeam2: Player[] = await this.crud.query(db, "players", true, {"team": "away", "isMale": "true"});
+    //this.homeTeamPlayers = playersForTeam1;
+    this.awayTeamPlayers = playersForTeam2;
+    console.log(this.homeTeamPlayers);
+    await db.close();
+  }
+
+  public async fetchPlayersUsingRawSql() {
+    let db = await this.sql.createConnection();
+    //it gives you back an array of type any
+    let playersForBothTeams: any[] = await this.crud.rawQuery(db, "Select * from players where team = 'home' or team = 'away'");
+    //you can manually cast it to players, but if your query doesn't match up with what you cast it to then javascript will 
+    //dynamically change the type at runtime and you could possibly run into errors when using the values
+    let playersForBothTeamsCasted: Player[] = await this.crud.rawQuery(db, "Select * from players where (team = 'home' or team = 'away') and isMale = 'true'");
+    await db.close();
   }
 
   addPoints(team: string, points: number) {
