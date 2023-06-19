@@ -10,7 +10,7 @@ export enum Credentials {
   providedIn: 'root'
 })
 export class AuthService {
-  constructor() { }
+  public showPopover:boolean = false;
 
   async storeCredential(key:Credentials, account:string, value:string) {
     // @ts-ignore

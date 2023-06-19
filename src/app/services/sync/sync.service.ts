@@ -57,7 +57,7 @@ export class SyncService {
       let httpResponse = await this.api.postSync(res);
       if (httpResponse.status == 200) {
         let res: SyncResult = httpResponse.data;
-        let history:SyncHistory = {
+        let history = {
           dateOccurred: new Date().toUTCString(),
           statsSynced: res.statsSynced ? 1 : 0,
           gamesSynced: res.statsSynced ? 1 : 0,
@@ -65,8 +65,7 @@ export class SyncService {
           playsSynced: res.statsSynced ? 1 : 0,
           teamsSynced: res.statsSynced ? 1 : 0,
           eventsSynced: res.statsSynced ? 1 : 0,
-          errorMessages: JSON.stringify(res.errorMessages),
-          id: 0
+          errorMessages: JSON.stringify(res.errorMessages)
         };
         await this.crudService.save(this.db, "syncHistory", history);
         await this.db.execute(` delete from plays;

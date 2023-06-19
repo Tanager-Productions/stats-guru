@@ -23,7 +23,8 @@ export class GamesComponent implements OnInit {
     private crud: CrudService,
     private sql:SqlService
   ) {
-
+    console.log('called')
+    sync.beginSync(true).then(() => common.initializeService());
   }
 
   ngOnInit() {

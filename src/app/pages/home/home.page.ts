@@ -12,7 +12,7 @@ import { HeaderComponent } from 'src/app/shared/header/header.component';
 export class HomePage {
 
   constructor(sync:SyncService, common:CommonService) {
-    sync.beginSync(true).then(() => common.initializeService());
+    //sync.beginSync(true).then(() => common.initializeService());
   }
 
 }

@@ -31,6 +31,7 @@ export class LoginPage {
           if (res != null) {
             let httpResponse = await this.server.GetUser(res);
             if (httpResponse.status == 200) {
+              this.authService.showPopover = true;
               this.router.navigateByUrl('/home');
             } else {
               //token could have expired, so generate a new one
@@ -40,6 +41,7 @@ export class LoginPage {
                 if (httpResponse.status == 200) {
                   let newToken = httpResponse.data;
                   await this.authService.storeCredential(Credentials.Token, userId, newToken);
+                  this.authService.showPopover = true;
                   this.router.navigateByUrl('/home');
                 }
               }
@@ -68,6 +70,7 @@ export class LoginPage {
       await this.authService.storeCredential(Credentials.Token, adminId, token);
       res = await this.server.GetUser(token)
       this.authService.storeUser(res.data);
+      this.authService.showPopover = true;
       this.router.navigateByUrl('/home');
     } else if (res.status == 400) {
       (await this.toastCtrl.create({message: 'Invalid Key', color: 'danger', duration: 2500})).present();

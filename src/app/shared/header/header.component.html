@@ -1,4 +1,4 @@
-<ion-header *ngIf="isWin" class="ion-no-border">
+<ion-header *ngIf="isWin" mode="ios" class="ion-no-border">
     <ion-toolbar class="drag" color="tertiary">
       <ion-buttons slot="start" *ngIf="showPopover">
         <ion-button class="no-drag" id="click-trigger">
@@ -24,8 +24,8 @@
     <ng-container [ngTemplateOutlet]="template"></ng-container>
 </ion-header>
 
-<ion-header *ngIf="!isWin" class="drag">
-  <ion-toolbar mode="ios" color="tertiary">
+<ion-header mode="ios" *ngIf="!isWin" class="drag">
+  <ion-toolbar color="tertiary">
     <ion-buttons slot="end" *ngIf="showPopover">
       <ion-button class="syncing" *ngIf="sync.syncing">
         <ion-icon slot="icon-only" name="sync"></ion-icon>

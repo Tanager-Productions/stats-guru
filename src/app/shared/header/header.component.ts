@@ -15,7 +15,6 @@ import { SyncService } from 'src/app/services/sync/sync.service';
 })
 export class HeaderComponent implements OnInit {
   public isWin: boolean;
-  public seconds = 10;
   @Input() showPopover = false;
   public user:AccountDto | null;
   public modalOpen:boolean = false;
