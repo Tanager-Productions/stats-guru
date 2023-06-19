@@ -12,12 +12,14 @@ import { CrudService } from './services/crud/crud.service';
 import { AuthService } from './services/auth/auth.service';
 import { CommonModule } from '@angular/common';
 import { HomeRoutingModule } from './pages/home/home-routing.module';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 
 @NgModule({
   declarations: [
     AppComponent
   ],
   imports: [
+    DragDropModule,
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
@@ -33,7 +35,9 @@ import { HomeRoutingModule } from './pages/home/home-routing.module';
     CrudService,
     AuthService
   ],
-  bootstrap: [AppComponent]
+  bootstrap: [
+    AppComponent
+  ]
 })
 export class AppModule { }
 

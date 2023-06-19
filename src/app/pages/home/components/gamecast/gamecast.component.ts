@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import {NgFor} from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { Observable, Subscription, async, interval, map } from 'rxjs';
 import { Game } from 'src/app/interfaces/game.interface';
@@ -7,11 +8,18 @@ import { Team } from 'src/app/interfaces/team.interface';
 import { CommonService } from 'src/app/services/common/common.service';
 import { CrudService } from 'src/app/services/crud/crud.service';
 import { SqlService } from 'src/app/services/sql/sql.service';
+import {
+  CdkDragDrop,
+  moveItemInArray,
+  transferArrayItem,
+  CdkDrag,
+  CdkDropList
+} from '@angular/cdk/drag-drop';
 
 @Component({
   selector: 'app-gamecast',
   templateUrl: './gamecast.component.html',
-  styleUrls: ['./gamecast.component.scss']
+  styleUrls: ['./gamecast.component.scss'],
 })
 export class GamecastComponent {
   public games$?: Observable<Game[]>;
@@ -35,7 +43,7 @@ export class GamecastComponent {
   awayTeam: Team | undefined;
   players$?: Observable<Player[]> | undefined;
   currentPlayers$?: Observable<Player | undefined>;
-  homeTeamPlayers: String[] = [];
+  homeTeamPlayers: Player[] = [];
   awayTeamPlayers: Player[] = [];
   teams: Team[] = [];
   players: Player[] = [];
@@ -53,6 +61,10 @@ export class GamecastComponent {
     private sql: SqlService
     ) {}
 
+  homeTeamMembers = [1, 4, 6, 45, 66, 76, 89, 99, 14, 5, 7, 3, 44, 2, 77];
+
+  awayTeamMembers = [4, 56, 7, 4, 3, 2, 1, 10, 33, 45, 66, 34, 3, 23, 49];
+
   ngOnInit() {
     this.route.params.subscribe((params: { [x: string]: string | number;}) => {
       this.gameId = +params['gameId'];
@@ -64,7 +76,14 @@ export class GamecastComponent {
           map(games => games.find(game => game.gameId === this.gameId))
         );
       }
-    }); 
+    });
+    
+    this.fetchPlayersUsingQuery();
+  }
+
+  drop(event: CdkDragDrop<any[]>) {
+    moveItemInArray(this.homeTeamMembers, event.previousIndex, event.currentIndex);
+    moveItemInArray(this.awayTeamMembers, event.previousIndex, event.currentIndex);
   }
 
   getTeamPlayers(name: string) {
@@ -74,15 +93,15 @@ export class GamecastComponent {
     for (const player of this.teamPlayers) {
       this.teamMemberNumbers.push(player.number);
     }
-    console.log([... new Set(this.teamMemberNumbers)]);
-    return [... new Set(this.teamMemberNumbers)];
+    console.log(this.teamMemberNumbers);
+    return (this.teamMemberNumbers);
   }
 
   public async fetchPlayersUsingQuery() {
     let db = await this.sql.createConnection();
     let playersForTeam1: Player[] = await this.crud.query(db, "players", true, {"team": "home", "isMale": "true"});
     let playersForTeam2: Player[] = await this.crud.query(db, "players", true, {"team": "away", "isMale": "true"});
-    //this.homeTeamPlayers = playersForTeam1;
+    this.homeTeamPlayers = playersForTeam1;
     this.awayTeamPlayers = playersForTeam2;
     console.log(this.homeTeamPlayers);
     await db.close();

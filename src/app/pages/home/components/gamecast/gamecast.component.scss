@@ -17,13 +17,13 @@
 
   .players-container {
     width: 100px;
-    height: 445px;
+    height: 371px;
     padding: 5px;
     border-radius: 10px;
-  }
+  } 
 
   .benched-width {
-    width: 80%;
+    width: 77.5%;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -31,20 +31,44 @@
   }
 
   .benched-container {
-    width: 750px;
-    height: 100px;
+    display: inline-block;
+    text-align: center;
+    width: 370px;
+    height: auto;
     padding-bottom: 5px;
     border-radius: 10px;
+    overflow-x: scroll;
+    white-space: nowrap;
+  }
+
+  .benched-container::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background-color: rgb(180, 180, 180);
+    border: 3px solid lightgray; 
+  }
+
+  .benched-container::-webkit-scrollbar {
+    height: min-content;
+  }
+
+  .benched-container::-webkit-scrollbar-track {
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    background: lightgray;
   }
 
   #home-benched-container {
     border: 2px solid #4416fc;
-    margin-left: 10.3px;
+    padding: 10px;
   }
 
   #away-benched-container {
     border: 2px solid #fc1616;
-    margin-right: 10.3px;
+    padding: 10px;
+  }
+
+  #default-color {
+    color: grey;
   }
 
   #players-text {
@@ -78,11 +102,11 @@
 
   #school-title {
     font-weight: bold;
-    font-size: 30px;
+    font-size: 25px;
   }
 
   .team-score {
-    font-size: 72px;
+    font-size: 50px;
     font-weight: bold;
     line-height: 1;
     margin-bottom: 5px;
@@ -125,7 +149,16 @@
 
   .bottom-button-container {
     padding-top: 1rem;
-    width: 85%;
+    width: 95%;
+    justify-content: space-between;
+    display: flex;
+    margin: auto;
+  }
+
+  .second-bottom-button-container {
+    padding-top: 1rem;
+    vertical-align: middle;
+    width: 58%;
     justify-content: space-between;
     display: flex;
     margin: auto;
@@ -136,7 +169,7 @@
     text-align: center;
     font-size: 50px;
     font-weight: bold;
-    color: black;
+    color: gray;
   }
 
   button {
@@ -151,37 +184,63 @@
   }
 
   .number-button {
-    width: 4.2rem;
-    height: 4.2rem;
-    font-size: 22px;
+    width: 4rem;
+    height: 4rem;
+    font-size: 18px;
     font-weight: bolder;
     transition: all 1s;
   }
 
   .other-button {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: bold;
-    width: 4rem;
+    width: 3.5rem;
     height: 3.5rem;
     transition: all 1s;
   }
 
-  .small-button {
-    font-size: 12px;
+  .bottom-number-button {
+    font-size: 16px;
     font-weight: bold;
-    width: 3rem;
+    width: 6.5rem;
+    height: 3.5rem;
+  }
+
+  .small-button {
+    font-size: 10px;
+    font-weight: bold;
+    width: 2.5rem;
     height: 2.5rem;
     transition: all 1s;
   }
 
-  #period-button {
-    font-size: 20px;
-    background-color: grey;
+  .icon-button {
+    font-weight: bold;
+    width: 4rem;
+    height: 4rem;
   }
 
-  #normal-button {
-    background-color: grey;
+  ion-icon {
     font-size: 30px;
+    opacity: 1;
+  }
+
+  .period-button {
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: bold;
+  }
+
+  .normal-button {
+    font-weight: bold;
+    font-size: 22px;
+    width: 11rem;
+    height: 2.5rem;
+    border-radius: 10x;
+  }
+
+  #bottom-normal-button {
+    height: 4rem;
   }
 
   .home-font {
@@ -193,7 +252,7 @@
   }
 
   #team-numbers {
-    font-size: 18px;
+    font-size: 25px;
     vertical-align: middle;
   }
 
@@ -205,25 +264,36 @@
     background-color: #fc1616;
   }
 
-  #normal-button:hover,
-  #period-button:hover {
-    background-color: rgb(110, 110, 110);
-  }
-
-  #home-button:hover {
-    background-color: #3814c9;
-  }
-
-  #away-button:hover {
-    background-color: #aa0f0f;
-  }
-
   p {
-    color: black;
-    font-size: 24px;
+    font-size: 18px;
   }
 
   #start-timer {
     font-size: 30px;
     font-weight: 400;
+  }
+
+  //CDK Drag and Drop List:
+  .cdk-drag-preview {
+    box-sizing: border-box;
+    border-radius: 4px;
+    box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2),
+                0 8px 10px 1px rgba(0, 0, 0, 0.14),
+                0 3px 14px 2px rgba(0, 0, 0, 0.12);
+  }
+  
+  .cdk-drag-placeholder {
+    opacity: 0;
+  }
+  
+  .cdk-drag-animating {
+    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+  }
+  
+  .example-box:last-child {
+    border: none;
+  }
+  
+  .example-list.cdk-drop-list-dragging .example-box:not(.cdk-drag-placeholder) {
+    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
   }

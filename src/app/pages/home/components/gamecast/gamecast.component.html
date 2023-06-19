@@ -6,26 +6,45 @@
     </ion-breadcrumbs>
   </ion-toolbar>
 </app-header>
-
-<ion-card>
+<ion-content>
+  <ion-card>
   <ion-card-header>
-    <ion-card-title>Game ID: {{ gameId }}</ion-card-title>
+    <ion-card-title id="default-color">Game ID: {{ gameId }}</ion-card-title>
     <ion-card-title class="timer-style">{{ timerDisplay || (timerDuration / 60) + ':00' }}</ion-card-title>
     <div class="game-info">
       <p>Period: {{ period }}</p>
-      <button id="period-button" (click)="nextPeriod()">Next Period</button>
+      <ion-button color="medium" class="period-button" (click)="nextPeriod()">Next Period</ion-button>
     </div>
   </ion-card-header>
   <div class="benched-width">
     <ng-container *ngIf="currentGame$ | async as currentGame">
-      <div class="benched-container" id="home-benched-container"> 
-        <span class="home-font" id="team-numbers">
-          {{getTeamPlayers(currentGame.homeTeam)}} 
+      <div 
+        class="benched-container" 
+        id="home-benched-container"> 
+        <span class="home-font" id="team-numbers" *ngFor="let player of homeTeamMembers">
+          {{player}}
         </span>     
       </div>
+      <div class="row-fluid">
+        <ion-button color="medium" class="no-drag; icon-button">
+          <ion-icon size="large" slot="icon-only" name="location-sharp"></ion-icon>
+        </ion-button>
+        <ion-button color="medium" class="no-drag; icon-button">
+          <ion-icon size="large" slot="icon-only" name="folder-open-sharp"></ion-icon>
+        </ion-button>
+        <ion-button color="medium" class="no-drag; icon-button">
+          <ion-icon size="large" slot="icon-only" name="thumbs-up-sharp"></ion-icon>
+        </ion-button>
+        <ion-button color="medium" class="no-drag; icon-button">
+          <ion-icon size="large" slot="icon-only" name="save-sharp"></ion-icon>
+        </ion-button>
+        <ion-button color="medium" class="no-drag; icon-button">
+          <ion-icon size="large" slot="icon-only" name="location-sharp"></ion-icon>
+        </ion-button>
+      </div>
       <div class="benched-container" id="away-benched-container">
-        <span class="away-font" id="team-numbers">
-          {{getTeamPlayers(currentGame.awayTeam)}}
+        <span class="away-font" id="team-numbers" *ngFor="let player of awayTeamMembers">
+          {{player}}
         </span>
       </div>
     </ng-container>
@@ -46,28 +65,28 @@
           <p class="team-score digital-number; home-font">{{ homeTeamScore }}</p>
           <p class="home-font">Fouls: {{ homeTeamFouls }} | Steals: {{ homeTeamSteals }} | Timeouts left: {{ homeTeamTOL }}</p>
           <div class="row-fluid">
-            <button class="number-button" id="home-button" (click)="addPoints('home', 1)">+1</button>
-            <button class="number-button" id="home-button" (click)="addPoints('home', 2)">+2</button>
-            <button class="number-button" id="home-button" (click)="addPoints('home', 3)">+3</button>  
+            <ion-button color="primary" class="number-button" (click)="addPoints('home', 1)">+1</ion-button>
+            <ion-button color="primary" class="number-button" (click)="addPoints('home', 2)">+2</ion-button>
+            <ion-button color="primary" class="number-button" (click)="addPoints('home', 3)">+3</ion-button>  
           </div>
           <div class="row-fluid">
-            <button class="other-button" id="home-button">1</button>
-            <button class="other-button" id="home-button">3</button>
-            <button class="other-button" id="home-button">MISS</button>
+            <ion-button color="primary" class="other-button">1</ion-button>
+            <ion-button color="primary" class="other-button">3</ion-button>
+            <ion-button color="primary" class="other-button">MISS</ion-button>
           </div>
           <div class="row-fluid">
-            <button class="other-button" id="home-button" (click)="addFoul('home')">FOUL</button>
-            <button class="other-button" id="home-button" (click)="addSteal('home')">STL</button>
-            <button class="other-button" id="home-button" (click)="useTimeout('home', 30)">30s</button>
-            <button class="other-button" id="home-button" (click)="useTimeout('home', 60)">60s</button>  
+            <ion-button color="primary" class="other-button" (click)="addFoul('home')">FOUL</ion-button>
+            <ion-button color="primary" class="other-button" (click)="addSteal('home')">STL</ion-button>
+            <ion-button color="primary" class="other-button" (click)="useTimeout('home', 30)">30s</ion-button>
+            <ion-button color="primary" class="other-button" (click)="useTimeout('home', 60)">60s</ion-button>  
           </div>
           <div class="row-fluid">
-            <button class="small-button" id="home-button">AST</button>
-            <button class="small-button" id="home-button">PB+</button>
-            <button class="small-button" id="home-button">PB-</button>
-            <button class="small-button" id="home-button">BLK</button>
-            <button class="small-button" id="home-button">OR</button>
-            <button class="small-button" id="home-button">DR</button>
+            <ion-button color="primary" class="small-button">AST</ion-button>
+            <ion-button color="primary" class="small-button">PB+</ion-button>
+            <ion-button color="primary" class="small-button">PB-</ion-button>
+            <ion-button color="primary" class="small-button">BLK</ion-button>
+            <ion-button color="primary" class="small-button">OR</ion-button>
+            <ion-button color="primary" class="small-button">DR</ion-button>
           </div>
         </div>
 
@@ -82,28 +101,28 @@
           <p class="team-score digital-number; away-font">{{ awayTeamScore }}</p>
           <p class="away-font">Fouls: {{ awayTeamFouls }} | Steals: {{ awayTeamSteals }} | Timeouts left: {{ awayTeamTOL }}</p>
           <div class="row-fluid">
-            <button class="number-button" id="away-button" (click)="addPoints('away', 1)">+1</button>
-            <button class="number-button" id="away-button" (click)="addPoints('away', 2)">+2</button>
-            <button class="number-button" id="away-button" (click)="addPoints('away', 3)">+3</button>
+            <ion-button color="danger" class="number-button" (click)="addPoints('away', 1)">+1</ion-button>
+            <ion-button color="danger" class="number-button" (click)="addPoints('away', 2)">+2</ion-button>
+            <ion-button color="danger" class="number-button" (click)="addPoints('away', 3)">+3</ion-button>
           </div>
           <div class="row-fluid">
-            <button class="other-button" id="away-button">1</button>
-            <button class="other-button" id="away-button">3</button>
-            <button class="other-button" id="away-button">MISS</button>
+            <ion-button color="danger" class="other-button">1</ion-button>
+            <ion-button color="danger" class="other-button">3</ion-button>
+            <ion-button color="danger" class="other-button">MISS</ion-button>
           </div>
           <div class="row-fluid">
-            <button class="other-button" id="away-button" (click)="addFoul('away')">FOUL</button>
-            <button class="other-button" id="away-button" (click)="addSteal('away')">STL</button>
-            <button class="other-button" id="away-button" (click)="useTimeout('away', 30)">30s</button>
-            <button class="other-button" id="away-button" (click)="useTimeout('away', 60)">60s</button>
+            <ion-button color="danger" class="other-button" (click)="addFoul('away')">FOUL</ion-button>
+            <ion-button color="danger" class="other-button" (click)="addSteal('away')">STL</ion-button>
+            <ion-button color="danger" class="other-button" (click)="useTimeout('away', 30)">30s</ion-button>
+            <ion-button color="danger" class="other-button" (click)="useTimeout('away', 60)">60s</ion-button>
           </div>
           <div class="row-fluid">
-            <button class="small-button" id="away-button">AST</button>
-            <button class="small-button" id="away-button">PB+</button>
-            <button class="small-button" id="away-button">PB-</button>
-            <button class="small-button" id="away-button">BLK</button>
-            <button class="small-button" id="away-button">OR</button>
-            <button class="small-button" id="away-button">DR</button>
+            <ion-button color="danger" class="small-button">AST</ion-button>
+            <ion-button color="danger" class="small-button">PB+</ion-button>
+            <ion-button color="danger" class="small-button">PB-</ion-button>
+            <ion-button color="danger" class="small-button">BLK</ion-button>
+            <ion-button color="danger" class="small-button">OR</ion-button>
+            <ion-button color="danger" class="small-button">DR</ion-button>
           </div>
         </div>
       </ng-container>
@@ -116,8 +135,43 @@
       </div>
       </div>
       <div class="bottom-button-container">
-        <button id="normal-button" (click)="startStopTimer()">{{ timerRunning ? 'End' : 'Start' }} Game</button>
-        <button id="normal-button" (click)="resetGame()">Reset Game</button>
+        <ion-button color="medium" class="bottom-number-button">Undo</ion-button>
+        <ion-button color="medium" class="bottom-number-button">0</ion-button>
+        <ion-button color="medium" class="bottom-number-button">1</ion-button>
+        <ion-button color="medium" class="bottom-number-button">2</ion-button>
+        <ion-button color="medium" class="bottom-number-button">3</ion-button>
+        <ion-button color="medium" class="bottom-number-button">4</ion-button>
+        <ion-button color="medium" class="bottom-number-button">5</ion-button>
+        <ion-button color="medium" class="bottom-number-button">6</ion-button>
+        <ion-button color="medium" class="bottom-number-button">7</ion-button>
+        <ion-button color="medium" class="bottom-number-button">8</ion-button>
+        <ion-button color="medium" class="bottom-number-button">9</ion-button>
+        <ion-button color="medium" class="bottom-number-button">Clock</ion-button>
+
+      </div>
+      <div class="second-bottom-button-container">
+        <ion-button color="medium" class="normal-button" id="bottom-normal-button" (click)="startStopTimer()">{{ timerRunning ? 'End' : 'Start' }} Game</ion-button>
+        
+        <ion-button color="medium" class="no-drag; icon-button">
+          <ion-icon slot="icon-only" name="stats-chart-sharp"></ion-icon>
+        </ion-button>
+        <ion-button color="medium" class="no-drag; icon-button">
+          <ion-icon slot="icon-only" name="videocam-sharp"></ion-icon>
+        </ion-button>
+        <ion-button color="medium" class="no-drag; icon-button">
+          <ion-icon slot="icon-only" name="radio-sharp"></ion-icon>
+        </ion-button>
+        <ion-button color="medium" class="no-drag; icon-button">
+          <ion-icon slot="icon-only" name="megaphone-sharp"></ion-icon>
+        </ion-button>
+        <ion-button color="medium" class="no-drag; icon-button">
+          <ion-icon slot="icon-only" name="settings-sharp"></ion-icon>
+        </ion-button>
+        <ion-button color="medium" class="no-drag; icon-button">
+          <ion-icon slot="icon-only" name="document-text-sharp"></ion-icon>
+        </ion-button>
+
+        <ion-button color="medium" class="normal-button" id="bottom-normal-button" (click)="resetGame()">Reset Game</ion-button>
       </div>
     </ion-card-content>
     <p>This is here to display the button presses.</p>
