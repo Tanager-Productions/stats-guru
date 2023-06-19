@@ -1,4 +1,4 @@
-export const currentDatabaseVersion = 3;
+export const currentDatabaseVersion = 4;
 export const databaseName = "tgs";
 
 export const version1: string[] = [
@@ -136,5 +136,11 @@ export const version3: string[] = [
       eventsSynced INTEGER NOT NULL,
       errorMessages TEXT NOT NULL
     );
+  `
+]
+
+export const version4: string[] = [
+  `
+    ALTER TABLE Events ADD COLUMN picture TEXT NULL;
   `
 ]

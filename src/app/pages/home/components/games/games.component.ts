@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
+import { Event } from 'src/app/interfaces/event.interface';
 import { Game } from 'src/app/interfaces/game.interface';
 import { CommonService } from 'src/app/services/common/common.service';
 import { CrudService } from 'src/app/services/crud/crud.service';
@@ -14,35 +15,46 @@ import { SyncService } from 'src/app/services/sync/sync.service';
 })
 export class GamesComponent implements OnInit {
   public games$?: Observable<Game[]>;
-  public logos: {name:string, isMale:boolean, logo:string}[] = [];
+  public events$?: Observable<Event[]>;
+  public logos: {name:string, isMale:string, logo:string|null}[] = [];
+  filterEventId:number = 0;
 
   constructor(
     private common: CommonService,
     private router: Router,
-    private sync:SyncService,
+    sync:SyncService,
     private crud: CrudService,
     private sql:SqlService
   ) {
-    console.log('called')
-    sync.beginSync(true).then(() => common.initializeService());
+    sync.beginSync(true);
   }
 
   ngOnInit() {
-    this.sync.syncComplete().subscribe(async complete => {
-      if (complete) {
-        this.common.gameState().subscribe(async ready => {
-          if (ready) {
-            this.games$ = this.common.getGames();
-            let db = await this.sql.createConnection();
-            this.logos = await this.crud.rawQuery(db, 'select Teams.name, Teams.isMale, Teams.logo from Teams;');
-          }
-        });
+    this.common.gameState().subscribe(async ready => {
+      if (ready) {
+        this.games$ = this.common.getGames();
+        let db = await this.sql.createConnection();
+        this.logos = await this.crud.rawQuery(db, 'select Teams.name, Teams.isMale, Teams.logo from Teams;');
+      }
+    });
+    this.common.eventState().subscribe(ready => {
+      if (ready) {
+        this.events$ = this.common.getEvents();
       }
     });
   }
 
-  public getLogo(teamName:string, isMale:boolean) {
-    return this.logos.find(t => t.name == teamName && t.isMale == isMale)?.logo;
+  public getLogo(teamName:string, isMale:string) {
+    let item = this.logos.find(t => t.name == teamName && t.isMale == isMale);
+    if (item == undefined) {
+      console.log(teamName, isMale);
+      throw 'Team not in logos array!';
+    }
+    if (item.logo == null) {
+      return '../../../../assets/icon-black.png'
+    } else {
+      return item.logo;
+    }
   }
 
   navigateToAddGame() {

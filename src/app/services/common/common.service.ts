@@ -8,6 +8,7 @@ import { Stat } from 'src/app/interfaces/stat.interface';
 import { CrudService } from '../crud/crud.service';
 import { SqlService } from '../sql/sql.service';
 import { SQLiteDBConnection } from '@capacitor-community/sqlite';
+import { Event } from 'src/app/interfaces/event.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -15,6 +16,8 @@ import { SQLiteDBConnection } from '@capacitor-community/sqlite';
 export class CommonService {
   private gamesSubject: BehaviorSubject<Game[]> = new BehaviorSubject<Game[]>([]);
   private isGamesReady: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+  private eventsSubject: BehaviorSubject<Event[]> = new BehaviorSubject<Event[]>([]);
+  private isEventsReady: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
   private playersSubject: BehaviorSubject<Player[]> = new BehaviorSubject<Player[]>([]);
   private isPlayersReady: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
   private playsSubject: BehaviorSubject<Play[]> = new BehaviorSubject<Play[]>([]);
@@ -33,7 +36,8 @@ export class CommonService {
       this.fetchGames(db),
       this.fetchPlays(db),
       this.fetchStats(db),
-      this.fetchTeams(db)
+      this.fetchTeams(db),
+      this.fetchEvents(db)
     ]);
   }
 
@@ -49,6 +53,20 @@ export class CommonService {
 
   public getGames() {
     return this.gamesSubject.asObservable();
+  }
+
+  public eventState() {
+    return this.isEventsReady.asObservable();
+  }
+
+  public async fetchEvents(db: SQLiteDBConnection) {
+    let events: Event[] = await this.crud.query(db, "events", false, undefined, "title", "asc");
+    this.eventsSubject.next(events);
+    this.isEventsReady.next(true);
+  }
+
+  public getEvents() {
+    return this.eventsSubject.asObservable();
   }
 
   public playerState() {
