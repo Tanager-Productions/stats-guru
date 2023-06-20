@@ -1,8 +1,51 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-breadcrumbs>
+      <ion-breadcrumb routerLink="/home/games">Games</ion-breadcrumb>
+      <ion-breadcrumb>Add Game</ion-breadcrumb>
+    </ion-breadcrumbs>
+  </ion-toolbar>
+</ion-header>
 
-<ion-breadcrumbs>
-  <ion-breadcrumb routerLink="/home/games">Games</ion-breadcrumb>
-  <ion-breadcrumb>Add Game</ion-breadcrumb>
-</ion-breadcrumbs>
-
-<p>add-games works!</p>
+<ion-content color="light">
+  <ion-grid>
+    <ion-row>
+      <ion-col size="1" size-lg="2"></ion-col>
+      <ion-col size="10" size-lg="8">
+        <ion-input
+          fill="outline"
+          label="Home Team"
+          class="ion-margin-vertical"
+        ></ion-input>
+        <ion-input
+          fill="outline"
+          label="Away Team"
+          class="ion-margin-vertical"
+        ></ion-input>
+        <ion-input
+          fill="outline"
+          label="Game Date"
+          class="ion-margin-vertical"
+        ></ion-input>
+        <ion-input
+          fill="outline"
+          label="Game Time"
+          class="ion-margin-vertical"
+        ></ion-input>
+        <ion-input
+          fill="outline"
+          label="Event"
+          class="ion-margin-vertical"
+        ></ion-input>
+        <ion-input
+          fill="outline"
+          label="Gender"
+          class="ion-margin-vertical"
+        ></ion-input>
+        <ion-button class="ion-text-center">Save</ion-button>
+      </ion-col>
+      <ion-col size="1" size-lg="2"></ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>
 

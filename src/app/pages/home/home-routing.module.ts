@@ -7,27 +7,21 @@ import { GamecastComponent } from './components/gamecast/gamecast.component';
 
 const routes: Routes = [
   {
+    path: 'games',
+    component: GamesComponent
+  },
+  {
     path: '',
-    component: HomePage,
-    children: [
-      {
-        path: 'games',
-        component: GamesComponent
-      },
-      {
-        path: '',
-        pathMatch: 'full',
-        redirectTo: 'games'
-      },
-      {
-        path: 'gamecast/:gameId',
-        component: GamecastComponent
-      },
-      {
-        path: 'add-game',
-        component: AddGamesComponent
-      },
-    ]
+    pathMatch: 'full',
+    redirectTo: 'games'
+  },
+  {
+    path: 'gamecast/:gameId',
+    component: GamecastComponent
+  },
+  {
+    path: 'add-game',
+    component: AddGamesComponent
   }
 ];
 

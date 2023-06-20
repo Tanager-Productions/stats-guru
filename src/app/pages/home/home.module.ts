@@ -8,6 +8,7 @@ import { GamecastDetailComponent } from './components/gamecast-detail/gamecast-d
 import { AddGamesComponent } from './components/add-games/add-games.component';
 import { HomePage } from './home.page';
 import { SharedModule } from 'src/app/shared/shared.module';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 
 @NgModule({
@@ -22,7 +23,9 @@ import { SharedModule } from 'src/app/shared/shared.module';
     CommonModule,
     HomeRoutingModule,
     IonicModule,
-    SharedModule
+    SharedModule,
+    FormsModule,
+    ReactiveFormsModule
   ]
 })
 export class HomeModule { }

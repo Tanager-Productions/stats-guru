@@ -14,6 +14,7 @@ import { ServerPlay } from 'src/app/interfaces/play.interface';
 import { ServerPlayer } from 'src/app/interfaces/player.interface';
 import { ServerStat } from 'src/app/interfaces/stat.interface';
 import { ServerTeam } from 'src/app/interfaces/team.interface';
+import { CommonService } from '../common/common.service';
 
 @Injectable({
   providedIn: 'root'
@@ -37,7 +38,7 @@ export class SyncService {
   public gameCastInProgress:boolean = false;
   public syncing:boolean = false;
 
-  constructor(private api:ApiService, private sqlService:SqlService, private crudService:CrudService) { }
+  constructor(private api:ApiService, private sqlService:SqlService, private crudService:CrudService, private common:CommonService) { }
 
   public async beginSync(isInitial:boolean = false) {
     this.db = await this.sqlService.createConnection();
@@ -57,7 +58,7 @@ export class SyncService {
       let httpResponse = await this.api.postSync(res);
       if (httpResponse.status == 200) {
         let res: SyncResult = httpResponse.data;
-        let history:SyncHistory = {
+        let history = {
           dateOccurred: new Date().toUTCString(),
           statsSynced: res.statsSynced ? 1 : 0,
           gamesSynced: res.statsSynced ? 1 : 0,
@@ -65,8 +66,7 @@ export class SyncService {
           playsSynced: res.statsSynced ? 1 : 0,
           teamsSynced: res.statsSynced ? 1 : 0,
           eventsSynced: res.statsSynced ? 1 : 0,
-          errorMessages: JSON.stringify(res.errorMessages),
-          id: 0
+          errorMessages: JSON.stringify(res.errorMessages)
         };
         await this.crudService.save(this.db, "syncHistory", history);
         await this.db.execute(` delete from plays;
@@ -87,6 +87,7 @@ export class SyncService {
       this.setTimer();
     }
     this.syncing = false;
+    this.common.initializeService();
   }
 
   public syncComplete() {
@@ -128,7 +129,7 @@ export class SyncService {
     if (response.status == 200) {
       let events = response.data as ServerEvent[];
       if (events.length > 0)
-        await this.crudService.bulkInsert(this.db!, "games", events);
+        await this.crudService.bulkInsert(this.db!, "events", events);
     } else {
       throw new Error(`Failed to fetch games from server: ${response.data}`);
     }
@@ -146,7 +147,7 @@ export class SyncService {
   }
 
   private async fetchAndInsertTeams() {
-    let response = await this.api.getAllTeams();
+    let response = await this.api.getAllTeams(true);
     if (response.status == 200) {
       let teams = response.data as ServerTeam[];
       if (teams.length > 0)

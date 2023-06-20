@@ -4,7 +4,7 @@ import { CapacitorSQLite, SQLiteDBConnection, SQLiteConnection, capSQLiteSet,
          capSQLiteChanges, capSQLiteValues, capEchoResult, capSQLiteResult,
          capNCDatabasePathResult,
          CapacitorSQLitePlugin} from '@capacitor-community/sqlite';
-import { currentDatabaseVersion, databaseName, version1, version2, version3 } from 'src/app/upgrades/versions';
+import { currentDatabaseVersion, databaseName, version1, version2, version3, version4 } from 'src/app/upgrades/versions';
 
 @Injectable({
   providedIn: 'root'
@@ -57,6 +57,10 @@ export class SqlService {
         {
           toVersion: 3,
           statements: version3
+        },
+        {
+          toVersion: 4,
+          statements: version4
         }
       ]
     });

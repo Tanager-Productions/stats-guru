@@ -13,6 +13,7 @@ import { AuthService } from './services/auth/auth.service';
 import { CommonModule } from '@angular/common';
 import { HomeRoutingModule } from './pages/home/home-routing.module';
 import { DragDropModule } from '@angular/cdk/drag-drop';
+import { SharedModule } from './shared/shared.module';
 
 @NgModule({
   declarations: [
@@ -25,7 +26,8 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
     HttpClientModule,
     CommonModule,
     HomeRoutingModule,
-    IonicModule.forRoot({mode:'md'})
+    IonicModule.forRoot({mode:'md'}),
+    SharedModule
   ],
   providers: [
     CommonService,
