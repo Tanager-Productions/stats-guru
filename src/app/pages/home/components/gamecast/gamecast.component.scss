@@ -1,7 +1,8 @@
-.scoreboard {
+  .scoreboard {
     display: flex;
     justify-content: center;
     align-items: center;
+    margin-top: -20px;
   }
   
   .team-container {
@@ -16,55 +17,46 @@
   }
 
   .players-container {
-    width: 100px;
-    height: 371px;
-    padding: 5px;
-    border-radius: 10px;
-  } 
-
-  .benched-width {
-    width: 77.5%;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    margin: auto;
-  }
-
-  .benched-container {
     display: inline-block;
     text-align: center;
-    width: 370px;
-    height: auto;
-    padding-bottom: 5px;
+    width: auto;
+    height: 375px;
+    padding: 5px;
     border-radius: 10px;
-    overflow-x: scroll;
-    white-space: nowrap;
+    overflow-y: auto;
+  } 
+
+  .players-container::-webkit-scrollbar {
+    display: none;
   }
 
-  .benched-container::-webkit-scrollbar-thumb {
+  .top-width {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    margin: auto;
+    margin-bottom: 10px;
+  }
+
+  .court-container {
+    text-align: center;
+    width: 350px;
+    height: 65px;
     border-radius: 10px;
-    background-color: rgb(180, 180, 180);
-    border: 3px solid lightgray; 
+    margin: 10px;
+    font-weight: bold;
+    align-items: center;
   }
 
-  .benched-container::-webkit-scrollbar {
-    height: min-content;
-  }
-
-  .benched-container::-webkit-scrollbar-track {
-    border-bottom-left-radius: 10px;
-    border-bottom-right-radius: 10px;
-    background: lightgray;
-  }
-
-  #home-benched-container {
+  #home-court-container {
     border: 2px solid #4416fc;
-    padding: 10px;
+    background-color: #dbd4fa;
   }
 
-  #away-benched-container {
+  #away-court-container {
     border: 2px solid #fc1616;
-    padding: 10px;
+    background-color: #fec3c3;
   }
 
   #default-color {
@@ -125,9 +117,11 @@
   }
   
   .game-info {
-    display: flex;
-    flex-direction: column;
     align-items: center;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    margin: auto;
   }
 
   ion-card-content {
@@ -149,16 +143,16 @@
 
   .bottom-button-container {
     padding-top: 1rem;
-    width: 95%;
+    width: 92%;
     justify-content: space-between;
     display: flex;
     margin: auto;
   }
 
   .second-bottom-button-container {
-    padding-top: 1rem;
+    padding-top: .5rem;
     vertical-align: middle;
-    width: 58%;
+    width: 45%;
     justify-content: space-between;
     display: flex;
     margin: auto;
@@ -184,8 +178,8 @@
   }
 
   .number-button {
-    width: 4rem;
-    height: 4rem;
+    width: 3.5rem;
+    height: 2.5rem;
     font-size: 18px;
     font-weight: bolder;
     transition: all 1s;
@@ -194,41 +188,40 @@
   .other-button {
     font-size: 14px;
     font-weight: bold;
-    width: 3.5rem;
-    height: 3.5rem;
+    width: 3rem;
+    height: 2rem;
     transition: all 1s;
   }
 
   .bottom-number-button {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: bold;
-    width: 6.5rem;
-    height: 3.5rem;
+    width: 5.5rem;
+    height: 2rem;
   }
 
   .small-button {
     font-size: 10px;
     font-weight: bold;
     width: 2.5rem;
-    height: 2.5rem;
+    height: 1.5rem;
     transition: all 1s;
   }
 
   .icon-button {
     font-weight: bold;
-    width: 4rem;
-    height: 4rem;
+    width: 2.8rem;
+    height: 2.8rem;
   }
 
   ion-icon {
-    font-size: 30px;
+    font-size: 18px;
     opacity: 1;
   }
 
   .period-button {
-    border-radius: 10px;
-    font-size: 15px;
-    font-weight: bold;
+    height: auto;
+    width: 2.8rem;
   }
 
   .normal-button {
@@ -237,10 +230,6 @@
     width: 11rem;
     height: 2.5rem;
     border-radius: 10x;
-  }
-
-  #bottom-normal-button {
-    height: 4rem;
   }
 
   .home-font {
@@ -252,8 +241,7 @@
   }
 
   #team-numbers {
-    font-size: 25px;
-    vertical-align: middle;
+    font-size: 20px;
   }
 
   #home-button {
@@ -265,35 +253,10 @@
   }
 
   p {
-    font-size: 18px;
+    font-size: 16px;
   }
 
   #start-timer {
     font-size: 30px;
     font-weight: 400;
-  }
-
-  //CDK Drag and Drop List:
-  .cdk-drag-preview {
-    box-sizing: border-box;
-    border-radius: 4px;
-    box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2),
-                0 8px 10px 1px rgba(0, 0, 0, 0.14),
-                0 3px 14px 2px rgba(0, 0, 0, 0.12);
-  }
-  
-  .cdk-drag-placeholder {
-    opacity: 0;
-  }
-  
-  .cdk-drag-animating {
-    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
-  }
-  
-  .example-box:last-child {
-    border: none;
-  }
-  
-  .example-list.cdk-drop-list-dragging .example-box:not(.cdk-drag-placeholder) {
-    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
   }

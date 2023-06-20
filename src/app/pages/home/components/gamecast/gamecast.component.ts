@@ -45,14 +45,10 @@ export class GamecastComponent {
   currentPlayers$?: Observable<Player | undefined>;
   homeTeamPlayers: Player[] = [];
   awayTeamPlayers: Player[] = [];
+  homeTeamPlayersOnCourt: Player[] = [];
+  awayTeamPlayersOnCourt: Player[] = [];
   teams: Team[] = [];
   players: Player[] = [];
-  playerId: number | undefined;
-  team: string | undefined;
-  number: number = 0;
-  teamMemberNumbers: number[] = [];
-  awayTeamNumbers: number[] = [];
-  teamPlayers: any[] = [];
 
   constructor(
     private route: ActivatedRoute, 
@@ -81,40 +77,44 @@ export class GamecastComponent {
     this.fetchPlayersUsingQuery();
   }
 
+  addToHomeCourt (player: Player) {
+    if(this.homeTeamPlayersOnCourt.length < 5) {
+      this.homeTeamPlayersOnCourt.push(player);
+      this.homeTeamPlayers.splice(this.homeTeamPlayers.indexOf(player), 1);
+    }
+  }
+
+  addToAwayCourt (player: Player) {
+    if (this.awayTeamPlayersOnCourt.length < 5) {
+      this.awayTeamPlayersOnCourt.push(player);
+      this.awayTeamPlayers.splice(this.awayTeamPlayers.indexOf(player), 1);
+    }
+  }
+
+  removeFromHomeCourt (player: Player) {
+    this.homeTeamPlayers.push(player);
+    this.homeTeamPlayersOnCourt.splice(this.homeTeamPlayersOnCourt.indexOf(player), 1);
+  }
+
+  removeFromAwayCourt (player: Player) {
+    this.awayTeamPlayers.push(player);
+    this.awayTeamPlayersOnCourt.splice(this.awayTeamPlayersOnCourt.indexOf(player), 1);
+  }
+
   drop(event: CdkDragDrop<any[]>) {
     moveItemInArray(this.homeTeamMembers, event.previousIndex, event.currentIndex);
     moveItemInArray(this.awayTeamMembers, event.previousIndex, event.currentIndex);
   }
 
-  getTeamPlayers(name: string) {
-    this.teamPlayers = this.players.filter(function(currentPlayers) {
-      return currentPlayers.team == name && currentPlayers.isMale == "1";
-    })
-    for (const player of this.teamPlayers) {
-      this.teamMemberNumbers.push(player.number);
-    }
-    console.log(this.teamMemberNumbers);
-    return (this.teamMemberNumbers);
-  }
-
   public async fetchPlayersUsingQuery() {
     let db = await this.sql.createConnection();
-    let playersForTeam1: Player[] = await this.crud.query(db, "players", true, {"team": "home", "isMale": "true"});
-    let playersForTeam2: Player[] = await this.crud.query(db, "players", true, {"team": "away", "isMale": "true"});
+    let teams = await this.crud.rawQuery(db, `select Games.homeTeam, Games.awayTeam from Games where gameId = ${this.gameId};`);
+    let playersForTeam1: Player[] = await this.crud.query(db, "players", true, {"team": `'${teams[0].homeTeam}'`, "isMale": "true"});
+    let playersForTeam2: Player[] = await this.crud.query(db, "players", true, {"team": `'${teams[0].awayTeam}'`, "isMale": "true"});
     this.homeTeamPlayers = playersForTeam1;
     this.awayTeamPlayers = playersForTeam2;
     console.log(this.homeTeamPlayers);
-    await db.close();
-  }
-
-  public async fetchPlayersUsingRawSql() {
-    let db = await this.sql.createConnection();
-    //it gives you back an array of type any
-    let playersForBothTeams: any[] = await this.crud.rawQuery(db, "Select * from players where team = 'home' or team = 'away'");
-    //you can manually cast it to players, but if your query doesn't match up with what you cast it to then javascript will 
-    //dynamically change the type at runtime and you could possibly run into errors when using the values
-    let playersForBothTeamsCasted: Player[] = await this.crud.rawQuery(db, "Select * from players where (team = 'home' or team = 'away') and isMale = 'true'");
-    await db.close();
+    console.log(this.awayTeamPlayers);
   }
 
   addPoints(team: string, points: number) {
@@ -157,8 +157,8 @@ export class GamecastComponent {
   }
 
 
-  startStopTimer() {
-    if (this.timerRunning) {
+  startStopTimer(timerRunning: boolean) {
+    if (timerRunning == true) {
       this.stopTimer();
     } else {
       this.startTimer();
