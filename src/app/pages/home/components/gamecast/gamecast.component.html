@@ -16,15 +16,35 @@
     <div class="scoreboard">
       <!-- Home Team -->
       <div class="players-container" id="home-players-container">
-        <div class="home-font" id="team-numbers" *ngFor="let player of homeTeamPlayers">
-          <ion-button fill="clear" color="primary" (click)="addToHomeCourt(player)">{{player.number}}</ion-button>        
+        <div class="home-font" id="team-numbers" *ngFor="let player of homeTeamPlayers; let i = index">
+          <ion-button fill="clear" id="context-menu-trigger{{i}}" color="primary" (click)="addToHomeCourt(player)">
+            {{player.number}}
+          </ion-button> 
+          <ion-popover trigger="context-menu-trigger{{i}}" triggerAction="context-menu" side="right" alignment="end">
+            <ng-template>
+              <ion-content class="ion-padding">
+                Name: {{player.firstName}} {{player.lastName}}<br>
+                Number: {{player.number}}
+              </ion-content>
+            </ng-template>
+          </ion-popover>       
         </div> 
       </div>
       <ng-container *ngIf="currentGame$ | async as currentGame">
         <div class="column">
           <div class="court-container" id="home-court-container"> 
-            <span class="home-font" id="team-numbers" *ngFor="let player of homeTeamPlayersOnCourt">
-              <ion-button fill="clear" color="primary" size="large" (click)="removeFromHomeCourt(player)">{{player.number}}</ion-button>        
+            <span class="home-font" id="team-numbers" *ngFor="let player of homeTeamPlayersOnCourt; let i = index">
+              <ion-button fill="clear" shape="round" color="primary" size="large" id="context-menu-trigger-homeCourt{{i}}" (click)="removeFromHomeCourt(player)">
+                {{player.number}}
+              </ion-button>        
+              <ion-popover trigger="context-menu-trigger-homeCourt{{i}}" triggerAction="context-menu" side="top" alignment="start">
+                <ng-template>
+                  <ion-content class="ion-padding">
+                    Name: {{player.firstName}} {{player.lastName}}<br>
+                    Number: {{player.number}}
+                  </ion-content>
+                </ng-template>
+              </ion-popover>
             </span>           
           </div>
           <div  class="home-font" id="home-team-container" class="team-container">
@@ -85,8 +105,18 @@
         <!-- Guest Team -->
         <div class="column">
           <div class="court-container" id="away-court-container">
-            <span class="home-font" id="team-numbers" *ngFor="let player of awayTeamPlayersOnCourt">
-              <ion-button fill="clear" color="danger" size="large" (click)="removeFromAwayCourt(player)">{{player.number}}</ion-button>        
+            <span class="home-font" id="team-numbers" *ngFor="let player of awayTeamPlayersOnCourt; let i = index">
+              <ion-button fill="clear" shape="round" color="danger" size="large" id="context-menu-trigger-awayCourt{{i}}" (click)="removeFromAwayCourt(player)">
+                {{player.number}}
+              </ion-button>   
+              <ion-popover trigger="context-menu-trigger-awayCourt{{i}}" triggerAction="context-menu" side="top" alignment="start">
+                <ng-template>
+                  <ion-content class="ion-padding">
+                    Name: {{player.firstName}} {{player.lastName}}<br>
+                    Number: {{player.number}}
+                  </ion-content>
+                </ng-template>
+              </ion-popover>     
             </span> 
           </div>
           <div id="away-team-container" class="team-container">
@@ -121,8 +151,18 @@
       </div>
       </ng-container>
       <div class="players-container" id="away-players-container">
-        <div class="away-font" id="team-numbers" *ngFor="let player of awayTeamPlayers">
-          <ion-button fill="clear" color="danger" (click)="addToAwayCourt(player)">{{player.number}}</ion-button>
+        <div class="away-font" id="team-numbers" *ngFor="let player of awayTeamPlayers; let i = index">
+          <ion-button fill="clear" color="danger" id="context-menu-trigger-away{{i}}" (click)="addToAwayCourt(player)">
+            {{player.number}}
+          </ion-button>
+          <ion-popover trigger="context-menu-trigger-away{{i}}" triggerAction="context-menu" side="left" alignment="start">
+            <ng-template>
+              <ion-content class="ion-padding">
+                Name: {{player.firstName}} {{player.lastName}}<br>
+                Number: {{player.number}}
+              </ion-content>
+            </ng-template>
+          </ion-popover>
         </div>
       </div>
     </div>

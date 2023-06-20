@@ -114,7 +114,6 @@ export class GamecastComponent {
     this.homeTeamPlayers = playersForTeam1;
     this.awayTeamPlayers = playersForTeam2;
     console.log(this.homeTeamPlayers);
-    console.log(this.awayTeamPlayers);
   }
 
   addPoints(team: string, points: number) {
