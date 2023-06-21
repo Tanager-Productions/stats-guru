@@ -1,8 +1,17 @@
-  ion-popover {
-    --backdrop-opacity: 0.6;
-    --color: grey;
+  .small-number-container {
+    display: flex;
+    text-align: center;
+    width: 5.5rem;
+    height: 2rem;
+    border-radius: 5px;
+    font-size: 14px;
+    color: grey;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid grey;
+    font-weight: bold;
   }
-  
+
   .scoreboard {
     display: flex;
     justify-content: center;
@@ -27,7 +36,6 @@
     width: auto;
     height: 375px;
     padding: 5px;
-    border-radius: 10px;
     overflow-y: auto;
   } 
 
@@ -70,14 +78,6 @@
 
   #players-text {
     text-align: center;
-  }
-
-  #home-players-container {
-    border: 2px solid #4416fc;
-  }
-
-  #away-players-container {
-    border: 2px solid #fc1616;
   }
 
   #home-team-container {
@@ -147,9 +147,10 @@
   }
 
   .bottom-button-container {
-    padding-top: 1rem;
-    width: 92%;
+    padding-top: .5rem;
+    width: 76%;
     justify-content: space-between;
+    align-items: center;
     display: flex;
     margin: auto;
   }
@@ -201,7 +202,7 @@
   .bottom-number-button {
     font-size: 14px;
     font-weight: bold;
-    width: 5.5rem;
+    width: 4.5rem;
     height: 2rem;
   }
 

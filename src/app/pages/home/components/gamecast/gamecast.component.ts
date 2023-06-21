@@ -39,8 +39,8 @@ export class GamecastComponent {
   timeLeft: number = this.timerDuration;
   timerDisplay: string = '';
   timerRunning: boolean = false;
-  homeTeam: Team | undefined;
-  awayTeam: Team | undefined;
+  homeTeam!: Team;
+  awayTeam!: Team;
   players$?: Observable<Player[]> | undefined;
   currentPlayers$?: Observable<Player | undefined>;
   homeTeamPlayers: Player[] = [];
@@ -49,6 +49,8 @@ export class GamecastComponent {
   awayTeamPlayersOnCourt: Player[] = [];
   teams: Team[] = [];
   players: Player[] = [];
+  newPlayerNumber: number[] = [];
+  playerNumber!: number;
 
   constructor(
     private route: ActivatedRoute, 
@@ -56,10 +58,6 @@ export class GamecastComponent {
     private crud: CrudService, 
     private sql: SqlService
     ) {}
-
-  homeTeamMembers = [1, 4, 6, 45, 66, 76, 89, 99, 14, 5, 7, 3, 44, 2, 77];
-
-  awayTeamMembers = [4, 56, 7, 4, 3, 2, 1, 10, 33, 45, 66, 34, 3, 23, 49];
 
   ngOnInit() {
     this.route.params.subscribe((params: { [x: string]: string | number;}) => {
@@ -75,6 +73,67 @@ export class GamecastComponent {
     });
     
     this.fetchPlayersUsingQuery();
+  }
+
+  inputNumber (numberClicked: number) {
+    if (this.newPlayerNumber.length < 3) {
+      this.newPlayerNumber.push(numberClicked);
+    }
+  } 
+
+  clearNumberInput() {
+    this.newPlayerNumber.length = 0;
+  }
+
+  clockPlayer() {
+    this.playerNumber = Number(this.newPlayerNumber.join(''));
+    this.newPlayerNumber.length = 0;
+    console.log(this.playerNumber);
+
+  }
+
+  addToHomeTeam(teamName: string) {
+    this.playerNumber = Number(this.newPlayerNumber.join(''));
+    this.newPlayerNumber.length = 0;
+    let newTeamPlayer: Player = {
+      playerId: 0,
+      firstName: "",
+      lastName: "",
+      number: this.playerNumber,
+      position: "",
+      team: teamName,
+      picture: null,
+      isMale: "",
+      added: "",
+      modified: "",
+      deleted: ""
+    }
+    console.log(this.playerNumber);
+    this.homeTeamPlayers.push(newTeamPlayer);
+    console.log(this.homeTeamPlayers);
+    this.playerNumber = 0;
+  }
+
+  addToAwayTeam(teamName: string) {
+    this.playerNumber = Number(this.newPlayerNumber.join(''));
+    this.newPlayerNumber.length = 0;
+    let newTeamPlayer: Player = {
+      playerId: 0,
+      firstName: "",
+      lastName: "",
+      number: this.playerNumber,
+      position: "",
+      team: teamName,
+      picture: null,
+      isMale: "",
+      added: "true",
+      modified: "",
+      deleted: ""
+    }
+    console.log(this.playerNumber);
+    this.awayTeamPlayers.push(newTeamPlayer);
+    console.log(this.awayTeamPlayers);
+    this.playerNumber = 0;
   }
 
   addToHomeCourt (player: Player) {
@@ -99,11 +158,6 @@ export class GamecastComponent {
   removeFromAwayCourt (player: Player) {
     this.awayTeamPlayers.push(player);
     this.awayTeamPlayersOnCourt.splice(this.awayTeamPlayersOnCourt.indexOf(player), 1);
-  }
-
-  drop(event: CdkDragDrop<any[]>) {
-    moveItemInArray(this.homeTeamMembers, event.previousIndex, event.currentIndex);
-    moveItemInArray(this.awayTeamMembers, event.previousIndex, event.currentIndex);
   }
 
   public async fetchPlayersUsingQuery() {
