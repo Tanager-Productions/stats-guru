@@ -26,7 +26,6 @@ export interface Game {
   eventId: number | null;
   added: string;
   modified: string;
-  deleted:string;
 }
 
 export interface ServerGame {

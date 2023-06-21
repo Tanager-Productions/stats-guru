@@ -51,21 +51,18 @@ export class SyncService {
         games: await this.crudService.query(this.db, "games"),
         players: await this.crudService.query(this.db, "players"),
         stats: await this.crudService.query(this.db, "stats"),
-        teams: await this.crudService.query(this.db, "teams"),
-        plays: await this.crudService.query(this.db, "plays"),
-        events: await this.crudService.query(this.db, "events")
+        plays: await this.crudService.query(this.db, "plays")
       }
       let httpResponse = await this.api.postSync(res);
       if (httpResponse.status == 200) {
         let res: SyncResult = httpResponse.data;
+        let history = {
         let history = {
           dateOccurred: new Date().toUTCString(),
           statsSynced: res.statsSynced ? 1 : 0,
           gamesSynced: res.statsSynced ? 1 : 0,
           playersSynced: res.statsSynced ? 1 : 0,
           playsSynced: res.statsSynced ? 1 : 0,
-          teamsSynced: res.statsSynced ? 1 : 0,
-          eventsSynced: res.statsSynced ? 1 : 0,
           errorMessages: JSON.stringify(res.errorMessages)
         };
         await this.crudService.save(this.db, "syncHistory", history);

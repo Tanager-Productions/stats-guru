@@ -9,7 +9,6 @@ export interface Player {
   isMale: string;
   added: string;
   modified: string;
-  deleted:string;
 }
 
 export interface ServerPlayer {

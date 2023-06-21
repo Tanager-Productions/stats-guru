@@ -6,9 +6,6 @@ export interface Event {
   title: string | null;
   city: string | null;
   picture: string | null;
-  added: string;
-  modified: string;
-  deleted:string;
 }
 
 export interface ServerEvent {

@@ -4,7 +4,7 @@ import { CapacitorSQLite, SQLiteDBConnection, SQLiteConnection, capSQLiteSet,
          capSQLiteChanges, capSQLiteValues, capEchoResult, capSQLiteResult,
          capNCDatabasePathResult,
          CapacitorSQLitePlugin} from '@capacitor-community/sqlite';
-import { currentDatabaseVersion, databaseName, version1, version2, version3, version4 } from 'src/app/upgrades/versions';
+import { currentDatabaseVersion, databaseName, upgrades } from 'src/app/upgrades/versions';
 
 @Injectable({
   providedIn: 'root'
@@ -43,27 +43,7 @@ export class SqlService {
 
   async upgradeDatabase(): Promise<void> {
     this.ensureConnectionIsOpen();
-    return this.sqlitePlugin.addUpgradeStatement({
-      database: databaseName,
-      upgrade: [
-        {
-          toVersion: 1,
-          statements: version1
-        },
-        {
-          toVersion: 2,
-          statements: version2
-        },
-        {
-          toVersion: 3,
-          statements: version3
-        },
-        {
-          toVersion: 4,
-          statements: version4
-        }
-      ]
-    });
+    return this.sqlitePlugin.addUpgradeStatement(upgrades);
   }
 
   /**

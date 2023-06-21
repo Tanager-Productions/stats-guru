@@ -1,6 +1,3 @@
-export const currentDatabaseVersion = 4;
-export const databaseName = "tgs";
-
 export const version1: string[] = [
   `
     CREATE TABLE IF NOT EXISTS Teams (
@@ -144,3 +141,32 @@ export const version4: string[] = [
     ALTER TABLE Events ADD COLUMN picture TEXT NULL;
   `
 ]
+
+export const version5: string[] = [
+  `ALTER TABLE Events DROP COLUMN added;`,
+  `ALTER TABLE Events DROP COLUMN modified;`,
+  `ALTER TABLE Events DROP COLUMN deleted;`,
+  `ALTER TABLE Teams DROP COLUMN added;`,
+  `ALTER TABLE Teams DROP COLUMN modified;`,
+  `ALTER TABLE Teams DROP COLUMN deleted;`,
+  `ALTER TABLE Games DROP COLUMN deleted;`,
+  `ALTER TABLE Players DROP COLUMN deleted;`,
+  `ALTER TABLE SyncHistory DROP COLUMN teamsSynced;`,
+  `ALTER TABLE SyncHistory DROP COLUMN eventsSynced;`,
+  `ALTER TABLE Stats ADD COLUMN eff GENERATED ALWAYS AS (
+    ([points]+[rebounds]+[assists]+[steals]+[blocks]-(([fieldGoalsAttempted]-[fieldGoalsMade])+([threesAttempted]-[threesMade]))-([freethrowsAttempted]-[freethrowsMade])-[turnovers])/[minutes]
+  )`
+]
+
+export const currentDatabaseVersion = 5;
+export const databaseName = "tgs";
+export const upgrades = {
+  database: databaseName,
+  upgrade: [
+    { toVersion: 1, statements: version1 },
+    { toVersion: 2, statements: version2 },
+    { toVersion: 3, statements: version3 },
+    { toVersion: 4, statements: version4 },
+    { toVersion: 5, statements: version5 },
+  ]
+};

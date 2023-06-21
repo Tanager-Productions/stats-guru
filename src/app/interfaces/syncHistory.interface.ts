@@ -3,9 +3,7 @@ export interface SyncHistory {
   dateOccurred: string;
   playsSynced: number;
   playersSynced: number;
-  teamsSynced: number;
   gamesSynced: number;
   statsSynced: number;
-  eventsSynced: number;
   errorMessages: string;
 }

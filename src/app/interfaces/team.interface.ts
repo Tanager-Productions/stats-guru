@@ -5,9 +5,6 @@ export interface Team {
   logo: string | null;
   isMale: string;
   official: string;
-  added: string;
-  modified: string;
-  deleted:string;
 }
 
 export interface ServerTeam {
