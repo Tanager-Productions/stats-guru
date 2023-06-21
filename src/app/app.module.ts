@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
+import { BrowserModule, HammerModule } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { IonicModule } from '@ionic/angular';
@@ -27,7 +27,8 @@ import { SharedModule } from './shared/shared.module';
     CommonModule,
     HomeRoutingModule,
     IonicModule.forRoot({mode:'md'}),
-    SharedModule
+    SharedModule,
+		HammerModule
   ],
   providers: [
     CommonService,

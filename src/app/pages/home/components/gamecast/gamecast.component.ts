@@ -15,6 +15,7 @@ import {
   CdkDrag,
   CdkDropList
 } from '@angular/cdk/drag-drop';
+import { SyncState } from 'src/app/interfaces/syncState.enum';
 
 @Component({
   selector: 'app-gamecast',
@@ -22,6 +23,7 @@ import {
   styleUrls: ['./gamecast.component.scss'],
 })
 export class GamecastComponent {
+	public ro:boolean = true;
   public games$?: Observable<Game[]>;
   gameId: number | undefined;
   currentGame$?: Observable<Game | undefined>;
@@ -35,9 +37,9 @@ export class GamecastComponent {
   homeTeamTOL: number = 5;
   awayTeamTOL: number = 5;
   period: number = 1;
-  timerDuration: number = 40 * 60; 
+  timerDuration: number = 40 * 60;
   timeLeft: number = this.timerDuration;
-  timerDisplay: string = '';
+  timerDisplay: string = '00:00';
   timerRunning: boolean = false;
   homeTeam!: Team;
   awayTeam!: Team;
@@ -53,9 +55,9 @@ export class GamecastComponent {
   playerNumber!: number;
 
   constructor(
-    private route: ActivatedRoute, 
+    private route: ActivatedRoute,
     private common: CommonService,
-    private crud: CrudService, 
+    private crud: CrudService,
     private sql: SqlService
     ) {}
 
@@ -71,7 +73,7 @@ export class GamecastComponent {
         );
       }
     });
-    
+
     this.fetchPlayersUsingQuery();
   }
 
@@ -79,7 +81,7 @@ export class GamecastComponent {
     if (this.newPlayerNumber.length < 3) {
       this.newPlayerNumber.push(numberClicked);
     }
-  } 
+  }
 
   clearNumberInput() {
     this.newPlayerNumber.length = 0;
@@ -104,9 +106,7 @@ export class GamecastComponent {
       team: teamName,
       picture: null,
       isMale: "",
-      added: "",
-      modified: "",
-      deleted: ""
+      syncState: SyncState.Unchanged
     }
     console.log(this.playerNumber);
     this.homeTeamPlayers.push(newTeamPlayer);
@@ -126,9 +126,7 @@ export class GamecastComponent {
       team: teamName,
       picture: null,
       isMale: "",
-      added: "true",
-      modified: "",
-      deleted: ""
+      syncState: SyncState.Unchanged
     }
     console.log(this.playerNumber);
     this.awayTeamPlayers.push(newTeamPlayer);
@@ -247,7 +245,7 @@ export class GamecastComponent {
     this.stopTimer();
   }
 
-  
+
   resetGame() {
     this.stopTimer();
     this.timeLeft = this.timerDuration;

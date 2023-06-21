@@ -7,9 +7,6 @@ export const version1: string[] = [
       state TEXT NOT NULL,
       logo TEXT NULL,
       official TEXT NOT NULL,
-      added TEXT NOT NULL DEFAULT "false",
-      modified TEXT NOT NULL DEFAULT "false",
-      deleted TEXT NOT NULL DEFAULT "false",
       PRIMARY KEY (name, isMale)
     );
   `,
@@ -24,9 +21,7 @@ export const version1: string[] = [
       picture TEXT NULL,
       team TEXT NOT NULL,
       isMale TEXT NOT NULL,
-      added TEXT NOT NULL DEFAULT "false",
-      modified TEXT NOT NULL DEFAULT "false",
-      deleted TEXT NOT NULL DEFAULT "false"
+      syncState INTEGER NOT NULL DEFAULT 0
     );
   `,
 
@@ -57,9 +52,7 @@ export const version1: string[] = [
       period TEXT NULL,
       gameLink TEXT NULL,
       eventId INTEGER NULL,
-      added TEXT NOT NULL DEFAULT "false",
-      modified TEXT NOT NULL DEFAULT "false",
-      deleted TEXT NOT NULL DEFAULT "false"
+      syncState INTEGER NOT NULL DEFAULT 0
     );
   `,
 
@@ -68,9 +61,7 @@ export const version1: string[] = [
       playId INTEGER NOT NULL,
       gameId INTEGER NOT NULL,
       data TEXT NOT NULL,
-      added TEXT NOT NULL DEFAULT "false",
-      modified TEXT NOT NULL DEFAULT "false",
-      deleted TEXT NOT NULL DEFAULT "false",
+      syncState INTEGER NOT NULL DEFAULT 0,
       PRIMARY KEY (playId, gameId)
     );
   `,
@@ -96,15 +87,14 @@ export const version1: string[] = [
       plusOrMinus INTEGER NULL,
       offensiveRebounds INTEGER NULL,
       defensiveRebounds INTEGER NULL,
-      added TEXT NOT NULL DEFAULT "false",
-      modified TEXT NOT NULL DEFAULT "false",
-      deleted TEXT NOT NULL DEFAULT "false",
+      eff GENERATED ALWAYS AS (
+        CASE WHEN [minutes] = 0 THEN 0 ELSE ((([threesMade]*3)+[freeThrowsMade]+(([fieldGoalsMade]-[threesMade])*2))+[rebounds]+[assists]+[steals]+[blocks]-([fieldGoalsAttempted]-[fieldGoalsMade])-([freethrowsAttempted]-[freethrowsMade])-[turnovers])/([minutes]*1.0) END
+      ),
+      syncState INTEGER NOT NULL DEFAULT 0,
       PRIMARY KEY (player, game)
     );
-  `
-];
+  `,
 
-export const version2: string[] = [
   `
     CREATE TABLE IF NOT EXISTS Events (
       eventId INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -113,60 +103,28 @@ export const version2: string[] = [
       state TEXT NULL,
       title TEXT NULL,
       city TEXT NULL,
-      added TEXT NOT NULL DEFAULT "false",
-      modified TEXT NOT NULL DEFAULT "false",
-      deleted TEXT NOT NULL DEFAULT "false"
+      picture TEXT NULL
     );
-  `
-];
+  `,
 
-export const version3: string[] = [
   `
     CREATE TABLE IF NOT EXISTS SyncHistory (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       dateOccurred TEXT NOT NULL,
       playsSynced INTEGER NOT NULL,
       playersSynced INTEGER NOT NULL,
-      teamsSynced INTEGER NOT NULL,
       gamesSynced INTEGER NOT NULL,
       statsSynced INTEGER NOT NULL,
-      eventsSynced INTEGER NOT NULL,
       errorMessages TEXT NOT NULL
     );
   `
-]
+];
 
-export const version4: string[] = [
-  `
-    ALTER TABLE Events ADD COLUMN picture TEXT NULL;
-  `
-]
-
-export const version5: string[] = [
-  `ALTER TABLE Events DROP COLUMN added;`,
-  `ALTER TABLE Events DROP COLUMN modified;`,
-  `ALTER TABLE Events DROP COLUMN deleted;`,
-  `ALTER TABLE Teams DROP COLUMN added;`,
-  `ALTER TABLE Teams DROP COLUMN modified;`,
-  `ALTER TABLE Teams DROP COLUMN deleted;`,
-  `ALTER TABLE Games DROP COLUMN deleted;`,
-  `ALTER TABLE Players DROP COLUMN deleted;`,
-  `ALTER TABLE SyncHistory DROP COLUMN teamsSynced;`,
-  `ALTER TABLE SyncHistory DROP COLUMN eventsSynced;`,
-  `ALTER TABLE Stats ADD COLUMN eff GENERATED ALWAYS AS (
-    ([points]+[rebounds]+[assists]+[steals]+[blocks]-(([fieldGoalsAttempted]-[fieldGoalsMade])+([threesAttempted]-[threesMade]))-([freethrowsAttempted]-[freethrowsMade])-[turnovers])/[minutes]
-  )`
-]
-
-export const currentDatabaseVersion = 5;
+export const currentDatabaseVersion = 6;
 export const databaseName = "tgs";
 export const upgrades = {
   database: databaseName,
   upgrade: [
-    { toVersion: 1, statements: version1 },
-    { toVersion: 2, statements: version2 },
-    { toVersion: 3, statements: version3 },
-    { toVersion: 4, statements: version4 },
-    { toVersion: 5, statements: version5 },
+    { toVersion: 1, statements: version1 }
   ]
 };

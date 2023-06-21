@@ -7,8 +7,7 @@ export interface Player {
   team: string;
   picture: string | null;
   isMale: string;
-  added: string;
-  modified: string;
+  syncState: number;
 }
 
 export interface ServerPlayer {

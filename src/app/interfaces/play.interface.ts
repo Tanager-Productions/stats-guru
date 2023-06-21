@@ -1,10 +1,8 @@
 export interface Play {
-  playId: string;
+  playId: number;
   data: string;
   gameId: number;
-  added: string;
-  modified: string;
-  deleted:string;
+  syncState: number;
 }
 
 export interface ServerPlay {

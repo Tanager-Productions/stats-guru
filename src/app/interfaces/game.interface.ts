@@ -24,8 +24,7 @@ export interface Game {
   period: string | null;
   gameLink: string | null;
   eventId: number | null;
-  added: string;
-  modified: string;
+  syncState: number;
 }
 
 export interface ServerGame {

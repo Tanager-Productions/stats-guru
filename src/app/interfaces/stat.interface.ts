@@ -18,9 +18,8 @@ export interface Stat {
   turnovers: number;
   fouls: number;
   plusOrMinus: number;
-  added: string;
-  modified: string;
-  deleted:string;
+  eff:number;
+  syncState: number;
 }
 
 export interface ServerStat {
@@ -43,5 +42,6 @@ export interface ServerStat {
   turnovers: number;
   fouls: number;
   plusOrMinus: number;
+  eff?:number;
 }
 

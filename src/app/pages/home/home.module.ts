@@ -9,6 +9,7 @@ import { AddGamesComponent } from './components/add-games/add-games.component';
 import { HomePage } from './home.page';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { HammerModule } from '@angular/platform-browser';
 
 
 @NgModule({
@@ -25,7 +26,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
     IonicModule,
     SharedModule,
     FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+		HammerModule
   ]
 })
 export class HomeModule { }

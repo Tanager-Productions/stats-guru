@@ -57,7 +57,6 @@ export class SyncService {
       if (httpResponse.status == 200) {
         let res: SyncResult = httpResponse.data;
         let history = {
-        let history = {
           dateOccurred: new Date().toUTCString(),
           statsSynced: res.statsSynced ? 1 : 0,
           gamesSynced: res.statsSynced ? 1 : 0,
@@ -160,6 +159,7 @@ export class SyncService {
       let stats = response.data as ServerStat[];
       for (let stat of stats) {
         delete stat.points;
+        delete stat.eff;
       }
       for (var i = 0; i < stats.length; i = i + 50) {
         let end = i+50;
