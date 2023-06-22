@@ -37,6 +37,7 @@ export class GamecastComponent {
   timerRunning: boolean = false;
 	newPlayerNumber:string = '';
 	homePlayerSelected: number = 0;
+	editPlayer: boolean = false;
 
   constructor(private route: ActivatedRoute, private crud: CrudService, private sql: SqlService) {}
 

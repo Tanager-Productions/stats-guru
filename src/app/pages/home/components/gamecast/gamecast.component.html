@@ -41,26 +41,24 @@
 											<ion-button color="light" fill="clear">
 												<ion-icon size="default" slot="icon-only" name="person-sharp"></ion-icon>
 											</ion-button>
-											<ion-button color="light" fill="clear" (click)="editPlayerNameNumber(true)">
+											<ion-button color="light" fill="clear" (click)="editPlayer = true">
 												<ion-icon size="default" slot="icon-only" name="pencil-sharp"></ion-icon>
 											</ion-button>
 										</div>
 									</div>
-									<ng-container *ngIf="currentGame$ | async as currentGame">
-										<div *ngIf="editPlayer == true">
-											<ion-input type="name" [(ngModel)]="updatePlayerFirstName" color="light" labelPlacement="stacked" label="First Name:" placeholder="{{player.firstName}}"></ion-input>
-											<ion-input type="name" [(ngModel)]="updatePlayerLastName" color="light" labelPlacement="stacked" label="Last Name:" placeholder="{{player.lastName}}"></ion-input>
-											<ion-input type="number" [(ngModel)]="updatePlayerNumber" color="light" labelPlacement="stacked" label="Number:" placeholder="{{player.number}}"></ion-input>
-											<div style="display: flex; float: right;">
-												<ion-button color="light" fill="clear" [disabled]="true">
-													<ion-icon size="default" slot="icon-only" name="person-sharp"></ion-icon>
-												</ion-button>
-												<ion-button color="light" fill="clear" (click)="editPlayerNameNumber(false); updatePlayerNameNumber(updatePlayerFirstName, updatePlayerLastName, updatePlayerNumber, currentGame.awayTeam)">
-													<ion-icon size="default" slot="icon-only" name="checkmark-sharp"></ion-icon>
-												</ion-button>
-											</div>
+									<div *ngIf="editPlayer == true">
+										<ion-input type="name" [(ngModel)]="player.firstName" color="light" labelPlacement="stacked" label="First Name:" placeholder="{{player.firstName}}"></ion-input>
+										<ion-input type="name" [(ngModel)]="player.lastName" color="light" labelPlacement="stacked" label="Last Name:" placeholder="{{player.lastName}}"></ion-input>
+										<ion-input type="number" [(ngModel)]="player.number" color="light" labelPlacement="stacked" label="Number:" placeholder="{{player.number}}"></ion-input>
+										<div style="display: flex; float: right;">
+											<ion-button color="light" fill="clear" [disabled]="true">
+												<ion-icon size="default" slot="icon-only" name="person-sharp"></ion-icon>
+											</ion-button>
+											<ion-button color="light" fill="clear" (click)="editPlayer = false">
+												<ion-icon size="default" slot="icon-only" name="checkmark-sharp"></ion-icon>
+											</ion-button>
 										</div>
-									</ng-container>
+									</div>
 								</ion-content>
 							</ng-template>
 						</ion-popover>
