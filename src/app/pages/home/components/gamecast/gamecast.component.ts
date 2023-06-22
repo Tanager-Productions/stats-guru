@@ -16,6 +16,7 @@ import {
   CdkDropList
 } from '@angular/cdk/drag-drop';
 import { SyncState } from 'src/app/interfaces/syncState.enum';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-gamecast',
@@ -53,12 +54,18 @@ export class GamecastComponent {
   players: Player[] = [];
   newPlayerNumber: number[] = [];
   playerNumber!: number;
+	updatePlayerFirstName!: string;
+	updatePlayerLastName!: string;
+	updatePlayerNumber!: number;
+	editedTeamPlayer!: Player;
+	editPlayer: boolean = false;
 
   constructor(
     private route: ActivatedRoute,
     private common: CommonService,
     private crud: CrudService,
-    private sql: SqlService
+    private sql: SqlService,
+		public formBuilder: FormBuilder
     ) {}
 
   ngOnInit() {
@@ -77,6 +84,25 @@ export class GamecastComponent {
     this.fetchPlayersUsingQuery();
   }
 
+	editPlayerNameNumber(edit: boolean) {
+		this.editPlayer = edit;
+	}
+
+	updatePlayerNameNumber(firstName: string, lastName: string, number: number, teamName: string) {
+		let updatedTeamPlayer: Player = {
+      playerId: 0,
+      firstName: firstName,
+      lastName: lastName,
+      number: number,
+      position: "",
+      team: teamName,
+      picture: null,
+      isMale: "",
+      syncState: SyncState.Unchanged
+    }
+		return updatedTeamPlayer;
+	}
+
   inputNumber (numberClicked: number) {
     if (this.newPlayerNumber.length < 3) {
       this.newPlayerNumber.push(numberClicked);
@@ -90,7 +116,6 @@ export class GamecastComponent {
   clockPlayer() {
     this.playerNumber = Number(this.newPlayerNumber.join(''));
     this.newPlayerNumber.length = 0;
-    console.log(this.playerNumber);
 
   }
 
@@ -108,9 +133,7 @@ export class GamecastComponent {
       isMale: "",
       syncState: SyncState.Unchanged
     }
-    console.log(this.playerNumber);
     this.homeTeamPlayers.push(newTeamPlayer);
-    console.log(this.homeTeamPlayers);
     this.playerNumber = 0;
   }
 
@@ -128,9 +151,7 @@ export class GamecastComponent {
       isMale: "",
       syncState: SyncState.Unchanged
     }
-    console.log(this.playerNumber);
     this.awayTeamPlayers.push(newTeamPlayer);
-    console.log(this.awayTeamPlayers);
     this.playerNumber = 0;
   }
 
@@ -165,7 +186,6 @@ export class GamecastComponent {
     let playersForTeam2: Player[] = await this.crud.query(db, "players", true, {"team": `'${teams[0].awayTeam}'`, "isMale": "true"});
     this.homeTeamPlayers = playersForTeam1;
     this.awayTeamPlayers = playersForTeam2;
-    console.log(this.homeTeamPlayers);
   }
 
   addPoints(team: string, points: number) {

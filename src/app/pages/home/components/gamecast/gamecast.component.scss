@@ -18,7 +18,7 @@
     align-items: center;
     margin-top: -20px;
   }
-  
+
   .team-container {
     height: auto;
     width: auto;
@@ -37,7 +37,8 @@
     height: 375px;
     padding: 5px;
     overflow-y: auto;
-  } 
+		overflow-x: hidden;
+  }
 
   .players-container::-webkit-scrollbar {
     display: none;
@@ -91,7 +92,7 @@
   #court-container {
     border: 2px solid grey;
   }
-  
+
   h2 {
     margin-bottom: 15px;
     color: black;
@@ -108,11 +109,11 @@
     line-height: 1;
     margin-bottom: 5px;
   }
-  
+
   .digital-number {
     font-family: 'Digital-7', monospace;
   }
-  
+
   .button-container {
     display: flex;
     flex-wrap: wrap;
@@ -120,7 +121,7 @@
     gap: 10px;
     margin-bottom: 15px;
   }
-  
+
   .game-info {
     align-items: center;
     display: flex;
@@ -132,14 +133,14 @@
   ion-card-content {
     position: relative;
   }
-  
+
   .timer-reset-container {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 1em;
   }
-  
+
   .reset-button {
     position: absolute;
     bottom: 1em;

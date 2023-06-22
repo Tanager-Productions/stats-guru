@@ -29,13 +29,34 @@
 						<ion-popover trigger="context-menu-trigger{{i}}" triggerAction="context-menu" side="right" alignment="end">
 							<ng-template>
 								<ion-content color="primary" class="ion-padding">
-									Name: {{player.firstName}} {{player.lastName}}<br>
-									Number: {{player.number}}
-									<div style="display: flex; float: right;">
-										<ion-button color="light" fill="clear">
-											<ion-icon slot="icon-only" name="pencil"></ion-icon>
-										</ion-button>
+									<div *ngIf="editPlayer == false">
+										<ion-input type="name" color="light" labelPlacement="stacked" label="First Name:" value="{{player.firstName}}" [readonly]="true"></ion-input>
+										<ion-input type="name" color="light" labelPlacement="stacked" label="Last Name:" value="{{player.lastName}}" [readonly]="true"></ion-input>
+										<ion-input type="number" color="light" labelPlacement="stacked" label="Number:" value="{{player.number}}" [readonly]="true"></ion-input>
+										<div style="display: flex; float: right;">
+											<ion-button color="light" fill="clear">
+												<ion-icon size="default" slot="icon-only" name="person-sharp"></ion-icon>
+											</ion-button>
+											<ion-button color="light" fill="clear" (click)="editPlayerNameNumber(true)">
+												<ion-icon size="default" slot="icon-only" name="pencil-sharp"></ion-icon>
+											</ion-button>
+										</div>
 									</div>
+									<ng-container *ngIf="currentGame$ | async as currentGame">
+										<div *ngIf="editPlayer == true">
+											<ion-input type="name" [(ngModel)]="updatePlayerFirstName" color="light" labelPlacement="stacked" label="First Name:" placeholder="{{player.firstName}}"></ion-input>
+											<ion-input type="name" [(ngModel)]="updatePlayerLastName" color="light" labelPlacement="stacked" label="Last Name:" placeholder="{{player.lastName}}"></ion-input>
+											<ion-input type="number" [(ngModel)]="updatePlayerNumber" color="light" labelPlacement="stacked" label="Number:" placeholder="{{player.number}}"></ion-input>
+											<div style="display: flex; float: right;">
+												<ion-button color="light" fill="clear" [disabled]="true">
+													<ion-icon size="default" slot="icon-only" name="person-sharp"></ion-icon>
+												</ion-button>
+												<ion-button color="light" fill="clear" (click)="editPlayerNameNumber(false); updatePlayerNameNumber(updatePlayerFirstName, updatePlayerLastName, updatePlayerNumber, currentGame.awayTeam)">
+													<ion-icon size="default" slot="icon-only" name="checkmark-sharp"></ion-icon>
+												</ion-button>
+											</div>
+										</div>
+									</ng-container>
 								</ion-content>
 							</ng-template>
 						</ion-popover>
@@ -45,18 +66,35 @@
 					<div class="column">
 						<div class="court-container" id="home-court-container">
 							<span class="home-font" id="team-numbers" *ngFor="let player of homeTeamPlayersOnCourt; let i = index">
-								<ion-button fill="clear" color="primary" size="large" id="context-menu-trigger-homeCourt{{i}}" (click)="removeFromHomeCourt(player)">
+								<ion-button fill="clear" shape="round" color="primary" size="large" id="context-menu-trigger-homeCourt{{i}}" (click)="removeFromHomeCourt(player)">
 									{{player.number}}
 								</ion-button>
-								<ion-popover trigger="context-menu-trigger-homeCourt{{i}}" triggerAction="context-menu" side="top" alignment="start">
+								<ion-popover trigger="context-menu-trigger-homeCourt{{i}}" triggerAction="context-menu" side="top" alignment="center">
 									<ng-template>
 										<ion-content color="primary" class="ion-padding">
-											Name: {{player.firstName}} {{player.lastName}}<br>
-											Number: {{player.number}}
-											<div style="display: flex; float: right;">
-												<ion-button color="light" fill="clear">
-													<ion-icon slot="icon-only" name="pencil"></ion-icon>
-												</ion-button>
+											<div *ngIf="editPlayer == false">
+												<ion-input type="name" color="light" labelPlacement="stacked" label="Name:" value="{{player.firstName}} {{player.lastName}}" [readonly]="true"></ion-input>
+												<ion-input type="number" color="light" labelPlacement="stacked" label="Number:" value="{{player.number}}" [readonly]="true"></ion-input>
+												<div style="display: flex; float: right;">
+													<ion-button color="light" fill="clear">
+														<ion-icon size="default" slot="icon-only" name="person-sharp"></ion-icon>
+													</ion-button>
+													<ion-button color="light" fill="clear" (click)="editPlayerNameNumber(true)">
+														<ion-icon size="default" slot="icon-only" name="pencil-sharp"></ion-icon>
+													</ion-button>
+												</div>
+											</div>
+											<div *ngIf="editPlayer == true">
+												<ion-input type="name" color="light" labelPlacement="stacked" label="Name:" value="{{player.firstName}} {{player.lastName}}"></ion-input>
+												<ion-input type="number" color="light" labelPlacement="stacked" label="Number:" value="{{player.number}}"></ion-input>
+												<div style="display: flex; float: right;">
+													<ion-button color="light" fill="clear">
+														<ion-icon size="default" slot="icon-only" name="person-sharp"></ion-icon>
+													</ion-button>
+													<ion-button color="light" fill="clear" (click)="editPlayerNameNumber(false)">
+														<ion-icon size="default" slot="icon-only" name="checkmark-sharp"></ion-icon>
+													</ion-button>
+												</div>
 											</div>
 										</ion-content>
 									</ng-template>
@@ -125,17 +163,34 @@
 							<ion-button fill="clear" shape="round" color="danger" size="large" id="context-menu-trigger-awayCourt{{i}}" (click)="removeFromAwayCourt(player)">
 								{{player.number}}
 							</ion-button>
-							<ion-popover trigger="context-menu-trigger-awayCourt{{i}}" triggerAction="context-menu" side="top" alignment="start">
+							<ion-popover trigger="context-menu-trigger-awayCourt{{i}}" triggerAction="context-menu" side="top" alignment="center">
 								<ng-template>
-								<ion-content color="danger" class="ion-padding">
-									Name: {{player.firstName}} {{player.lastName}}<br>
-									Number: {{player.number}}
-									<div style="display: flex; float: right;">
-									<ion-button color="light" size="small" shape="round" fill="clear" class="no-drag">
-										<ion-icon slot="icon-only" name="pencil-sharp"></ion-icon>
-									</ion-button>
-									</div>
-								</ion-content>
+									<ion-content color="danger" class="ion-padding">
+										<div *ngIf="editPlayer == false">
+											<ion-input type="name" color="light" labelPlacement="stacked" label="Name:" value="{{player.firstName}} {{player.lastName}}" [readonly]="true"></ion-input>
+											<ion-input type="number" color="light" labelPlacement="stacked" label="Number:" value="{{player.number}}" [readonly]="true"></ion-input>
+											<div style="display: flex; float: right;">
+												<ion-button color="light" fill="clear">
+													<ion-icon size="default" slot="icon-only" name="person-sharp"></ion-icon>
+												</ion-button>
+												<ion-button color="light" fill="clear" (click)="editPlayerNameNumber(true)">
+													<ion-icon size="default" slot="icon-only" name="pencil-sharp"></ion-icon>
+												</ion-button>
+											</div>
+										</div>
+										<div *ngIf="editPlayer == true">
+											<ion-input type="name" color="light" labelPlacement="stacked" label="Name:" value="{{player.firstName}} {{player.lastName}}"></ion-input>
+											<ion-input type="number" color="light" labelPlacement="stacked" label="Number:" value="{{player.number}}"></ion-input>
+											<div style="display: flex; float: right;">
+												<ion-button color="light" fill="clear">
+													<ion-icon size="default" slot="icon-only" name="person-sharp"></ion-icon>
+												</ion-button>
+												<ion-button color="light" fill="clear" (click)="editPlayerNameNumber(false)">
+													<ion-icon size="default" slot="icon-only" name="checkmark-sharp"></ion-icon>
+												</ion-button>
+											</div>
+										</div>
+									</ion-content>
 								</ng-template>
 							</ion-popover>
 							</span>
@@ -179,12 +234,29 @@
 						<ion-popover trigger="context-menu-trigger-away{{i}}" triggerAction="context-menu" side="left" alignment="start">
 							<ng-template>
 								<ion-content color="danger" class="ion-padding">
-									Name: {{player.firstName}} {{player.lastName}}<br>
-									Number: {{player.number}}
-									<div style="display: flex; float: right;">
-									<ion-button color="light" size="small" shape="round" fill="clear" class="no-drag">
-										<ion-icon slot="icon-only" name="pencil-sharp"></ion-icon>
-									</ion-button>
+									<div *ngIf="editPlayer == false">
+										<ion-input type="name" color="light" labelPlacement="stacked" label="Name:" value="{{player.firstName}} {{player.lastName}}" [readonly]="true"></ion-input>
+										<ion-input type="number" color="light" labelPlacement="stacked" label="Number:" value="{{player.number}}" [readonly]="true"></ion-input>
+										<div style="display: flex; float: right;">
+											<ion-button color="light" fill="clear">
+												<ion-icon size="default" slot="icon-only" name="person-sharp"></ion-icon>
+											</ion-button>
+											<ion-button color="light" fill="clear" (click)="editPlayerNameNumber(true)">
+												<ion-icon size="default" slot="icon-only" name="pencil-sharp"></ion-icon>
+											</ion-button>
+										</div>
+									</div>
+									<div *ngIf="editPlayer == true">
+										<ion-input type="name" color="light" labelPlacement="stacked" label="Name:" value="{{player.firstName}} {{player.lastName}}"></ion-input>
+										<ion-input type="number" color="light" labelPlacement="stacked" label="Number:" value="{{player.number}}"></ion-input>
+										<div style="display: flex; float: right;">
+											<ion-button color="light" fill="clear">
+												<ion-icon size="default" slot="icon-only" name="person-sharp"></ion-icon>
+											</ion-button>
+											<ion-button color="light" fill="clear" (click)="editPlayerNameNumber(false)">
+												<ion-icon size="default" slot="icon-only" name="checkmark-sharp"></ion-icon>
+											</ion-button>
+										</div>
 									</div>
 								</ion-content>
 							</ng-template>
