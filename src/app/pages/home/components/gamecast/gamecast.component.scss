@@ -12,12 +12,17 @@
     font-weight: bold;
   }
 
+	.selectedButton {
+		--background: white;
+	}
+
   .scoreboard {
     display: flex;
     justify-content: center;
     align-items: center;
     margin-top: -20px;
   }
+
 
   .team-container {
     height: auto;
