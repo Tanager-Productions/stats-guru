@@ -37,6 +37,7 @@ export class GamecastComponent {
   timerRunning: boolean = false;
 	newPlayerNumber:string = '';
 	homePlayerSelected: number = 0;
+	editPlayer:boolean = false;
 
   constructor(private route: ActivatedRoute, private crud: CrudService, private sql: SqlService) {}
 
@@ -83,23 +84,10 @@ export class GamecastComponent {
 		this.awayTeamFouls = this.stats.filter(t => awayPlayerIds.includes(t.player)).reduce((sum, current) => sum + current.fouls, 0);
 	}
 
-	editPlayerNameNumber(edit: boolean) {
-		//this.editPlayer = edit;
-	}
-
-	updatePlayerNameNumber(firstName: string, lastName: string, number: number, teamName: string) {
-		let updatedTeamPlayer: Player = {
-      playerId: 0,
-      firstName: firstName,
-      lastName: lastName,
-      number: number,
-      position: "",
-      team: teamName,
-      picture: null,
-      isMale: "",
-      syncState: SyncState.Unchanged
-    }
-		return updatedTeamPlayer;
+	async savePlayer(player: Player) {
+		player.syncState = SyncState.Modified;
+		await this.crud.save(this.db, "Players", player, {"playerId": `${player.playerId}`});
+		this.editPlayer = false;
 	}
 
   inputNumber (numberClicked: number) {
@@ -181,6 +169,7 @@ export class GamecastComponent {
   }
 
 	private async updateGame() {
+		this.currentGame!.syncState = SyncState.Modified;
 		await this.crud.save(this.db, 'Games', this.currentGame, { "gameId": `${this.gameId}` });
 	}
 
