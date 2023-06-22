@@ -1,21 +1,16 @@
 import { Component } from '@angular/core';
-import {NgFor} from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { Observable, Subscription, async, interval, map } from 'rxjs';
+import { Observable, Subscription, interval, map } from 'rxjs';
 import { Game } from 'src/app/interfaces/game.interface';
 import { Player } from 'src/app/interfaces/player.interface';
-import { Team } from 'src/app/interfaces/team.interface';
-import { CommonService } from 'src/app/services/common/common.service';
 import { CrudService } from 'src/app/services/crud/crud.service';
 import { SqlService } from 'src/app/services/sql/sql.service';
-import {
-  CdkDragDrop,
-  moveItemInArray,
-  transferArrayItem,
-  CdkDrag,
-  CdkDropList
-} from '@angular/cdk/drag-drop';
 import { SyncState } from 'src/app/interfaces/syncState.enum';
+import { Stat } from 'src/app/interfaces/stat.interface';
+import { Play } from 'src/app/interfaces/play.interface';
+import { SQLiteDBConnection } from '@capacitor-community/sqlite';
+
+//teamName | player name | player number | GameAction | period | gameClock | score | timestamp
 
 @Component({
   selector: 'app-gamecast',
@@ -23,190 +18,152 @@ import { SyncState } from 'src/app/interfaces/syncState.enum';
   styleUrls: ['./gamecast.component.scss'],
 })
 export class GamecastComponent {
-	public ro:boolean = true;
-  public games$?: Observable<Game[]>;
+	db!:SQLiteDBConnection;
+	ro:boolean = true;
   gameId: number | undefined;
-  currentGame$?: Observable<Game | undefined>;
-  homeTeamScore: number = 0;
-  awayTeamScore: number = 0;
-  homeTeamFouls: number = 0;
-  homeTeamSteals: number = 0;
-  awayTeamSteals: number = 0;
+  currentGame?: Game;
+	homeTeamPlayers?: Player[];
+	awayTeamPlayers?: Player[];
+	homePlayersOnCourt: Player[] = [];
+	awayPlayersOnCourt: Player[] = [];
+	stats?: Stat[];
+	plays?: Play[];
+	homeTeamFouls: number = 0;
+	awayTeamFouls:number = 0;
   timerSubscription?: Subscription;
-  awayTeamFouls: number = 0;
-  homeTeamTOL: number = 5;
-  awayTeamTOL: number = 5;
-  period: number = 1;
-  timerDuration: number = 40 * 60;
+  timerDuration: number = 8 * 60;
   timeLeft: number = this.timerDuration;
-  timerDisplay: string = '00:00';
+  timerDisplay: string = '08:00';
   timerRunning: boolean = false;
-  homeTeam!: Team;
-  awayTeam!: Team;
-  players$?: Observable<Player[]> | undefined;
-  currentPlayers$?: Observable<Player | undefined>;
-  homeTeamPlayers: Player[] = [];
-  awayTeamPlayers: Player[] = [];
-  homeTeamPlayersOnCourt: Player[] = [];
-  awayTeamPlayersOnCourt: Player[] = [];
-  teams: Team[] = [];
-  players: Player[] = [];
-  newPlayerNumber: number[] = [];
-  playerNumber!: number;
+	newPlayerNumber:string = '';
+	homePlayerSelected: number = 0;
 
-  constructor(
-    private route: ActivatedRoute,
-    private common: CommonService,
-    private crud: CrudService,
-    private sql: SqlService
-    ) {}
+  constructor(private route: ActivatedRoute, private crud: CrudService, private sql: SqlService) {}
 
   ngOnInit() {
-    this.route.params.subscribe((params: { [x: string]: string | number;}) => {
-      this.gameId = +params['gameId'];
-      this.games$ = this.common.getGames();
-      this.common.getTeams().subscribe(teams => this.teams = teams);
-      this.common.getPlayers().subscribe(players => this.players = players);
-      if (this.games$) {
-        this.currentGame$ = this.games$.pipe(
-          map(games => games.find(game => game.gameId === this.gameId))
-        );
-      }
+    this.route.params.subscribe((params: { [x: string]: string | number }) => {
+      this.gameId = params['gameId'] as number;
+			this.fetchData();
     });
-
-    this.fetchPlayersUsingQuery();
   }
+
+	private async fetchData() {
+		this.db = await this.sql.createConnection();
+		this.currentGame = (await this.crud.rawQuery(this.db, `
+			SELECT 	*
+			FROM 		Games
+			WHERE 	gameId = ${this.gameId}
+		`))[0];
+    this.homeTeamPlayers = await this.crud.rawQuery(this.db, `
+			SELECT 	*
+			FROM 		Players
+			WHERE 	team = '${this.currentGame?.homeTeam}'
+			AND 		isMale = ${this.currentGame?.isMale};
+		`);
+    this.awayTeamPlayers = await this.crud.rawQuery(this.db, `
+			SELECT 	*
+			FROM 		Players
+			WHERE 	team = '${this.currentGame?.awayTeam}'
+			AND 		isMale = ${this.currentGame?.isMale};
+		`);
+		this.stats = await this.crud.rawQuery(this.db, `
+			SELECT	*
+			FROM 		Stats
+			WHERE 	game = ${this.gameId};
+		`);
+		this.plays = await this.crud.rawQuery(this.db, `
+			SELECT 		*
+			FROM 			Plays
+			WHERE 		gameId = ${this.gameId}
+			ORDER BY	playId DESC
+		`);
+		let homePlayerIds = this.awayTeamPlayers.map(t => t.playerId);
+		let awayPlayerIds = this.homeTeamPlayers.map(t => t.playerId);
+		this.homeTeamFouls = this.stats.filter(t => homePlayerIds.includes(t.player)).reduce((sum, current) => sum + current.fouls, 0);
+		this.awayTeamFouls = this.stats.filter(t => awayPlayerIds.includes(t.player)).reduce((sum, current) => sum + current.fouls, 0);
+	}
 
   inputNumber (numberClicked: number) {
     if (this.newPlayerNumber.length < 3) {
-      this.newPlayerNumber.push(numberClicked);
+      this.newPlayerNumber += numberClicked;
     }
   }
 
   clearNumberInput() {
-    this.newPlayerNumber.length = 0;
+    this.newPlayerNumber = '';
   }
 
-  clockPlayer() {
-    this.playerNumber = Number(this.newPlayerNumber.join(''));
-    this.newPlayerNumber.length = 0;
-    console.log(this.playerNumber);
-
-  }
-
-  addToHomeTeam(teamName: string) {
-    this.playerNumber = Number(this.newPlayerNumber.join(''));
-    this.newPlayerNumber.length = 0;
+  addToTeam(team: 'home' | 'away') {
     let newTeamPlayer: Player = {
       playerId: 0,
-      firstName: "",
-      lastName: "",
-      number: this.playerNumber,
+      firstName: "New",
+      lastName: "Player",
+      number: Number(this.newPlayerNumber),
       position: "",
-      team: teamName,
+      team: team == 'home' ? this.currentGame!.homeTeam : this.currentGame!.awayTeam,
       picture: null,
-      isMale: "",
+      isMale: this.currentGame!.isMale!,
       syncState: SyncState.Unchanged
     }
-    console.log(this.playerNumber);
-    this.homeTeamPlayers.push(newTeamPlayer);
-    console.log(this.homeTeamPlayers);
-    this.playerNumber = 0;
-  }
 
-  addToAwayTeam(teamName: string) {
-    this.playerNumber = Number(this.newPlayerNumber.join(''));
-    this.newPlayerNumber.length = 0;
-    let newTeamPlayer: Player = {
-      playerId: 0,
-      firstName: "",
-      lastName: "",
-      number: this.playerNumber,
-      position: "",
-      team: teamName,
-      picture: null,
-      isMale: "",
-      syncState: SyncState.Unchanged
-    }
-    console.log(this.playerNumber);
-    this.awayTeamPlayers.push(newTeamPlayer);
-    console.log(this.awayTeamPlayers);
-    this.playerNumber = 0;
+		if (team == 'home') {
+			this.homeTeamPlayers!.push(newTeamPlayer);
+		} else {
+			this.awayTeamPlayers!.push(newTeamPlayer);
+		}
+
+    this.clearNumberInput();
   }
 
   addToHomeCourt (player: Player) {
-    if(this.homeTeamPlayersOnCourt.length < 5) {
-      this.homeTeamPlayersOnCourt.push(player);
-      this.homeTeamPlayers.splice(this.homeTeamPlayers.indexOf(player), 1);
+    if(this.homePlayersOnCourt.length < 5) {
+      this.homePlayersOnCourt.push(player);
     }
   }
 
   addToAwayCourt (player: Player) {
-    if (this.awayTeamPlayersOnCourt.length < 5) {
-      this.awayTeamPlayersOnCourt.push(player);
-      this.awayTeamPlayers.splice(this.awayTeamPlayers.indexOf(player), 1);
+    if (this.awayPlayersOnCourt.length < 5) {
+      this.awayPlayersOnCourt.push(player);
     }
   }
 
   removeFromHomeCourt (player: Player) {
-    this.homeTeamPlayers.push(player);
-    this.homeTeamPlayersOnCourt.splice(this.homeTeamPlayersOnCourt.indexOf(player), 1);
+		this.homePlayerSelected = 0;
+    this.homePlayersOnCourt.splice(this.homePlayersOnCourt.indexOf(player), 1);
   }
 
   removeFromAwayCourt (player: Player) {
-    this.awayTeamPlayers.push(player);
-    this.awayTeamPlayersOnCourt.splice(this.awayTeamPlayersOnCourt.indexOf(player), 1);
+    this.awayPlayersOnCourt.splice(this.awayPlayersOnCourt.indexOf(player), 1);
   }
 
-  public async fetchPlayersUsingQuery() {
-    let db = await this.sql.createConnection();
-    let teams = await this.crud.rawQuery(db, `select Games.homeTeam, Games.awayTeam from Games where gameId = ${this.gameId};`);
-    let playersForTeam1: Player[] = await this.crud.query(db, "players", true, {"team": `'${teams[0].homeTeam}'`, "isMale": "true"});
-    let playersForTeam2: Player[] = await this.crud.query(db, "players", true, {"team": `'${teams[0].awayTeam}'`, "isMale": "true"});
-    this.homeTeamPlayers = playersForTeam1;
-    this.awayTeamPlayers = playersForTeam2;
-    console.log(this.homeTeamPlayers);
+  addPoints(team: 'home' | 'away', points: number) {
+
   }
 
-  addPoints(team: string, points: number) {
-    if (team === 'home') {
-      this.homeTeamScore += points;
-    } else {
-      this.awayTeamScore += points;
-    }
+  addFoul(team: 'home' | 'away') {
+
   }
 
-  addFoul(team: string) {
-    if (team === 'home') {
-      this.homeTeamFouls++;
-    } else {
-      this.awayTeamFouls++;
-    }
+  useTimeout(team: 'home' | 'away', partial: boolean = false) {
+
   }
 
-  addSteal (team: string) {
-    if (team == 'home') {
-      this.homeTeamSteals++;
-    } else {
-      this.awayTeamSteals++;
-    }
-  }
+	addSteal(team: 'home' | 'away') {
 
-  useTimeout(team: string, duration: number) {
-    if (team == 'home' && this.homeTeamTOL > 0) {
-      this.homeTeamTOL--;
-    } else if (team === 'away' && this.awayTeamTOL > 0) {
-      this.awayTeamTOL--;
-    }
-  }
+	}
 
   nextPeriod() {
-    if (this.period < 4)
-    {
-      this.period++;
+		let period = Number(this.currentGame!.period);
+    if (period < 4) {
+      period++;
+			this.currentGame!.period = String(period);
+			this.updateGame();
     }
   }
 
+	private async updateGame() {
+		await this.crud.save(this.db, 'Games', this.currentGame, { "gameId": `${this.gameId}` });
+	}
 
   startStopTimer(timerRunning: boolean) {
     if (timerRunning == true) {
@@ -250,15 +207,15 @@ export class GamecastComponent {
     this.stopTimer();
     this.timeLeft = this.timerDuration;
     this.updateTimerDisplay();
-    this.homeTeamScore = 0;
-    this.awayTeamScore = 0;
-    this.homeTeamFouls = 0;
-    this.awayTeamFouls = 0;
-    this.homeTeamSteals = 0;
-    this.awayTeamSteals = 0;
-    this.homeTeamTOL = 5;
-    this.awayTeamTOL = 5;
-    this.period = 1;
+    //this.homeTeamScore = 0;
+    //this.awayTeamScore = 0;
+    //this.homeTeamFouls = 0;
+    //this.awayTeamFouls = 0;
+    //this.homeTeamSteals = 0;
+    //this.awayTeamSteals = 0;
+    //this.homeTeamTOL = 5;
+    //this.awayTeamTOL = 5;
+    //this.period = 1;
   }
 
 }
