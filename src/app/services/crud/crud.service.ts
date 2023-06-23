@@ -73,9 +73,17 @@ export class CrudService {
       if(setString.length === 0) {
         throw new Error(`save: update no SET`);
       }
-      stmt = `UPDATE ${table} SET ${setString} WHERE ${wKey}=${where[wKey]}`;
+      stmt = `UPDATE ${table} SET ${setString}`;
+			stmt += " where ";
+      let keys2:string[] = Object.keys(where);
+      for (let key in where) {
+        stmt += `${key} = ${where[key]}`;
+        if (keys2.indexOf(key) != keys2.length - 1) {
+          stmt += ` and `
+        }
+      }
     }
-    const ret = await db.run(stmt,values, true);
+    const ret = await db.run(stmt+=';',values, true);
     if(ret.changes!.changes != 1) {
       throw new Error(`save: insert changes != 1`);
     }
