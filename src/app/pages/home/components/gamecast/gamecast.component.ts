@@ -9,6 +9,7 @@ import { SyncState } from 'src/app/interfaces/syncState.enum';
 import { Stat } from 'src/app/interfaces/stat.interface';
 import { Play } from 'src/app/interfaces/play.interface';
 import { SQLiteDBConnection } from '@capacitor-community/sqlite';
+import { ColDef, GridApi, SelectionChangedEvent, ValueFormatterParams } from 'ag-grid-community';
 
 //teamName | player name | player number | GameAction | period | gameClock | score | timestamp
 
@@ -24,6 +25,8 @@ export class GamecastComponent {
   currentGame?: Game;
 	homeTeamPlayers?: Player[];
 	awayTeamPlayers?: Player[];
+	homeTeamStats?: any[];
+	awayTeamStats?: any[];
 	homePlayersOnCourt: Player[] = [];
 	awayPlayersOnCourt: Player[] = [];
 	stats?: Stat[];
@@ -38,6 +41,28 @@ export class GamecastComponent {
 	newPlayerNumber:string = '';
 	homePlayerSelected: number = 0;
 	editPlayer:boolean = false;
+
+	public teamStats: ColDef[] = [
+		{field: 'firstName', headerName: 'First Name'},
+		{field: 'lastName', headerName: 'Last Name'},
+		{field: 'minutes', headerName: 'MIN', width: 80},
+		{field: 'rebounds', headerName: 'REB', width: 80},
+		{field: 'defensiveRebounds', headerName: 'DREB', width: 90},
+		{field: 'offensiveRebounds', headerName: 'OREB', width: 90},
+		{field: 'fieldGoalsMade', headerName: 'FGM', width: 80},
+		{field: 'fieldGoalsAttempted', headerName: 'FGA', width: 80},
+		{field: 'blocks', headerName: 'BLK', width: 80},
+		{field: 'steals', headerName: 'STL', width: 80},
+		{field: 'threesMade', headerName: '3FGM', width: 90},
+		{field: 'threesAttempted', headerName: '3FGA', width: 90},
+		{field: 'freeThrowsMade', headerName: 'FTM', width: 80},
+		{field: 'freeThrowsAttempted', headerName: 'FTA', width: 80},
+		{field: 'points', headerName: 'PTS', width: 80},
+		{field: 'turnovers', headerName: 'TO', width: 80},
+		{field: 'fouls', headerName: 'FLS', width: 80},
+		{field: 'plusOrMinus', headerName: '+/-', width: 80},
+		{field: 'eff', headerName: 'EFF'}
+	];
 
   constructor(private route: ActivatedRoute, private crud: CrudService, private sql: SqlService) {}
 
@@ -72,6 +97,24 @@ export class GamecastComponent {
 			FROM 		Stats
 			WHERE 	game = ${this.gameId};
 		`);
+		this.homeTeamStats = await this.crud.rawQuery(this.db, `
+			SELECT			Players.firstName, Players.lastName, Stats.minutes, Stats.rebounds, Stats.defensiveRebounds,
+									Stats.offensiveRebounds, Stats.fieldGoalsMade, Stats.fieldGoalsAttempted, Stats.blocks, Stats.steals, Stats.threesMade,
+									Stats.threesAttempted, Stats.freeThrowsMade, Stats.freeThrowsAttempted, Stats.points, Stats.turnOvers,
+									Stats.fouls, Stats.plusOrMinus, Stats.eff
+			FROM				Stats
+			INNER JOIN	Players ON Stats.player = Players.playerId
+			WHERE 			team = '${this.currentGame?.homeTeam}'
+		`)
+		this.awayTeamStats = await this.crud.rawQuery(this.db, `
+			SELECT			Players.firstName, Players.lastName, Stats.minutes, Stats.rebounds, Stats.defensiveRebounds,
+									Stats.offensiveRebounds, Stats.fieldGoalsMade, Stats.fieldGoalsAttempted, Stats.blocks, Stats.steals, Stats.threesMade,
+									Stats.threesAttempted, Stats.freeThrowsMade, Stats.freeThrowsAttempted, Stats.points, Stats.turnOvers,
+									Stats.fouls, Stats.plusOrMinus, Stats.eff
+			FROM				Stats
+			INNER JOIN	Players ON Stats.player = Players.playerId
+			WHERE 			team = '${this.currentGame?.awayTeam}'
+		`)
 		this.plays = await this.crud.rawQuery(this.db, `
 			SELECT 		*
 			FROM 			Plays
@@ -125,17 +168,18 @@ export class GamecastComponent {
   addToHomeCourt (player: Player) {
     if(this.homePlayersOnCourt.length < 5) {
       this.homePlayersOnCourt.push(player);
+			this.homeTeamPlayers!.splice(this.homeTeamPlayers!.indexOf(player), 1)
     }
   }
 
   addToAwayCourt (player: Player) {
     if (this.awayPlayersOnCourt.length < 5) {
       this.awayPlayersOnCourt.push(player);
+			this.awayTeamPlayers!.splice(this.awayTeamPlayers!.indexOf(player), 1)
     }
   }
 
   removeFromHomeCourt (player: Player) {
-		this.homePlayerSelected = 0;
     this.homePlayersOnCourt.splice(this.homePlayersOnCourt.indexOf(player), 1);
   }
 
@@ -159,13 +203,22 @@ export class GamecastComponent {
 
 	}
 
-  nextPeriod() {
+  nextPeriod(direction: 'left' | 'right') {
 		let period = Number(this.currentGame!.period);
-    if (period < 4) {
-      period++;
-			this.currentGame!.period = String(period);
-			this.updateGame();
-    }
+		if (direction == 'right') {
+			if (period < 5) {
+				period++;
+				this.currentGame!.period = String(period);
+				this.updateGame();
+			}
+		}
+		if (direction == 'left') {
+			if (period > 1) {
+				period --;
+				this.currentGame!.period = String(period);
+				this.updateGame();
+			}
+		}
   }
 
 	private async updateGame() {
@@ -180,6 +233,25 @@ export class GamecastComponent {
       this.startTimer();
     }
   }
+
+	updateTimer (direction: 'left' | 'right') {
+		if (this.timerRunning == false) {
+			if (direction == 'left') {
+				if (this.timeLeft > 0) {
+					this.timeLeft--;
+					this.updateTimerDisplay();
+					console.log(this.timeLeft);
+				}
+			}
+			if (direction == 'right') {
+				if (this.timeLeft < this.timerDuration) {
+					this.timeLeft++;
+					this.updateTimerDisplay();
+					console.log(this.timeLeft);
+				}
+			}
+		}
+	}
 
   startTimer() {
     this.timerRunning = true;

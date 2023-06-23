@@ -10,6 +10,8 @@ import { HomePage } from './home.page';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HammerModule } from '@angular/platform-browser';
+import { AgGridModule } from 'ag-grid-angular';
+
 
 
 @NgModule({
@@ -21,6 +23,7 @@ import { HammerModule } from '@angular/platform-browser';
     AddGamesComponent
   ],
   imports: [
+		AgGridModule,
     CommonModule,
     HomeRoutingModule,
     IonicModule,

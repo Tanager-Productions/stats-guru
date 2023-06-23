@@ -14,12 +14,14 @@ import { CommonModule } from '@angular/common';
 import { HomeRoutingModule } from './pages/home/home-routing.module';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { SharedModule } from './shared/shared.module';
+import { AgGridModule } from 'ag-grid-angular';
 
 @NgModule({
   declarations: [
     AppComponent
   ],
   imports: [
+		AgGridModule,
     DragDropModule,
     BrowserModule,
     AppRoutingModule,

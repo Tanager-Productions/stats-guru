@@ -18,7 +18,7 @@ export interface Stat {
   turnovers: number;
   fouls: number;
   plusOrMinus: number;
-  eff:number;
+  eff: number;
   syncState: number;
 }
 
