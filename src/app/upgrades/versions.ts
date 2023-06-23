@@ -124,10 +124,25 @@ export const version1: string[] = [
       statsSynced INTEGER NOT NULL,
       errorMessages TEXT NOT NULL
     );
+  `,
+
+  `
+    CREATE TABLE IF NOT EXISTS GameCastSettings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      homePlayersOnCourt TEXT NULL,
+      awayPlayersOnCourt TEXT NULL,
+      fullTimeouts INTEGER NULL,
+			partialTimeouts INTEGER NULL,
+      periodsPerGame INTEGER NULL,
+      minutesPerPeriod INTEGER NULL,
+      minutesPerOvertime INTEGER NULL,
+			game INTEGER NOT NULL,
+			resetTimeoutsEveryPeriod TEXT NULL
+    );
   `
 ];
 
-export const currentDatabaseVersion = 6;
+export const currentDatabaseVersion = 1;
 export const databaseName = "tgs";
 export const upgrades = {
   database: databaseName,
