@@ -108,7 +108,7 @@ export class GamecastComponent {
 			FROM				Stats
 			INNER JOIN	Players ON Stats.player = Players.playerId
 			WHERE 			team = '${this.currentGame?.homeTeam}'
-		`)
+		`);
 		this.awayTeamStats = await this.crud.rawQuery(this.db, `
 			SELECT			Players.firstName, Players.lastName, Stats.minutes, Stats.rebounds, Stats.defensiveRebounds,
 									Stats.offensiveRebounds, Stats.fieldGoalsMade, Stats.fieldGoalsAttempted, Stats.blocks, Stats.steals, Stats.threesMade,
@@ -117,7 +117,7 @@ export class GamecastComponent {
 			FROM				Stats
 			INNER JOIN	Players ON Stats.player = Players.playerId
 			WHERE 			team = '${this.currentGame?.awayTeam}'
-		`)
+		`);
 		this.plays = await this.crud.rawQuery(this.db, `
 			SELECT 		*
 			FROM 			Plays

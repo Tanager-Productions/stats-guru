@@ -7,7 +7,7 @@
 	<ion-buttons slot="end">
 		<ion-button (click)="startStopTimer(false)">Start</ion-button>
 		<ion-button (click)="startStopTimer(true)">Stop</ion-button>
-		<ion-button>
+		<ion-button id="liveStatsModal">
 			<ion-icon slot="icon-only" name="stats-chart"></ion-icon>
 		</ion-button>
 		<ion-button>
@@ -155,7 +155,7 @@
 											<ion-button color="medium" fill="clear" (click)="updateTimer('left')">
 												<ion-icon size="large" slot="icon-only" name="chevron-back-sharp"></ion-icon>
 											</ion-button>
-											<ion-label color="medium" style="font-size: xxx-large; font-weight: bolder;" [ngModel]="timerDisplay">{{timerDisplay}}</ion-label>
+											<ion-label color="medium" style="font-size: xx-large; font-weight: bolder;" [ngModel]="timerDisplay">{{timerDisplay}}</ion-label>
 											<ion-button color="medium" fill="clear" (click)="updateTimer('right')">
 												<ion-icon size="large" slot="icon-only" name="chevron-forward-sharp"></ion-icon>
 											</ion-button>
@@ -165,13 +165,13 @@
 											<ion-button fill="outline" expand="block" color="danger">T60</ion-button>
 										</ion-col>
 									</ion-row>
-									<ion-row>
+									<ion-row class="ion-align-items-center">
 										<ion-col class="ion-text-center">
-											<ion-button fill="clear" color="medium">
+											<ion-button fill="clear" color="medium" size="small" (click)="nextPeriod('left')">
 												<ion-icon slot="icon-only" name="chevron-back"></ion-icon>
 											</ion-button>
 											<ion-label color="medium">Period: {{ currentGame.period }}</ion-label>
-											<ion-button color="medium" fill="clear" size="small" (click)="nextPeriod()">
+											<ion-button color="medium" fill="clear" size="small" (click)="nextPeriod('right')">
 												<ion-icon slot="icon-only" name="chevron-forward"></ion-icon>
 											</ion-button>
 										</ion-col>
