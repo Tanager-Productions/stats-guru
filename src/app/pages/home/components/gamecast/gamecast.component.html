@@ -4,38 +4,28 @@
       <ion-breadcrumb routerLink="/home/games">Games</ion-breadcrumb>
       <ion-breadcrumb>Gamecast: {{ gameId }}</ion-breadcrumb>
     </ion-breadcrumbs>
+	<ion-buttons slot="end">
+		<ion-button (click)="startStopTimer(false)">Start</ion-button>
+		<ion-button (click)="startStopTimer(true)">Stop</ion-button>
+		<ion-button>
+			<ion-icon slot="icon-only" name="stats-chart"></ion-icon>
+		</ion-button>
+		<ion-button>
+			<ion-icon slot="icon-only" name="settings"></ion-icon>
+		</ion-button>
+	</ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content color="light">
+<ion-content class="ion-padding" color="light">
   <ion-grid style="height: 100%; width: 100%;">
-	<ion-row class="ion-margin-vertical">
-		<ion-col class="ion-text-right">
-			<ion-button color="medium" class="normal-button" (click)="startStopTimer(false)">Start</ion-button>
-		</ion-col>
-		<ion-col class="ion-text-center">
-			<ion-row style="align-items: center; justify-content: center;">
-				<ion-button color="medium" fill="clear" (click)="updateTimer('left')">
-					<ion-icon size="large" slot="icon-only" name="chevron-back-sharp"></ion-icon>
-				</ion-button>
-				<ion-label color="medium" style="font-size: xxx-large; font-weight: bolder;" [ngModel]="timerDisplay">{{timerDisplay}}</ion-label>
-				<ion-button color="medium" fill="clear" (click)="updateTimer('right')">
-					<ion-icon size="large" slot="icon-only" name="chevron-forward-sharp"></ion-icon>
-				</ion-button>
-			</ion-row>
-		</ion-col>
-		<ion-col class="ion-text-left">
-			<ion-button color="medium" class="normal-button" (click)="startStopTimer(true)">Stop</ion-button>
-		</ion-col>
-	</ion-row>
 	<ion-row>
-		<ion-col size="0" sizeXl="1"></ion-col>
-		<ion-col size="12" sizeXl="10">
+		<ion-col class="ion-no-padding" size="12">
 			<div class="scoreboard">
 				<!-- Home Team -->
 				<div class="players-container" id="home-players-container">
 					<div class="home-font" id="team-numbers" *ngFor="let player of homeTeamPlayers; let i = index">
-						<ion-button fill="clear" id="context-menu-trigger{{i}}" color="primary" (click)="addToHomeCourt(player)">
+						<ion-button fill="clear" id="context-menu-trigger{{i}}" color="primary" (click)="addToCourt('home', player)">
 							{{player.number}}
 						</ion-button>
 						<ion-popover trigger="context-menu-trigger{{i}}" triggerAction="context-menu" side="right" alignment="end">
@@ -71,41 +61,13 @@
 				<ng-container *ngIf="currentGame">
 					<ion-grid>
 						<ion-row>
-							<ion-col size="5">
+							<ion-col>
 								<ion-grid style="border-radius: 10px; background-color: #e5eee7; width: 100%; padding: 0;">
 									<ion-row>
 										<ng-container *ngFor="let player of homePlayersOnCourt; let i = index">
 											<ion-col id="context-menu-trigger-homeCourt{{i}}" *ngIf="homePlayersOnCourt.length >= i">
-												<ion-button style="font-size: large;" [ngClass]="{'selectedButton':homePlayerSelected == i}" fill="clear" expand="block" (tap)="homePlayerSelected == 0 ? homePlayerSelected = i : homePlayerSelected = 0" (doubleTap)="removeFromHomeCourt(player)">
+												<ion-button [ngClass]="{'selectedButton':homePlayerSelected == i}" color="tertiary" fill="clear" expand="block" (tap)="selectPlayer('home', i)" (doubleTap)="removeFromCourt('home', player, i)">
 													<ion-label>{{player.number}}</ion-label>
-													<ion-popover trigger="context-menu-trigger-homeCourt{{i}}" triggerAction="context-menu" side="top" alignment="start">
-														<ng-template>
-															<ion-content color="primary" class="ion-padding">
-																<div *ngIf="editPlayer == false">
-																	<ion-input type="name" color="light" labelPlacement="stacked" label="First Name:" value="{{player.firstName}}" [readonly]="true"></ion-input>
-																	<ion-input type="name" color="light" labelPlacement="stacked" label="Last Name:" value="{{player.lastName}}" [readonly]="true"></ion-input>
-																	<ion-input type="number" color="light" labelPlacement="stacked" label="Number:" value="{{player.number}}" [readonly]="true"></ion-input>
-																	<div style="display: flex; float: right;">
-																		<ion-button color="light" fill="clear" (click)="editPlayer = true">
-																			<ion-icon size="default" slot="icon-only" name="pencil"></ion-icon>
-																		</ion-button>
-																	</div>
-																</div>
-																<ng-container *ngIf="currentGame">
-																	<div *ngIf="editPlayer == true">
-																		<ion-input type="name" [(ngModel)]="player.firstName" color="light" labelPlacement="stacked" label="First Name:" placeholder="{{player.firstName}}"></ion-input>
-																		<ion-input type="name" [(ngModel)]="player.lastName" color="light" labelPlacement="stacked" label="Last Name:" placeholder="{{player.lastName}}"></ion-input>
-																		<ion-input type="number" [(ngModel)]="player.number" color="light" labelPlacement="stacked" label="Number:" placeholder="{{player.number}}"></ion-input>
-																		<div style="display: flex; float: right;">
-																			<ion-button color="light" fill="clear" (click)="savePlayer(player)">
-																				<ion-icon size="default" slot="icon-only" name="checkmark-sharp"></ion-icon>
-																			</ion-button>
-																		</div>
-																	</div>
-																</ng-container>
-															</ion-content>
-														</ng-template>
-													</ion-popover>
 												</ion-button>
 											</ion-col>
 										</ng-container>
@@ -116,9 +78,13 @@
 										<ion-card-title color="primary" class="ion-text-center">
 											{{ currentGame.homeTeam }}
 										</ion-card-title>
-										<ion-label class="ion-margin-vertical ion-text-center">
+										<ion-label class="ion-margin-top ion-text-center">
 											<p class="team-score digital-number; home-font">{{ currentGame.homeFinal }}</p>
-											<p class="home-font">Fouls: {{ homeTeamFouls }} | Timeouts left: {{ currentGame.homeTeamTOL }}</p>
+											<p class="home-font">
+												Fouls: {{ currentGame.homeCurrentFouls == null ? 0 : currentGame.homeCurrentFouls }} |
+												Partial TO: {{ currentGame.homePartialTOL == null ? 0 : currentGame.homePartialTOL }} |
+												Full TO: {{currentGame.homeFullTOL == null ? 0 : currentGame.homeFullTOL }}
+											</p>
 										</ion-label>
 									</ion-card-header>
 									<ion-grid>
@@ -152,10 +118,7 @@
 												<ion-button expand="block" color="primary" (click)="addSteal('home')">STL</ion-button>
 											</ion-col>
 											<ion-col>
-												<ion-button expand="block" color="primary" (click)="useTimeout('home', true)">30s</ion-button>
-											</ion-col>
-											<ion-col>
-												<ion-button expand="block" color="primary" (click)="useTimeout('home', false)">60s</ion-button>
+												<ion-button expand="block" color="primary" (click)="addTurnover('home')">TO</ion-button>
 											</ion-col>
 										</ion-row>
 										<ion-row>
@@ -181,96 +144,122 @@
 									</ion-grid>
 								</ion-card>
 							</ion-col>
-							<ion-col size="2">
-								<div class="game-info">
-									<ion-button color="medium" fill="clear" size="small" (click)="nextPeriod('left')">
-										<ion-icon slot="icon-only" name="chevron-back-sharp"></ion-icon>
-									</ion-button>
-									<ion-label color="medium">Period: {{ currentGame.period }}</ion-label>
-									<ion-button color="medium" fill="clear" size="small" (click)="nextPeriod('right')">
-										<ion-icon slot="icon-only" name="chevron-forward-sharp"></ion-icon>
-									</ion-button>
-								</div>
-								<div class="top-width">
-									<ion-button id="liveStatsModal" size="default" color="medium">
-										<ion-icon slot="icon-only" name="stats-chart"></ion-icon>
-									</ion-button>
-									<ion-button size="default" color="medium">
-										<ion-icon slot="icon-only" name="settings"></ion-icon>
-									</ion-button>
-									<ion-button size="default" color="medium">
-										<ion-icon slot="icon-only" name="calendar"></ion-icon>
-									</ion-button>
-								</div>
-								<div class="team-container">
-									<img src="assets/images/sad_cat.jpg">
-								</div>
+							<ion-col class="ion-no-padding">
+								<ion-grid class="ion-no-padding">
+									<ion-row class="ion-align-items-center">
+										<ion-col size="3">
+											<ion-button fill="outline" expand="block" color="primary">T30</ion-button>
+											<ion-button fill="outline" expand="block" color="primary">T60</ion-button>
+										</ion-col>
+										<ion-col size="6" class="ion-text-center">
+											<ion-button color="medium" fill="clear" (click)="updateTimer('left')">
+												<ion-icon size="large" slot="icon-only" name="chevron-back-sharp"></ion-icon>
+											</ion-button>
+											<ion-label color="medium" style="font-size: xxx-large; font-weight: bolder;" [ngModel]="timerDisplay">{{timerDisplay}}</ion-label>
+											<ion-button color="medium" fill="clear" (click)="updateTimer('right')">
+												<ion-icon size="large" slot="icon-only" name="chevron-forward-sharp"></ion-icon>
+											</ion-button>
+										</ion-col>
+										<ion-col size="3">
+											<ion-button fill="outline" expand="block" color="danger">T30</ion-button>
+											<ion-button fill="outline" expand="block" color="danger">T60</ion-button>
+										</ion-col>
+									</ion-row>
+									<ion-row>
+										<ion-col class="ion-text-center">
+											<ion-button fill="clear" color="medium">
+												<ion-icon slot="icon-only" name="chevron-back"></ion-icon>
+											</ion-button>
+											<ion-label color="medium">Period: {{ currentGame.period }}</ion-label>
+											<ion-button color="medium" fill="clear" size="small" (click)="nextPeriod()">
+												<ion-icon slot="icon-only" name="chevron-forward"></ion-icon>
+											</ion-button>
+										</ion-col>
+									</ion-row>
+								</ion-grid>
 							</ion-col>
-							<ion-col size="5">
-								<div class="court-container" id="away-court-container">
-									<span class="home-font" id="team-numbers" *ngFor="let player of awayPlayersOnCourt; let i = index">
-										<ion-button fill="clear" shape="round" color="danger" size="large" id="context-menu-trigger-awayCourt{{i}}" (click)="removeFromAwayCourt(player)">
-											{{player.number}}
-										</ion-button>
-										<ion-popover trigger="context-menu-trigger-awayCourt{{i}}" triggerAction="context-menu" side="top" alignment="start">
-											<ng-template>
-												<ion-content color="danger" class="ion-padding">
-													<div *ngIf="editPlayer == false">
-														<ion-input type="name" color="light" labelPlacement="stacked" label="First Name:" value="{{player.firstName}}" [readonly]="true"></ion-input>
-														<ion-input type="name" color="light" labelPlacement="stacked" label="Last Name:" value="{{player.lastName}}" [readonly]="true"></ion-input>
-														<ion-input type="number" color="light" labelPlacement="stacked" label="Number:" value="{{player.number}}" [readonly]="true"></ion-input>
-														<div style="display: flex; float: right;">
-															<ion-button color="light" fill="clear" (click)="editPlayer = true">
-																<ion-icon size="default" slot="icon-only" name="pencil"></ion-icon>
-															</ion-button>
-														</div>
-													</div>
-													<ng-container *ngIf="currentGame">
-														<div *ngIf="editPlayer == true">
-															<ion-input type="name" [(ngModel)]="player.firstName" color="light" labelPlacement="stacked" label="First Name:" placeholder="{{player.firstName}}"></ion-input>
-															<ion-input type="name" [(ngModel)]="player.lastName" color="light" labelPlacement="stacked" label="Last Name:" placeholder="{{player.lastName}}"></ion-input>
-															<ion-input type="number" [(ngModel)]="player.number" color="light" labelPlacement="stacked" label="Number:" placeholder="{{player.number}}"></ion-input>
-															<div style="display: flex; float: right;">
-																<ion-button color="light" fill="clear" (click)="savePlayer(player)">
-																	<ion-icon size="default" slot="icon-only" name="checkmark-sharp"></ion-icon>
-																</ion-button>
-															</div>
-														</div>
-													</ng-container>
-												</ion-content>
-											</ng-template>
-										</ion-popover>
-									</span>
-								</div>
-								<div id="away-team-container" class="team-container">
-									<h2 class="away-font" id="school-title">{{currentGame.awayTeam}}</h2>
-									<p class="team-score digital-number; away-font">{{ currentGame.awayFinal }}</p>
-									<p class="away-font">Fouls: {{ awayTeamFouls }} | Timeouts left: {{ currentGame.awayTeamTOL }}</p>
-									<div class="row-fluid">
-										<ion-button color="danger" class="number-button" (click)="addPoints('away', 1)">+1</ion-button>
-										<ion-button color="danger" class="number-button" (click)="addPoints('away', 2)">+2</ion-button>
-										<ion-button color="danger" class="number-button" (click)="addPoints('away', 3)">+3</ion-button>
-									</div>
-									<div class="row-fluid">
-										<ion-button color="danger" class="other-button">1</ion-button>
-										<ion-button color="danger" class="other-button">3</ion-button>
-										<ion-button color="danger" class="other-button">MISS</ion-button>
-									</div>
-									<div class="row-fluid">
-										<ion-button color="danger" class="other-button" (click)="addFoul('away')">FOUL</ion-button>
-										<ion-button color="danger" class="other-button" (click)="addSteal('away')">STL</ion-button>
-										<ion-button color="danger" class="other-button" (click)="useTimeout('away', true)">30s</ion-button>
-										<ion-button color="danger" class="other-button" (click)="useTimeout('away', false)">60s</ion-button>
-									</div>
-									<div class="row-fluid">
-										<ion-button color="danger" class="small-button">AST</ion-button>
-										<ion-button color="danger" class="small-button">PB+</ion-button>
-										<ion-button color="danger" class="small-button">PB-</ion-button>
-										<ion-button color="danger" class="small-button">BLK</ion-button>
-										<ion-button color="danger" class="small-button">OR</ion-button>
-										<ion-button color="danger" class="small-button">DR</ion-button>
-									</div>
-								</div>
+							<ion-col>
+								<ion-grid style="border-radius: 10px; background-color: #e5eee7; width: 100%; padding: 0;">
+									<ion-row>
+										<ng-container *ngFor="let player of awayPlayersOnCourt; let i = index">
+											<ion-col id="context-menu-trigger-awayCourt{{i}}" *ngIf="awayPlayersOnCourt.length >= i">
+												<ion-button [ngClass]="{'selectedButton':awayPlayerSelected == i}" color="tertiary" fill="clear" expand="block" (tap)="selectPlayer('away', i)" (doubleTap)="removeFromCourt('away', player, i)">
+													<ion-label>{{player.number}}</ion-label>
+												</ion-button>
+											</ion-col>
+										</ng-container>
+									</ion-row>
+								</ion-grid>
+								<ion-card>
+									<ion-card-header>
+										<ion-card-title class="ion-text-center">
+											{{ currentGame.awayTeam }}
+										</ion-card-title>
+										<ion-label class="ion-margin-top ion-text-center">
+											<p class="team-score digital-number; away-font">{{ currentGame.awayFinal }}</p>
+											<p class="away-font">
+												Fouls: {{ currentGame.awayCurrentFouls == null ? 0 : currentGame.awayCurrentFouls }} |
+												Partial TO: {{ currentGame.awayPartialTOL == null ? 0 : currentGame.awayPartialTOL }} |
+												Full TO: {{currentGame.awayFullTOL == null ? 0 : currentGame.awayFullTOL }}
+											</p>
+										</ion-label>
+									</ion-card-header>
+									<ion-grid>
+										<ion-row>
+											<ion-col>
+												<ion-button expand="block" color="danger" (click)="addPoints('away', 1)">+1</ion-button>
+											</ion-col>
+											<ion-col>
+												<ion-button expand="block" color="danger" (click)="addPoints('away', 2)">+2</ion-button>
+											</ion-col>
+											<ion-col>
+												<ion-button expand="block" color="danger" (click)="addPoints('away', 3)">+3</ion-button>
+											</ion-col>
+										</ion-row>
+										<ion-row>
+											<ion-col>
+												<ion-button expand="block" color="danger">1</ion-button>
+											</ion-col>
+											<ion-col>
+												<ion-button expand="block" color="danger">3</ion-button>
+											</ion-col>
+											<ion-col>
+												<ion-button expand="block" color="danger">MISS</ion-button>
+											</ion-col>
+										</ion-row>
+										<ion-row>
+											<ion-col>
+												<ion-button expand="block" color="danger" (click)="addFoul('away')">FOUL</ion-button>
+											</ion-col>
+											<ion-col>
+												<ion-button expand="block" color="danger" (click)="addSteal('away')">STL</ion-button>
+											</ion-col>
+											<ion-col>
+												<ion-button expand="block" color="danger" (click)="addTurnover('away')">TO</ion-button>
+											</ion-col>
+										</ion-row>
+										<ion-row>
+											<ion-col>
+												<ion-button fill="clear" expand="block" size="small" color="danger">AST</ion-button>
+											</ion-col>
+											<ion-col>
+												<ion-button fill="clear" expand="block" size="small" color="danger">PB+</ion-button>
+											</ion-col>
+											<ion-col>
+												<ion-button fill="clear" expand="block" size="small" color="danger">PB-</ion-button>
+											</ion-col>
+											<ion-col>
+												<ion-button fill="clear" expand="block" size="small" color="danger">BLK</ion-button>
+											</ion-col>
+											<ion-col>
+												<ion-button fill="clear" expand="block" size="small" color="danger">OR</ion-button>
+											</ion-col>
+											<ion-col>
+												<ion-button fill="clear" expand="block" size="small" color="danger">DR</ion-button>
+											</ion-col>
+										</ion-row>
+									</ion-grid>
+								</ion-card>
 							</ion-col>
 						</ion-row>
 					</ion-grid>
@@ -278,7 +267,7 @@
 				<!-- Guest Team -->
 				<div class="players-container" id="away-players-container">
 					<div class="away-font" id="team-numbers" *ngFor="let player of awayTeamPlayers; let i = index">
-						<ion-button fill="clear" color="danger" id="context-menu-trigger-away{{i}}" (click)="addToAwayCourt(player)">
+						<ion-button fill="clear" color="danger" id="context-menu-trigger-away{{i}}" (click)="addToCourt('away', player)">
 							{{player.number}}
 						</ion-button>
 						<ion-popover trigger="context-menu-trigger-away{{i}}" triggerAction="context-menu" side="left" alignment="start">
@@ -337,12 +326,11 @@
 				</ng-container>
 			</div>
 		</ion-col>
-		<ion-col size="0" sizeXl="1"></ion-col>
 	</ion-row>
-	<ion-row *ngIf="plays" class="ion-margin-vertical">
+	<ion-row *ngIf="plays">
 		<ion-col size="3"></ion-col>
 		<ion-col id="playsModal" size="6">
-			<ion-list>
+			<ion-list inset="true" lines="full">
 				<ion-item *ngFor="let play of plays | slice:0:3">
 					<ion-label>{{play.data}}</ion-label>
 				</ion-item>

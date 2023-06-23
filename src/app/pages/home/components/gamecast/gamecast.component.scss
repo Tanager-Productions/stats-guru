@@ -13,7 +13,11 @@
   }
 
 	.selectedButton {
-		--background: white;
+		background: white;
+	}
+
+	ion-card {
+		margin: 4px 0;
 	}
 
   .scoreboard {

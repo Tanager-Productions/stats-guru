@@ -52,6 +52,12 @@ export const version1: string[] = [
       period TEXT NULL,
       gameLink TEXT NULL,
       eventId INTEGER NULL,
+			homePartialTOL INTEGER NULL,
+			awayPartialTOL INTEGER NULL,
+			homeFullTOL INTEGER NULL,
+			awayFullTOL INTEGER NULL,
+			homeCurrentFouls INTEGER NULL,
+			awayCurrentFouls INTEGER NULL,
       syncState INTEGER NOT NULL DEFAULT 0
     );
   `,
@@ -88,8 +94,9 @@ export const version1: string[] = [
       offensiveRebounds INTEGER NULL,
       defensiveRebounds INTEGER NULL,
       eff GENERATED ALWAYS AS (
-        CASE WHEN [minutes] = 0 THEN 0 ELSE ((([threesMade]*3)+[freeThrowsMade]+(([fieldGoalsMade]-[threesMade])*2))+[rebounds]+[assists]+[steals]+[blocks]-([fieldGoalsAttempted]-[fieldGoalsMade])-([freethrowsAttempted]-[freethrowsMade])-[turnovers])/([minutes]*1.0) END
+				(([threesMade]*3)+[freeThrowsMade]+(([fieldGoalsMade]-[threesMade])*2))+[rebounds]+[assists]+[steals]+[blocks]-([fieldGoalsAttempted]-[fieldGoalsMade])-([freethrowsAttempted]-[freethrowsMade])-[turnovers]
       ),
+			technicalFouls INTEGER NULL,
       syncState INTEGER NOT NULL DEFAULT 0,
       PRIMARY KEY (player, game)
     );

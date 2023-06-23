@@ -20,6 +20,7 @@ export interface Stat {
   plusOrMinus: number;
   eff: number;
   syncState: number;
+	technicalFouls:number | null;
 }
 
 export interface ServerStat {

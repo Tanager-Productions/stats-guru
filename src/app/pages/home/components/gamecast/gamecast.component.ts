@@ -39,7 +39,8 @@ export class GamecastComponent {
   timerDisplay: string = '08:00';
   timerRunning: boolean = false;
 	newPlayerNumber:string = '';
-	homePlayerSelected: number = 0;
+	homePlayerSelected: number = -1;
+	awayPlayerSelected: number = -1;
 	editPlayer:boolean = false;
 
 	public teamStats: ColDef[] = [
@@ -81,16 +82,18 @@ export class GamecastComponent {
 			WHERE 	gameId = ${this.gameId}
 		`))[0];
     this.homeTeamPlayers = await this.crud.rawQuery(this.db, `
-			SELECT 	*
-			FROM 		Players
-			WHERE 	team = '${this.currentGame?.homeTeam}'
-			AND 		isMale = ${this.currentGame?.isMale};
+			SELECT 		*
+			FROM 			Players
+			WHERE 		team = '${this.currentGame?.homeTeam}'
+			AND 			isMale = ${this.currentGame?.isMale}
+			ORDER BY 	number ASC;
 		`);
     this.awayTeamPlayers = await this.crud.rawQuery(this.db, `
-			SELECT 	*
-			FROM 		Players
-			WHERE 	team = '${this.currentGame?.awayTeam}'
-			AND 		isMale = ${this.currentGame?.isMale};
+			SELECT 		*
+			FROM 			Players
+			WHERE 		team = '${this.currentGame?.awayTeam}'
+			AND 			isMale = ${this.currentGame?.isMale}
+			ORDER BY 	number ASC;
 		`);
 		this.stats = await this.crud.rawQuery(this.db, `
 			SELECT	*
@@ -165,26 +168,46 @@ export class GamecastComponent {
     this.clearNumberInput();
   }
 
-  addToHomeCourt (player: Player) {
-    if(this.homePlayersOnCourt.length < 5) {
-      this.homePlayersOnCourt.push(player);
-			this.homeTeamPlayers!.splice(this.homeTeamPlayers!.indexOf(player), 1)
-    }
-  }
+	addToCourt(team: 'home' | 'away', player: Player) {
+		if (team == 'home') {
+			if(this.homePlayersOnCourt.length < 5) {
+				this.homePlayersOnCourt.push(player);
+			}
+		} else {
+			if (this.awayPlayersOnCourt.length < 5) {
+				this.awayPlayersOnCourt.push(player);
+			}
+		}
+	}
 
-  addToAwayCourt (player: Player) {
-    if (this.awayPlayersOnCourt.length < 5) {
-      this.awayPlayersOnCourt.push(player);
-			this.awayTeamPlayers!.splice(this.awayTeamPlayers!.indexOf(player), 1)
-    }
-  }
+	selectPlayer(team: 'home' | 'away', index: number) {
+		if (team == 'away') {
+			if (this.awayPlayerSelected == index) {
+				this.awayPlayerSelected = -1;
+			} else {
+				this.awayPlayerSelected = index;
+			}
+		} else {
+			if (this.homePlayerSelected == index) {
+				this.homePlayerSelected = -1;
+			} else {
+				this.homePlayerSelected = index;
+			}
+		}
+	}
 
-  removeFromHomeCourt (player: Player) {
-    this.homePlayersOnCourt.splice(this.homePlayersOnCourt.indexOf(player), 1);
-  }
-
-  removeFromAwayCourt (player: Player) {
-    this.awayPlayersOnCourt.splice(this.awayPlayersOnCourt.indexOf(player), 1);
+  removeFromCourt (team: 'home' | 'away', player: Player, index:number) {
+		if (team == 'away') {
+			if (this.awayPlayerSelected == index) {
+				this.awayPlayerSelected = -1;
+			}
+			this.awayPlayersOnCourt.splice(this.awayPlayersOnCourt.indexOf(player), 1);
+		} else {
+			if (this.homePlayerSelected == index) {
+				this.homePlayerSelected = -1;
+			}
+			this.homePlayersOnCourt.splice(this.homePlayersOnCourt.indexOf(player), 1);
+		}
   }
 
   addPoints(team: 'home' | 'away', points: number) {
@@ -200,6 +223,10 @@ export class GamecastComponent {
   }
 
 	addSteal(team: 'home' | 'away') {
+
+	}
+
+	addTurnover(team: 'home' | 'away') {
 
 	}
 
