@@ -24,7 +24,6 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: -20px;
   }
 
 
@@ -40,11 +39,10 @@
   }
 
   .players-container {
-    display: inline-block;
     text-align: center;
     width: auto;
-    height: 385px;
-    padding: 5px;
+    height: 650px;
+    padding: 2px;
     overflow-y: auto;
 		overflow-x: hidden;
   }
@@ -72,13 +70,19 @@
     align-items: center;
   }
 
+	.home-court {
+		background-color: #dbd4fa;
+	}
+
+	.away-court {
+		background-color: #fec3c3;
+	}
+
   #home-court-container {
-    border: 2px solid #4416fc;
     background-color: #dbd4fa;
   }
 
   #away-court-container {
-    border: 2px solid #fc1616;
     background-color: #fec3c3;
   }
 
@@ -92,10 +96,12 @@
 
   #home-team-container {
     border: 2px solid #4416fc;
+		background-color: #dbd4fa;
   }
 
   #away-team-container {
     border: 2px solid #fc1616;
+		background-color: #fec3c3;
   }
 
   #court-container {
@@ -168,18 +174,19 @@
   .second-bottom-button-container {
     padding-top: .5rem;
     vertical-align: middle;
-    width: 45%;
     justify-content: space-between;
     display: flex;
     margin: auto;
   }
 
   .timer-style {
-    align-self: center;
-    text-align: center;
+    align-items: center;
+		margin: auto;
+    display: flex;
     font-size: 50px;
+		width: 300px;
+		height: 50px;
     font-weight: bold;
-    color: gray;
   }
 
   button {

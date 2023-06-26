@@ -5,8 +5,6 @@
       <ion-breadcrumb>Gamecast: {{ gameId }}</ion-breadcrumb>
     </ion-breadcrumbs>
 	<ion-buttons slot="end">
-		<ion-button (click)="startTimer()">Start</ion-button>
-		<ion-button (click)="stopTimer()">Stop</ion-button>
 		<ion-button id="liveStatsModal">
 			<ion-icon slot="icon-only" name="stats-chart"></ion-icon>
 		</ion-button>
@@ -19,56 +17,58 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding" color="light">
-  <ion-grid style="height: 100%; width: 100%;">
-	<ion-row>
-		<ion-col class="ion-no-padding" size="12">
-			<div class="scoreboard">
-				<!-- Home Team -->
-				<div class="players-container" id="home-players-container">
-					<div class="home-font" id="team-numbers" *ngFor="let player of homeTeamPlayers; let i = index">
-						<ion-button [fill]="homePlayersOnCourt.includes(player) ? 'outline' : 'clear'" id="context-menu-trigger{{i}}" color="primary" (click)="addToCourt('home', player)">
-							{{player.number}}
-						</ion-button>
-						<ion-popover trigger="context-menu-trigger{{i}}" [showBackdrop]="false" triggerAction="context-menu" side="right" alignment="end">
-							<ng-template>
-								<ion-content color="primary" class="ion-padding">
-									<div *ngIf="editPlayer == false">
-										<ion-input type="name" color="light" labelPlacement="stacked" label="First Name:" value="{{player.firstName}}" [readonly]="true"></ion-input>
-										<ion-input type="name" color="light" labelPlacement="stacked" label="Last Name:" value="{{player.lastName}}" [readonly]="true"></ion-input>
-										<ion-input type="number" color="light" labelPlacement="stacked" label="Number:" value="{{player.number}}" [readonly]="true"></ion-input>
+<ion-content class="ion-no-padding" color="light">
+  <ion-grid style="height: 100%; width: 100%">
+	<ion-row style="height: 70%">
+		<ion-col class="ion-no-padding" size="1">
+			<div class="players-container" id="home-players-container">
+				<div class="home-font" id="team-numbers" *ngFor="let player of homeTeamPlayers; let i = index">
+					<ion-button [fill]="homePlayersOnCourt.includes(player) ? 'outline' : 'clear'" id="context-menu-trigger{{i}}" color="primary" (click)="addToCourt('home', player)">
+						{{player.number}}
+					</ion-button>
+					<ion-popover trigger="context-menu-trigger{{i}}" [showBackdrop]="false" triggerAction="context-menu" side="right" alignment="end">
+						<ng-template>
+							<ion-content color="primary" class="ion-padding">
+								<div *ngIf="editPlayer == false">
+									<ion-input type="name" color="light" labelPlacement="stacked" label="First Name:" value="{{player.firstName}}" [readonly]="true"></ion-input>
+									<ion-input type="name" color="light" labelPlacement="stacked" label="Last Name:" value="{{player.lastName}}" [readonly]="true"></ion-input>
+									<ion-input type="number" color="light" labelPlacement="stacked" label="Number:" value="{{player.number}}" [readonly]="true"></ion-input>
+									<div style="display: flex; float: right;">
+										<ion-button color="light" fill="clear" (click)="editPlayer = true">
+											<ion-icon size="default" slot="icon-only" name="pencil"></ion-icon>
+										</ion-button>
+									</div>
+								</div>
+								<ng-container *ngIf="currentGame">
+									<div *ngIf="editPlayer == true">
+										<ion-input type="name" [(ngModel)]="player.firstName" color="light" labelPlacement="stacked" label="First Name:" placeholder="{{player.firstName}}"></ion-input>
+										<ion-input type="name" [(ngModel)]="player.lastName" color="light" labelPlacement="stacked" label="Last Name:" placeholder="{{player.lastName}}"></ion-input>
+										<ion-input type="number" [(ngModel)]="player.number" color="light" labelPlacement="stacked" label="Number:" placeholder="{{player.number}}"></ion-input>
 										<div style="display: flex; float: right;">
-											<ion-button color="light" fill="clear" (click)="editPlayer = true">
-												<ion-icon size="default" slot="icon-only" name="pencil"></ion-icon>
+											<ion-button color="light" fill="clear" (click)="savePlayer(player)">
+												<ion-icon size="default" slot="icon-only" name="checkmark-sharp"></ion-icon>
 											</ion-button>
 										</div>
 									</div>
-									<ng-container *ngIf="currentGame">
-										<div *ngIf="editPlayer == true">
-											<ion-input type="name" [(ngModel)]="player.firstName" color="light" labelPlacement="stacked" label="First Name:" placeholder="{{player.firstName}}"></ion-input>
-											<ion-input type="name" [(ngModel)]="player.lastName" color="light" labelPlacement="stacked" label="Last Name:" placeholder="{{player.lastName}}"></ion-input>
-											<ion-input type="number" [(ngModel)]="player.number" color="light" labelPlacement="stacked" label="Number:" placeholder="{{player.number}}"></ion-input>
-											<div style="display: flex; float: right;">
-												<ion-button color="light" fill="clear" (click)="savePlayer(player)">
-													<ion-icon size="default" slot="icon-only" name="checkmark-sharp"></ion-icon>
-												</ion-button>
-											</div>
-										</div>
-									</ng-container>
-								</ion-content>
-							</ng-template>
-						</ion-popover>
-					</div>
+								</ng-container>
+							</ion-content>
+						</ng-template>
+					</ion-popover>
 				</div>
+			</div>
+		</ion-col>
+		<ion-col class="ion-no-padding">
+			<div class="scoreboard">
+				<!-- Home Team -->
 				<ng-container *ngIf="currentGame">
 					<ion-grid>
 						<ion-row>
 							<ion-col>
-								<ion-grid style="border-radius: 10px; background-color: #e5eee7; width: 100%; padding: 0;">
+								<ion-grid style="border-radius: 10px; background-color: #d8d0fe; width: 100%; padding: 0;">
 									<ion-row>
 										<ng-container *ngFor="let player of homePlayersOnCourt; let i = index">
 											<ion-col id="context-menu-trigger-homeCourt{{i}}" *ngIf="homePlayersOnCourt.length >= i">
-												<ion-button [ngClass]="{'selectedButton':homePlayerSelected == i}" color="tertiary" fill="clear" expand="block" (tap)="selectPlayer('home', i)" (doubleTap)="removeFromCourt('home', player, i)">
+												<ion-button [ngClass]="{'selectedButton':homePlayerSelected == i}" color="primary" fill="clear" expand="block" (tap)="selectPlayer('home', i)" (doubleTap)="removeFromCourt('home', player, i)">
 													<ion-label>{{player.number}}</ion-label>
 												</ion-button>
 											</ion-col>
@@ -150,37 +150,39 @@
 								<ion-grid class="ion-no-padding">
 									<ion-row class="ion-align-items-center">
 										<ion-col size="3">
-											<ion-button fill="outline" expand="block" color="primary" (click)="addTimeout('home', true)">T30</ion-button>
-											<ion-button fill="outline" expand="block" color="primary" (click)="addTimeout('home', false)">T60</ion-button>
+											<ion-button fill="clear" expand="block" color="primary" (click)="addTimeout('home', true)">T30</ion-button>
+											<ion-button fill="clear" expand="block" color="primary" (click)="addTimeout('home', false)">T60</ion-button>
 										</ion-col>
 										<ion-col size="6">
 											<ion-input
 												class="ion-text-center"
-												fill="outline"
+												fill="clear"
 												style="font-size: xx-large; font-weight: bolder; margin-bottom: 4px;"
 												[(ngModel)]="currentGame.clock"
 												(keyup.enter)="updateGame()"
 											></ion-input>
 											<ion-input
 												label="Period:"
-												fill="outline"
+												fill="clear"
 												[(ngModel)]="currentGame.period"
 												type="number"
 											></ion-input>
 										</ion-col>
 										<ion-col size="3">
-											<ion-button fill="outline" expand="block" color="danger" (click)="addTimeout('away', true)">T30</ion-button>
-											<ion-button fill="outline" expand="block" color="danger" (click)="addTimeout('away', false)">T60</ion-button>
+											<ion-button fill="clear" expand="block" color="danger" (click)="addTimeout('away', true)">T30</ion-button>
+											<ion-button fill="clear" expand="block" color="danger" (click)="addTimeout('away', false)">T60</ion-button>
 										</ion-col>
+										<ion-button class="timer-style" color="medium" (click)="startStopTimer()">{{ timerRunning ? 'Stop' : 'Start' }}</ion-button>
 									</ion-row>
 								</ion-grid>
 							</ion-col>
+							<!-- Guest Team -->
 							<ion-col>
-								<ion-grid style="border-radius: 10px; background-color: #e5eee7; width: 100%; padding: 0;">
+								<ion-grid style="border-radius: 10px; background-color: #fec3c3; width: 100%; padding: 0;">
 									<ion-row>
 										<ng-container *ngFor="let player of awayPlayersOnCourt; let i = index">
 											<ion-col id="context-menu-trigger-awayCourt{{i}}" *ngIf="awayPlayersOnCourt.length >= i">
-												<ion-button [ngClass]="{'selectedButton':awayPlayerSelected == i}" color="tertiary" fill="clear" expand="block" (tap)="selectPlayer('away', i)" (doubleTap)="removeFromCourt('away', player, i)">
+												<ion-button [ngClass]="{'selectedButton':awayPlayerSelected == i}" color="danger" fill="clear" expand="block" (tap)="selectPlayer('away', i)" (doubleTap)="removeFromCourt('away', player, i)">
 													<ion-label>{{player.number}}</ion-label>
 												</ion-button>
 											</ion-col>
@@ -261,43 +263,8 @@
 						</ion-row>
 					</ion-grid>
 				</ng-container>
-				<!-- Guest Team -->
-				<div class="players-container" id="away-players-container">
-					<div class="away-font" id="team-numbers" *ngFor="let player of awayTeamPlayers; let i = index">
-						<ion-button [fill]="awayPlayersOnCourt.includes(player) ? 'outline' : 'clear'" color="danger" id="context-menu-trigger-away{{i}}" (click)="addToCourt('away', player)">
-							{{player.number}}
-						</ion-button>
-						<ion-popover trigger="context-menu-trigger-away{{i}}" [showBackdrop]="false" triggerAction="context-menu" side="left" alignment="start">
-							<ng-template>
-								<ion-content color="danger" class="ion-padding">
-									<div *ngIf="editPlayer == false">
-										<ion-input type="name" color="light" labelPlacement="stacked" label="First Name:" value="{{player.firstName}}" [readonly]="true"></ion-input>
-										<ion-input type="name" color="light" labelPlacement="stacked" label="Last Name:" value="{{player.lastName}}" [readonly]="true"></ion-input>
-										<ion-input type="number" color="light" labelPlacement="stacked" label="Number:" value="{{player.number}}" [readonly]="true"></ion-input>
-										<div style="display: flex; float: right;">
-											<ion-button color="light" fill="clear" (click)="editPlayer = true">
-												<ion-icon size="default" slot="icon-only" name="pencil"></ion-icon>
-											</ion-button>
-										</div>
-									</div>
-									<ng-container *ngIf="currentGame">
-										<div *ngIf="editPlayer == true">
-											<ion-input type="name" [(ngModel)]="player.firstName" color="light" labelPlacement="stacked" label="First Name:" placeholder="{{player.firstName}}"></ion-input>
-											<ion-input type="name" [(ngModel)]="player.lastName" color="light" labelPlacement="stacked" label="Last Name:" placeholder="{{player.lastName}}"></ion-input>
-											<ion-input type="number" [(ngModel)]="player.number" color="light" labelPlacement="stacked" label="Number:" placeholder="{{player.number}}"></ion-input>
-											<div style="display: flex; float: right;">
-												<ion-button color="light" fill="clear" (click)="savePlayer(player)">
-													<ion-icon size="default" slot="icon-only" name="checkmark-sharp"></ion-icon>
-												</ion-button>
-											</div>
-										</div>
-									</ng-container>
-								</ion-content>
-							</ng-template>
-						</ion-popover>
-					</div>
-				</div>
 			</div>
+			<!-- <ion-grid>
 			<div class="bottom-button-container">
 				<div class="small-number-container">
 					<span id="default-color">{{newPlayerNumber}}</span>
@@ -322,11 +289,50 @@
 					</ion-button>
 				</ng-container>
 			</div>
+			</ion-grid> -->
+		</ion-col>
+		<ion-col class="ion-no-padding" size="1">
+			<div class="players-container" id="away-players-container">
+				<div class="away-font" id="team-numbers" *ngFor="let player of awayTeamPlayers; let i = index">
+					<ion-button [fill]="awayPlayersOnCourt.includes(player) ? 'outline' : 'clear'" color="danger" id="context-menu-trigger-away{{i}}" (click)="addToCourt('away', player)">
+						{{player.number}}
+					</ion-button>
+					<ion-popover trigger="context-menu-trigger-away{{i}}" [showBackdrop]="false" triggerAction="context-menu" side="left" alignment="start">
+						<ng-template>
+							<ion-content color="danger" class="ion-padding">
+								<div *ngIf="editPlayer == false">
+									<ion-input type="name" color="light" labelPlacement="stacked" label="First Name:" value="{{player.firstName}}" [readonly]="true"></ion-input>
+									<ion-input type="name" color="light" labelPlacement="stacked" label="Last Name:" value="{{player.lastName}}" [readonly]="true"></ion-input>
+									<ion-input type="number" color="light" labelPlacement="stacked" label="Number:" value="{{player.number}}" [readonly]="true"></ion-input>
+									<div style="display: flex; float: right;">
+										<ion-button color="light" fill="clear" (click)="editPlayer = true">
+											<ion-icon size="default" slot="icon-only" name="pencil"></ion-icon>
+										</ion-button>
+									</div>
+								</div>
+								<ng-container *ngIf="currentGame">
+									<div *ngIf="editPlayer == true">
+										<ion-input type="name" [(ngModel)]="player.firstName" color="light" labelPlacement="stacked" label="First Name:" placeholder="{{player.firstName}}"></ion-input>
+										<ion-input type="name" [(ngModel)]="player.lastName" color="light" labelPlacement="stacked" label="Last Name:" placeholder="{{player.lastName}}"></ion-input>
+										<ion-input type="number" [(ngModel)]="player.number" color="light" labelPlacement="stacked" label="Number:" placeholder="{{player.number}}"></ion-input>
+										<div style="display: flex; float: right;">
+											<ion-button color="light" fill="clear" (click)="savePlayer(player)">
+												<ion-icon size="default" slot="icon-only" name="checkmark-sharp"></ion-icon>
+											</ion-button>
+										</div>
+									</div>
+								</ng-container>
+							</ion-content>
+						</ng-template>
+					</ion-popover>
+				</div>
+			</div>
 		</ion-col>
 	</ion-row>
+	<ion-row size="1"></ion-row>
 	<ion-row *ngIf="plays">
-		<ion-col size="3"></ion-col>
-		<ion-col id="playsModal" size="6">
+		<ion-col size="1"></ion-col>
+		<ion-col id="playsModal" size="10">
 			<ion-list inset="true" lines="full">
 				<ion-item *ngFor="let play of plays | slice:0:3">
 					<ion-label>{{play.data}}</ion-label>
@@ -366,12 +372,12 @@
 						</ion-buttons>
 					</ion-toolbar>
 					<ion-toolbar>
-						<ion-segment mode="md" [(ngModel)]="statsTab">
+						<ion-segment color="medium" mode="md" [(ngModel)]="statsTab">
 							<ion-segment-button value="home">
-								{{currentGame?.homeTeam}}
+								<ion-label color="primary">{{currentGame?.homeTeam}}</ion-label>
 							</ion-segment-button>
 							<ion-segment-button value="away">
-								{{currentGame?.awayTeam}}
+								<ion-label color="danger">{{currentGame?.awayTeam}}</ion-label>
 							</ion-segment-button>
 						</ion-segment>
 					</ion-toolbar>
@@ -402,7 +408,7 @@
 				</ion-content>
 			</ng-template>
 		</ion-modal>
-	<ion-col size="3"></ion-col>
+		<ion-col size="1"></ion-col>
 	</ion-row>
   </ion-grid>
 </ion-content>

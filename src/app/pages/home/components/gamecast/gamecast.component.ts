@@ -67,24 +67,23 @@ export class GamecastComponent {
 		{field: 'number', headerName: 'NUM', pinned: true},
 		{field: 'firstName', headerName: 'First Name'},
 		{field: 'lastName', headerName: 'Last Name'},
-		{field: 'minutes', headerName: 'MIN', width: 80},
-		{field: 'rebounds', headerName: 'REB', width: 80},
-		{field: 'defensiveRebounds', headerName: 'DREB', width: 90},
-		{field: 'offensiveRebounds', headerName: 'OREB', width: 90},
-		{field: 'fieldGoalsMade', headerName: 'FGM', width: 90},
-		{field: 'fieldGoalsAttempted', headerName: 'FGA', width: 80},
-		{field: 'blocks', headerName: 'BLK', width: 80},
-		{field: 'steals', headerName: 'STL', width: 80},
-		{field: 'threesMade', headerName: '3FGM', width: 90},
-		{field: 'threesAttempted', headerName: '3FGA', width: 90},
-		{field: 'freethrowsMade', headerName: 'FTM', width: 80},
-		{field: 'freethrowsAttempted', headerName: 'FTA', width: 80},
-		{field: 'points', headerName: 'PTS', width: 80},
-		{field: 'turnovers', headerName: 'TO', width: 80},
-		{field: 'fouls', headerName: 'FOUL', width: 90},
-		{field: 'technicalFouls', headerName: 'TECH', width: 90},
-		{field: 'plusOrMinus', headerName: '+/-', width: 80},
-		{field: 'eff', headerName: 'EFF', width: 80}
+		{field: 'minutes', headerName: 'MIN', width: 80, editable: true},
+		{field: 'rebounds', headerName: 'REB', width: 80, editable: true},
+		{field: 'defensiveRebounds', headerName: 'DREB', width: 90, editable: true},
+		{field: 'offensiveRebounds', headerName: 'OREB', width: 90, editable: true},
+		{field: 'fieldGoalsMade', headerName: 'FGM', width: 90, editable: true},
+		{field: 'fieldGoalsAttempted', headerName: 'FGA', width: 80, editable: true},
+		{field: 'blocks', headerName: 'BLK', width: 80, editable: true},
+		{field: 'steals', headerName: 'STL', width: 80, editable: true},
+		{field: 'threesMade', headerName: '3FGM', width: 90, editable: true},
+		{field: 'threesAttempted', headerName: '3FGA', width: 90, editable: true},
+		{field: 'freethrowsMade', headerName: 'FTM', width: 80, editable: true},
+		{field: 'freethrowsAttempted', headerName: 'FTA', width: 80, editable: true},
+		{field: 'points', headerName: 'PTS', width: 80, editable: true},
+		{field: 'turnovers', headerName: 'TO', width: 80, editable: true},
+		{field: 'fouls', headerName: 'FOUL', width: 90, editable: true},
+		{field: 'technicalFouls', headerName: 'TECH', width: 90, editable: true},
+		{field: 'plusOrMinus', headerName: '+/-', width: 80, editable: true},
 	];
 
   constructor(private route: ActivatedRoute, private crud: CrudService, private sql: SqlService) {}
@@ -154,7 +153,7 @@ export class GamecastComponent {
 			SELECT			Players.number, Players.firstName, Players.lastName, Stats.minutes, Stats.rebounds, Stats.defensiveRebounds,
 									Stats.offensiveRebounds, Stats.fieldGoalsMade, Stats.fieldGoalsAttempted, Stats.blocks, Stats.steals, Stats.threesMade,
 									Stats.threesAttempted, Stats.freethrowsMade, Stats.freethrowsAttempted, Stats.points, Stats.turnovers,
-									Stats.fouls, Stats.technicalFouls, Stats.plusOrMinus, Stats.eff
+									Stats.fouls, Stats.technicalFouls, Stats.plusOrMinus
 			FROM				Stats
 			JOIN				Players ON Stats.player = Players.playerId
 			WHERE 			Players.team = '${this.currentGame?.homeTeam}'
@@ -165,7 +164,7 @@ export class GamecastComponent {
 			SELECT		Players.number, Players.firstName, Players.lastName, Stats.minutes, Stats.rebounds, Stats.defensiveRebounds,
 								Stats.offensiveRebounds, Stats.fieldGoalsMade, Stats.fieldGoalsAttempted, Stats.blocks, Stats.steals, Stats.threesMade,
 								Stats.threesAttempted, Stats.freethrowsMade, Stats.freethrowsAttempted, Stats.points, Stats.turnovers,
-								Stats.fouls, Stats.technicalFouls, Stats.plusOrMinus, Stats.eff
+								Stats.fouls, Stats.technicalFouls, Stats.plusOrMinus
 			FROM			Stats
 			JOIN			Players ON Stats.player = Players.playerId
 			WHERE 		Players.team = '${this.currentGame?.awayTeam}'
@@ -296,7 +295,6 @@ export class GamecastComponent {
 	private async saveStat(stat:Stat) {
 		let res:any = stat;
 		delete res.points;
-		delete res.eff;
 		await this.crud.save(this.db, "Stats", res, {"player": `${stat.player}`, "game": `${this.gameId}`});
 		stat = (await this.crud.rawQuery(this.db, `select * from Stats where player = ${stat.player} and game = ${stat.game}`))[0];
 	}
@@ -606,6 +604,14 @@ export class GamecastComponent {
 		`))[0];
 
 	}
+
+	startStopTimer() {
+    if (this.timerRunning) {
+      this.stopTimer();
+    } else {
+      this.startTimer();
+    }
+  }
 
   startTimer() {
     this.timerRunning = true;
