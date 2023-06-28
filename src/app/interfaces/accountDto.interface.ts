@@ -1,5 +1,5 @@
 export interface AccountDto {
-  userId: number;
+  userId: string;
   email: string;
   darkMode: boolean | null;
   token: string | null;

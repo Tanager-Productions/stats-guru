@@ -1,6 +1,15 @@
 import { Injectable } from '@angular/core';
-import { SqlService } from '../sql/sql.service';
 import { SQLiteDBConnection } from '@capacitor-community/sqlite';
+import { Player } from 'src/app/interfaces/player.interface';
+import { Game } from 'src/app/interfaces/game.interface';
+import { Stat } from 'src/app/interfaces/stat.interface';
+import { Play } from 'src/app/interfaces/play.interface';
+import { SyncHistory } from 'src/app/interfaces/syncHistory.interface';
+import { GameCastSettings } from 'src/app/interfaces/gameCastSetting.interface';
+
+export type Table = 'Games' | 'Plays' | 'Stats' | 'Players' | 'Events' | 'SyncHistory' | 'GameCastSettings' | 'Teams';
+export type Model = Play | Player | Game | Stat | SyncHistory | GameCastSettings;
+export type Direction = 'desc' | 'asc';
 
 @Injectable({
   providedIn: 'root'
@@ -9,13 +18,17 @@ export class CrudService {
 
   constructor() { }
 
-  public async query(db:SQLiteDBConnection, table:string, where:boolean = false, params?: {[key: string]: string}, orderByColumn?:string, orderDirection:'desc' | 'asc' = 'asc') {
+  public async query(db:SQLiteDBConnection,
+										table:Table,
+										where?: {[key: string]: string},
+										orderByColumn?:string,
+										orderDirection:Direction = 'asc') {
     let sqlcmd:string = `select * from ${table}`;
-    if (where && params) {
+    if (where) {
       sqlcmd += " where ";
-      let keys:string[] = Object.keys(params);
-      for (let key in params) {
-        sqlcmd += `${key} = ${params[key]}`;
+      let keys:string[] = Object.keys(where);
+      for (let key in where) {
+        sqlcmd += `${key} = ${where[key]}`;
         if (keys.indexOf(key) != keys.length - 1) {
           sqlcmd += ` and `
         }
@@ -32,19 +45,21 @@ export class CrudService {
     }
   }
 
-  public async delete(db:SQLiteDBConnection, table:string, where:boolean = false, params?: {[key: string]: string}) {
+  public async delete(db:SQLiteDBConnection,
+											table:string,
+											where?: {[key: string]: string}) {
     let sqlcmd:string = `delete from ${table}`;
-    if (where && params) {
+    if (where) {
       sqlcmd += " where ";
-      let keys:string[] = Object.keys(params);
-      for (let key in params) {
-        sqlcmd += `${key} = ${params[key]}`;
+      let keys:string[] = Object.keys(where);
+      for (let key in where) {
+        sqlcmd += `${key} = ${where[key]}`;
         if (keys.indexOf(key) != keys.length - 1) {
           sqlcmd += ` and `
         }
       }
     }
-    let res = await db.run(sqlcmd);
+    let res = await db.run(sqlcmd+=';', undefined, true);
     if (res.changes == undefined || res.changes.changes == undefined) {
       throw new Error("Execution returned undefined");
     } else {
@@ -52,30 +67,32 @@ export class CrudService {
     }
   }
 
-  public async save(db:SQLiteDBConnection, table: string, model: any, where?: any): Promise<void> {
+  public async save(db:SQLiteDBConnection,
+										table: Table,
+										model: Model,
+										where?: {[key: string]: string}): Promise<void> {
+		let castedModel: any = model;
+		this.deleteKeys(model, table);
     const isUpdate: boolean = where ? true : false;
-    const keys: string[] = Object.keys(model);
+    const keys: string[] = Object.keys(castedModel);
     let stmt: string = '';
     let values: any[] = [];
     for (const key of keys) {
-      values.push(model[key]);
+      values.push(castedModel[key]);
     }
     if(!isUpdate) {
       const qMarks: string[] = [];
       for (const key of keys) {
         qMarks.push('?');
       }
-      stmt = `INSERT INTO ${table} (${keys.toString()}) VALUES (${qMarks.toString()});`;
+      stmt = `INSERT INTO ${table} (${keys.toString()}) VALUES (${qMarks.toString()})`;
     } else {
-      const wKey: string = Object.keys(where)[0];
-
-      const setString: string = await this.setNameForUpdate(keys);
-      if(setString.length === 0) {
+			const setString: string = await this.setNameForUpdate(keys);
+      if (setString.length === 0) {
         throw new Error(`save: update no SET`);
       }
-      stmt = `UPDATE ${table} SET ${setString}`;
-			stmt += " where ";
-      let keys2:string[] = Object.keys(where);
+      stmt = `UPDATE ${table} SET ${setString} where `;
+      let keys2:string[] = Object.keys(where!);
       for (let key in where) {
         stmt += `${key} = ${where[key]}`;
         if (keys2.indexOf(key) != keys2.length - 1) {
@@ -83,7 +100,7 @@ export class CrudService {
         }
       }
     }
-    const ret = await db.run(stmt+=';',values, true);
+    const ret = await db.run(stmt+=';', values, true);
     if(ret.changes!.changes != 1) {
       throw new Error(`save: insert changes != 1`);
     }
@@ -105,7 +122,7 @@ export class CrudService {
       stmt += `(${qMarks.toString()}),`;
     }
     stmt = stmt.slice(0, stmt.length-1);
-    const ret = await db.run(stmt,values, true);
+    const ret = await db.run(stmt, values, true);
   }
 
   private async setNameForUpdate(names: string[]): Promise<string> {
@@ -120,6 +137,26 @@ export class CrudService {
       throw new Error('SetNameForUpdate: length = 0');
     }
   }
+
+	private deleteKeys(model: any, table: Table) : any {
+		if (table == 'Games') {
+			delete model.homeFinal;
+			delete model.awayFinal;
+			if (model.gameId == 0) {
+				delete model.gameId;
+			}
+		} else if (table == 'Players' && model.playerId == 0) {
+			delete model.playerId;
+		} else if (table == 'Stats') {
+			delete model.points;
+			delete model.rebounds;
+			delete model.eff;
+		} else if (table == 'SyncHistory') {
+			delete model.id;
+		} else if (table == 'GameCastSettings') {
+			delete model.id;
+		}
+	}
 
   public async rawQuery(db:SQLiteDBConnection, query:string) {
     let res = await db.query(query);
