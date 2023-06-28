@@ -11,8 +11,8 @@
 		<ion-button id="detailModal">
 			<ion-icon slot="icon-only" name="settings"></ion-icon>
 		</ion-button>
-		<ion-button color="success" *ngIf="currentGame?.complete == '1'">Complete</ion-button>
-		<ion-button color="danger" *ngIf="currentGame?.complete == '0'">Live</ion-button>
+		<ion-button color="success" (click)='toggleGameComplete()' *ngIf="currentGame?.complete == '1'">Complete</ion-button>
+		<ion-button color="danger" (click)='toggleGameComplete()' *ngIf="currentGame?.complete == '0'">Live</ion-button>
 	</ion-buttons>
   </ion-toolbar>
 </ion-header>
@@ -82,11 +82,23 @@
 										</ion-card-title>
 										<ion-label class="ion-margin-top ion-text-center">
 											<p class="team-score digital-number; home-font">{{ currentGame.homeFinal }}</p>
-											<p class="home-font">
-												Fouls: {{ currentGame.homeCurrentFouls == null ? 0 : currentGame.homeCurrentFouls }} |
-												Partial TO: {{ currentGame.homePartialTOL == null ? 0 : currentGame.homePartialTOL }} |
-												Full TO: {{currentGame.homeFullTOL == null ? 0 : currentGame.homeFullTOL }}
-											</p>
+											<div class="home-font">
+												<div class="input-div">
+													<div class="input">
+														<ion-label class="input-label" for="homeCurrentFouls">Fouls:</ion-label>
+														<ion-input type="number" id ="homeCurrentFouls" [placeholder]="currentGame.homeCurrentFouls == null ? 0 : currentGame.homeCurrentFouls" [(ngModel)]="currentGame.homeCurrentFouls"></ion-input>
+													</div>
+													<div class="input">
+														<ion-label class="input-label" for="homePartialTOL">Partial TO:</ion-label>
+														<ion-input type="number" id ="homePartialTOL" [placeholder]="currentGame.homePartialTOL == null ? 0 : currentGame.homePartialTOL" [(ngModel)]="currentGame.homePartialTOL"></ion-input>
+													</div>
+													<div class="input">
+														<ion-label class="input-label" for="homeFullTOL">Full TO:</ion-label>
+														<ion-input type="number" id ="homeFullTOL" [placeholder]="currentGame.homeFullTOL == null ? 0 : currentGame.homeFullTOL" [(ngModel)]="currentGame.homeFullTOL"></ion-input>
+													</div>
+												</div>
+												<ion-button (click)="this.updateGame()">Save</ion-button>
+											</div>
 										</ion-label>
 									</ion-card-header>
 									<ion-grid>
@@ -196,11 +208,23 @@
 										</ion-card-title>
 										<ion-label class="ion-margin-top ion-text-center">
 											<p class="team-score digital-number; away-font">{{ currentGame.awayFinal }}</p>
-											<p class="away-font">
-												Fouls: {{ currentGame.awayCurrentFouls == null ? 0 : currentGame.awayCurrentFouls }} |
-												Partial TO: {{ currentGame.awayPartialTOL == null ? 0 : currentGame.awayPartialTOL }} |
-												Full TO: {{currentGame.awayFullTOL == null ? 0 : currentGame.awayFullTOL }}
-											</p>
+											<div class="away-font">
+												<div class="input-div">
+													<div class="input">
+														<ion-label class="input-label" for="awayCurrentFouls">Fouls:</ion-label>
+														<ion-input type="number" id ="awayCurrentFouls" [placeholder]="currentGame.awayCurrentFouls == null ? 0 : currentGame.awayCurrentFouls" [(ngModel)]="currentGame.awayCurrentFouls"></ion-input>
+													</div>
+													<div class="input">
+														<ion-label class="input-label" for="awayPartialTOL">Partial TO:</ion-label>
+														<ion-input type="number" id ="awayPartialTOL" [placeholder]="currentGame.awayPartialTOL == null ? 0 : currentGame.awayPartialTOL" [(ngModel)]="currentGame.awayPartialTOL"></ion-input>
+													</div>
+													<div class="input">
+														<ion-label class="input-label" for="awayFullTOL">Full TO:</ion-label>
+														<ion-input type="number" id ="awayFullTOL" [placeholder]="currentGame.awayFullTOL == null ? 0 : currentGame.awayFullTOL" [(ngModel)]="currentGame.awayFullTOL"></ion-input>
+													</div>
+												</div>
+												<ion-button color="danger" (click)="this.updateGame()">Save</ion-button>
+											</div>
 										</ion-label>
 									</ion-card-header>
 									<ion-grid>

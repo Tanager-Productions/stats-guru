@@ -213,6 +213,36 @@ export class GamecastComponent {
 		await this.crud.save(this.db, "Players", newTeamPlayer);
   }
 
+	toggleGameComplete() {
+		if(this.currentGame!.complete == '1') {
+			this.currentGame!.complete = '0';
+			this.updateGame();
+		} else {
+			this.currentGame!.complete = '1';
+			this.updateGame();
+		}
+	}
+
+	editToPartialTOL(team: 'home' | 'away', TOL: number) {
+		if (team == 'home') {
+			this.currentGame!.homePartialTOL = TOL;
+			this.updateGame();
+		} else {
+			this.currentGame!.awayPartialTOL = TOL;
+			this.updateGame();
+		}
+	}
+
+	editToFullTOL(team: 'home' | 'away', TOL: number) {
+		if (team == 'home') {
+			this.currentGame!.homeFullTOL = TOL;
+			this.updateGame();
+		} else {
+			this.currentGame!.awayFullTOL = TOL;
+			this.updateGame();
+		}
+	}
+
 	addToCourt(team: 'home' | 'away', player: Player) {
 		if (team == 'home') {
 			if(this.homePlayersOnCourt.length < 5) {
@@ -603,6 +633,14 @@ export class GamecastComponent {
 			WHERE 	gameId = ${this.gameId}
 		`))[0];
 
+	}
+
+	public async editHomeGame() {
+		this.currentGame!.syncState = SyncState.Modified;
+		let game:any = this.currentGame;
+		delete game.homeCurrentFouls;
+		delete game.homePartialTOL;
+		delete game.homeFullTOL;
 	}
 
 	startStopTimer() {

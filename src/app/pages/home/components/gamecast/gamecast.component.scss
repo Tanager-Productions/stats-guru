@@ -283,3 +283,29 @@
     font-size: 30px;
     font-weight: 400;
   }
+
+	.input-div {
+		display: flex;
+    flex-direction: row;
+    justify-content: center;
+	}
+
+	.input-partialTO {
+		min-width: min-content;
+		margin:5px;
+	}
+
+	.input {
+		min-width: min-content;
+		white-space: nowrap;
+		margin:5px;
+		justify-content: center;
+	}
+
+	.home-font .ion-valid {
+		--highlight-color:#4416fc;
+	}
+
+	.away-font .ion-valid {
+		--highlight-color:#fc1616;
+	}
