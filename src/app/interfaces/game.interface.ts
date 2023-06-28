@@ -54,8 +54,8 @@ export interface ServerGame {
   homeTeamTOL: number;
   awayTeamTOL: number;
   has4Quarters: boolean | null;
-  homeFinal?: number | null;
-  awayFinal?: number | null;
+  homeFinal: number | null;
+  awayFinal: number | null;
   period: string | null;
   gameLink: string | null;
   eventId: number | null;

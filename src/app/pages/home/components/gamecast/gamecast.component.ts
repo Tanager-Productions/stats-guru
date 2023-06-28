@@ -99,7 +99,8 @@ export class GamecastComponent {
 		this.db = await this.sql.createConnection();
 		let res = await this.crud.rawQuery(this.db, `SELECT * FROM GameCastSettings WHERE game = ${this.gameId}`);
 		if (res.length == 0) {
-			let gameCastSetting = {
+			let gameCastSetting: GameCastSettings = {
+				id: 0,
 				partialTimeouts: 0,
 				fullTimeouts: 2,
 				periodsPerGame: 2,
@@ -199,7 +200,13 @@ export class GamecastComponent {
       team: team == 'home' ? this.currentGame!.homeTeam : this.currentGame!.awayTeam,
       picture: null,
       isMale: this.currentGame!.isMale!,
-      syncState: SyncState.Added
+      syncState: SyncState.Added,
+			height: null,
+			weight: null,
+			age: null,
+			homeState: null,
+			homeTown: null,
+			socialMediaString: null
     }
 
 		if (team == 'home') {
@@ -288,7 +295,7 @@ export class GamecastComponent {
 	private async getStat(playerId:number) {
 		let stat = this.stats!.find(t => t.player == playerId);
 		if (stat == undefined) {
-			let newStat = {
+			let newStat:Stat = {
 				game: this.gameId!,
 				player: playerId,
 				steals: 0,
@@ -308,7 +315,9 @@ export class GamecastComponent {
 				defensiveRebounds: 0,
 				blocks: 0,
 				turnovers: 0,
-				syncState: SyncState.Added
+				syncState: SyncState.Added,
+				points: 0,
+				eff: 0
 			}
 			await this.crud.save(this.db, "Stats", newStat);
 			this.stats = await this.crud.rawQuery(this.db, `
@@ -323,9 +332,7 @@ export class GamecastComponent {
 	}
 
 	private async saveStat(stat:Stat) {
-		let res:any = stat;
-		delete res.points;
-		await this.crud.save(this.db, "Stats", res, {"player": `${stat.player}`, "game": `${this.gameId}`});
+		await this.crud.save(this.db, "Stats", stat, {"player": `${stat.player}`, "game": `${this.gameId}`});
 		stat = (await this.crud.rawQuery(this.db, `select * from Stats where player = ${stat.player} and game = ${stat.game}`))[0];
 	}
 
@@ -365,8 +372,16 @@ export class GamecastComponent {
 		let play: Play = {
 			playId: this.plays!.length + 1,
 			gameId: this.gameId!,
-			data: `${team == 'away' ? this.currentGame!.awayTeam : this.currentGame!.homeTeam} | ${player ? player.firstName + ' ' + player.lastName : null} | ${player ? player.number : null} | ${action} | ${this.currentGame!.period} | ${this.currentGame!.clock} | ${this.currentGame?.homeFinal}-${this.currentGame?.awayFinal} | ${new Date().toISOString()}`,
-			syncState: SyncState.Added
+			turboStatsData: `${team == 'away' ? this.currentGame!.awayTeam : this.currentGame!.homeTeam} | ${player ? player.firstName + ' ' + player.lastName : null} | ${player ? player.number : null} | ${action} | ${this.currentGame!.period} | ${this.currentGame!.clock} | ${this.currentGame?.homeFinal}-${this.currentGame?.awayFinal} | ${new Date().toISOString()}`,
+			syncState: SyncState.Added,
+			period: null,
+			playerName: null,
+			playerNumber: null,
+			score: null,
+			teamName: null,
+			timeStamp: null,
+			action: GameActions.Assist,
+			gameClock: null
 		}
 		await this.crud.save(this.db, 'Plays', play);
 		this.plays?.unshift(play);
@@ -623,16 +638,16 @@ export class GamecastComponent {
 
 	public async updateGame() {
 		this.currentGame!.syncState = SyncState.Modified;
-		let game:any = this.currentGame;
-		delete game.homeFinal;
-		delete game.awayFinal;
-		await this.crud.save(this.db, 'Games', this.currentGame, { "gameId": `${this.gameId}` });
-		this.currentGame = (await this.crud.rawQuery(this.db, `
+		await this.crud.save(this.db, 'Games', this.currentGame!, { "gameId": `${this.gameId}` });
+		let game = (await this.crud.rawQuery(this.db, `
 			SELECT 	*
 			FROM 		Games
 			WHERE 	gameId = ${this.gameId}
 		`))[0];
-
+		let currentGameCopy:any = this.currentGame;
+		for (let key in game) {
+			currentGameCopy[key] = game[key];
+		}
 	}
 
 	public async editHomeGame() {
