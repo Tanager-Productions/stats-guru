@@ -18,7 +18,7 @@
 </ion-header>
 
 <ion-content class="ion-no-padding" color="light">
-  <ion-grid style="height: 100%; width: 100%">
+  <ion-grid style="height: 100%; width: 100%;">
 	<ion-row style="height: 70%">
 		<ion-col class="ion-no-padding" size="1">
 			<div class="players-container" id="home-players-container">
@@ -152,6 +152,9 @@
 										<ion-col size="3">
 											<ion-button fill="clear" expand="block" color="primary" (click)="addTimeout('home', true)">T30</ion-button>
 											<ion-button fill="clear" expand="block" color="primary" (click)="addTimeout('home', false)">T60</ion-button>
+											<ion-button id="addHomePlayerModal" fill="clear" expand="block" color="primary">
+												<ion-icon size="large" slot="icon-only" name="add-circle-sharp"></ion-icon>
+											</ion-button>
 										</ion-col>
 										<ion-col size="6">
 											<ion-input
@@ -171,6 +174,9 @@
 										<ion-col size="3">
 											<ion-button fill="clear" expand="block" color="danger" (click)="addTimeout('away', true)">T30</ion-button>
 											<ion-button fill="clear" expand="block" color="danger" (click)="addTimeout('away', false)">T60</ion-button>
+											<ion-button id="addAwayPlayerModal" fill="clear" expand="block" color="danger">
+												<ion-icon size="large" slot="icon-only" name="add-circle-sharp"></ion-icon>
+											</ion-button>
 										</ion-col>
 										<ion-button class="timer-style" color="medium" (click)="startStopTimer()">{{ timerRunning ? 'Stop' : 'Start' }}</ion-button>
 									</ion-row>
@@ -264,32 +270,6 @@
 					</ion-grid>
 				</ng-container>
 			</div>
-			<!-- <ion-grid>
-			<div class="bottom-button-container">
-				<div class="small-number-container">
-					<span id="default-color">{{newPlayerNumber}}</span>
-				</div>
-				<ng-container *ngIf="currentGame">
-					<ion-button color="medium" class="bottom-number-button" [disabled]="newPlayerNumber.length == 0" (click)="clearNumberInput()">Clear</ion-button>
-					<ion-button color="medium" class="bottom-number-button" (click)="inputNumber(0)">0</ion-button>
-					<ion-button color="medium" class="bottom-number-button" (click)="inputNumber(1)">1</ion-button>
-					<ion-button color="medium" class="bottom-number-button" (click)="inputNumber(2)">2</ion-button>
-					<ion-button color="medium" class="bottom-number-button" (click)="inputNumber(3)">3</ion-button>
-					<ion-button color="medium" class="bottom-number-button" (click)="inputNumber(4)">4</ion-button>
-					<ion-button color="medium" class="bottom-number-button" (click)="inputNumber(5)">5</ion-button>
-					<ion-button color="medium" class="bottom-number-button" (click)="inputNumber(6)">6</ion-button>
-					<ion-button color="medium" class="bottom-number-button" (click)="inputNumber(7)">7</ion-button>
-					<ion-button color="medium" class="bottom-number-button" (click)="inputNumber(8)">8</ion-button>
-					<ion-button color="medium" class="bottom-number-button" (click)="inputNumber(9)">9</ion-button>
-					<ion-button color="primary" class="bottom-number-button" [disabled]="newPlayerNumber.length == 0" (click)="addToTeam('home')">
-						Home
-					</ion-button>
-					<ion-button color="danger" class="bottom-number-button" [disabled]="newPlayerNumber.length == 0" (click)="addToTeam('away')">
-						Away
-					</ion-button>
-				</ng-container>
-			</div>
-			</ion-grid> -->
 		</ion-col>
 		<ion-col class="ion-no-padding" size="1">
 			<div class="players-container" id="away-players-container">
@@ -329,88 +309,109 @@
 			</div>
 		</ion-col>
 	</ion-row>
-	<ion-row size="1"></ion-row>
+  </ion-grid>
+  <ion-col style="padding-top: 5rem;" class="ion-padding" size="12"></ion-col>
 	<ion-row *ngIf="plays">
-		<ion-col size="1"></ion-col>
-		<ion-col id="playsModal" size="10">
+	<ion-col size="1"></ion-col>
+	<ion-col id="playsModal" size="10">
+		<ion-list inset="true" lines="full">
+			<ion-item *ngFor="let play of plays | slice:0:3">
+				<ion-label>{{play.data}}</ion-label>
+			</ion-item>
+		</ion-list>
+	</ion-col>
+	<ion-modal [backdropDismiss]="false" #playsModal trigger="playsModal">
+	  <ng-template>
+		<ion-header>
+			<ion-toolbar>
+				<ion-title>Plays</ion-title>
+				<ion-buttons slot="end">
+					<ion-button (click)="playsModal.dismiss()">
+						<ion-icon slot="icon-only" name="close"></ion-icon>
+					</ion-button>
+				</ion-buttons>
+			</ion-toolbar>
+		</ion-header>
+		<ion-content class="ion-padding">
 			<ion-list inset="true" lines="full">
-				<ion-item *ngFor="let play of plays | slice:0:3">
+				<ion-item *ngFor="let play of plays">
 					<ion-label>{{play.data}}</ion-label>
 				</ion-item>
 			</ion-list>
-		</ion-col>
-		<ion-modal [backdropDismiss]="false" #playsModal trigger="playsModal">
-		  <ng-template>
+		</ion-content>
+	  </ng-template>
+	</ion-modal>
+	<ion-modal [backdropDismiss]="false" (willPresent)="loadBoxScore()" #statsModal trigger="liveStatsModal">
+		<ng-template>
 			<ion-header>
 				<ion-toolbar>
-					<ion-title>Plays</ion-title>
+					<ion-title>Box Score</ion-title>
 					<ion-buttons slot="end">
-						<ion-button (click)="playsModal.dismiss()">
+						<ion-button (click)="statsModal.dismiss()">
+							<ion-icon slot="icon-only" name="close"></ion-icon>
+						</ion-button>
+					</ion-buttons>
+				</ion-toolbar>
+				<ion-toolbar>
+					<ion-segment color="medium" mode="md" [(ngModel)]="statsTab">
+						<ion-segment-button value="home">
+							<ion-label color="primary">{{currentGame?.homeTeam}}</ion-label>
+						</ion-segment-button>
+						<ion-segment-button value="away">
+							<ion-label color="danger">{{currentGame?.awayTeam}}</ion-label>
+						</ion-segment-button>
+					</ion-segment>
+				</ion-toolbar>
+			</ion-header>
+			<ion-content [scrollY]="false">
+				<ag-grid-angular
+					*ngIf="statsTab == 'home'"
+					class="ag-theme-alpine"
+					style="width: 100%; height: 100%;"
+					[columnDefs]="teamStats"
+					[defaultColDef]="{sortable: true, filter: true}"
+					[rowData]="homeTeamStats"
+					[rowSelection]="'single'"
+					[pagination]="true"
+					[suppressCellFocus]="true">
+				</ag-grid-angular>
+				<ag-grid-angular
+					*ngIf="statsTab == 'away'"
+					class="ag-theme-alpine"
+					style="width: 100%; height: 100%;"
+					[columnDefs]="teamStats"
+					[defaultColDef]="{sortable: true, filter: true}"
+					[rowData]="awayTeamStats"
+					[rowSelection]="'single'"
+					[pagination]="true"
+					[suppressCellFocus]="true">
+				</ag-grid-angular>
+			</ion-content>
+		</ng-template>
+	</ion-modal>
+	<ion-modal class="add-player-modal" trigger="addHomePlayerModal" #homePlayerModal [backdropDismiss]="false">
+		<ng-template>
+			<ion-content [scrollY]="false">
+				<app-add-home-player (dismiss)="homePlayerModal.dismiss()"></app-add-home-player>
+			</ion-content>
+		</ng-template>
+	</ion-modal>
+	<ion-modal class="add-player-modal" trigger="addAwayPlayerModal" #awayPlayerModal [backdropDismiss]="false">
+		<ng-template>
+			<ion-header>
+				<ion-toolbar color="danger">
+					<ion-title>Add Player</ion-title>
+					<ion-buttons slot="end">
+						<ion-button (click)="awayPlayerModal.dismiss()">
 							<ion-icon slot="icon-only" name="close"></ion-icon>
 						</ion-button>
 					</ion-buttons>
 				</ion-toolbar>
 			</ion-header>
-			<ion-content class="ion-padding">
-				<ion-list inset="true" lines="full">
-					<ion-item *ngFor="let play of plays">
-						<ion-label>{{play.data}}</ion-label>
-					</ion-item>
-				</ion-list>
-			</ion-content>
-		  </ng-template>
-		</ion-modal>
-		<ion-modal [backdropDismiss]="false" (willPresent)="loadBoxScore()" #statsModal trigger="liveStatsModal">
-			<ng-template>
-				<ion-header>
-					<ion-toolbar>
-						<ion-title>Box Score</ion-title>
-						<ion-buttons slot="end">
-							<ion-button (click)="statsModal.dismiss()">
-								<ion-icon slot="icon-only" name="close"></ion-icon>
-							</ion-button>
-						</ion-buttons>
-					</ion-toolbar>
-					<ion-toolbar>
-						<ion-segment color="medium" mode="md" [(ngModel)]="statsTab">
-							<ion-segment-button value="home">
-								<ion-label color="primary">{{currentGame?.homeTeam}}</ion-label>
-							</ion-segment-button>
-							<ion-segment-button value="away">
-								<ion-label color="danger">{{currentGame?.awayTeam}}</ion-label>
-							</ion-segment-button>
-						</ion-segment>
-					</ion-toolbar>
-				</ion-header>
-				<ion-content [scrollY]="false">
-					<ag-grid-angular
-						*ngIf="statsTab == 'home'"
-						class="ag-theme-alpine"
-						style="width: 100%; height: 100%;"
-						[columnDefs]="teamStats"
-						[defaultColDef]="{sortable: true, filter: true}"
-						[rowData]="homeTeamStats"
-						[rowSelection]="'single'"
-						[pagination]="true"
-						[suppressCellFocus]="true">
-					</ag-grid-angular>
-					<ag-grid-angular
-						*ngIf="statsTab == 'away'"
-						class="ag-theme-alpine"
-						style="width: 100%; height: 100%;"
-						[columnDefs]="teamStats"
-						[defaultColDef]="{sortable: true, filter: true}"
-						[rowData]="awayTeamStats"
-						[rowSelection]="'single'"
-						[pagination]="true"
-						[suppressCellFocus]="true">
-					</ag-grid-angular>
-				</ion-content>
-			</ng-template>
-		</ion-modal>
-		<ion-col size="1"></ion-col>
+		</ng-template>
+	</ion-modal>
+	<ion-col size="1"></ion-col>
 	</ion-row>
-  </ion-grid>
 </ion-content>
 
 <ion-modal trigger="detailModal" #settingsModal [backdropDismiss]="false">

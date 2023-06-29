@@ -1,0 +1,39 @@
+<ion-header>
+	<ion-toolbar color="primary">
+		<ion-title>
+			<ion-row style="display: flex; align-items: center;">
+				<ion-icon size="large" name="basketball-sharp"></ion-icon>
+				Add Player
+			</ion-row>
+		</ion-title>
+		<ion-buttons slot="end">
+			<ion-button (click)="dismiss.emit()">
+				<ion-icon slot="icon-only" name="close"></ion-icon>
+			</ion-button>
+		</ion-buttons>
+	</ion-toolbar>
+</ion-header>
+<ion-content>
+	<ion-grid class="ion-padding">
+		<ion-col size="10">
+			<ion-input [(ngModel)]="newPlayerNumber" color="primary" type="number" label="Player Number" labelPlacement="stacked"></ion-input>
+			<ion-input color="primary" label="First Name" type="text" labelPlacement="stacked"></ion-input>
+			<ion-input color="primary" label="Last Name" type="text" labelPlacement="stacked"></ion-input>
+			<ion-button class="submit-button" color="primary" [disabled]="!newPlayerNumber">
+				Submit
+			</ion-button>
+		</ion-col>
+	</ion-grid>
+</ion-content>
+<!-- <ion-row>
+				<ion-button color="primary" class="bottom-number-button" (click)="inputNumber(0)">0</ion-button>
+				<ion-button color="primary" class="bottom-number-button" (click)="inputNumber(1)">1</ion-button>
+				<ion-button color="primary" class="bottom-number-button" (click)="inputNumber(2)">2</ion-button>
+				<ion-button color="primary" class="bottom-number-button" (click)="inputNumber(3)">3</ion-button>
+				<ion-button color="primary" class="bottom-number-button" (click)="inputNumber(4)">4</ion-button>
+				<ion-button color="primary" class="bottom-number-button" (click)="inputNumber(5)">5</ion-button>
+				<ion-button color="primary" class="bottom-number-button" (click)="inputNumber(6)">6</ion-button>
+				<ion-button color="primary" class="bottom-number-button" (click)="inputNumber(7)">7</ion-button>
+				<ion-button color="primary" class="bottom-number-button" (click)="inputNumber(8)">8</ion-button>
+				<ion-button color="primary" class="bottom-number-button" (click)="inputNumber(9)">9</ion-button>
+			</ion-row> -->

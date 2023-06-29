@@ -11,6 +11,7 @@ import { SharedModule } from 'src/app/shared/shared.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HammerModule } from '@angular/platform-browser';
 import { AgGridModule } from 'ag-grid-angular';
+import { AddHomePlayerComponent } from '../add-home-player/add-home-player.component';
 
 
 
@@ -20,7 +21,8 @@ import { AgGridModule } from 'ag-grid-angular';
     GamesComponent,
     GamecastComponent,
     GamecastDetailComponent,
-    AddGamesComponent
+    AddGamesComponent,
+		AddHomePlayerComponent
   ],
   imports: [
 		AgGridModule,
