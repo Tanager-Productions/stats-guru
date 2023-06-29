@@ -48,15 +48,16 @@ export class SyncService {
         version: currentDatabaseVersion,
         mode: SyncMode.Full,
         overwrite: null,
-        games: await this.crudService.query(this.db, "games"),
-        players: await this.crudService.query(this.db, "players"),
-        stats: await this.crudService.query(this.db, "stats"),
-        plays: await this.crudService.query(this.db, "plays")
+        games: await this.crudService.query(this.db, "Games"),
+        players: await this.crudService.query(this.db, "Players"),
+        stats: await this.crudService.query(this.db, "Stats"),
+        plays: await this.crudService.query(this.db, "Plays")
       }
       let httpResponse = await this.api.postSync(res);
       if (httpResponse.status == 200) {
         let res: SyncResult = httpResponse.data;
-        let history = {
+        let history: SyncHistory = {
+					id: 0,
           dateOccurred: new Date().toUTCString(),
           statsSynced: res.statsSynced ? 1 : 0,
           gamesSynced: res.statsSynced ? 1 : 0,
@@ -64,7 +65,7 @@ export class SyncService {
           playsSynced: res.statsSynced ? 1 : 0,
           errorMessages: JSON.stringify(res.errorMessages)
         };
-        await this.crudService.save(this.db, "syncHistory", history);
+        await this.crudService.save(this.db, 'SyncHistory', history);
         await this.db.execute(` delete from plays;
                                 delete from stats;
                                 delete from games;
@@ -109,7 +110,7 @@ export class SyncService {
   private async fetchAndInsertGames() {
     let response = await this.api.getAllGames();
     if (response.status == 200) {
-      let games = response.data as ServerGame[];
+      let games = response.data /*as ServerGame[]*/;
       for (let game of games) {
         delete game.homeFinal;
         delete game.awayFinal;
@@ -134,7 +135,10 @@ export class SyncService {
   private async fetchAndInsertPlayers() {
     let response = await this.api.getAllPlayers();
     if (response.status == 200) {
-      let players = response.data as ServerPlayer[];
+      let players = response.data /*as ServerPlayer[]*/;
+			for (let player of players) {
+				delete player.socialMedias;
+			}
       if (players.length > 0)
         await this.crudService.bulkInsert(this.db!, "players", players);
     } else {
@@ -156,10 +160,11 @@ export class SyncService {
   private async fetchAndInsertStats() {
     let response = await this.api.getAllStats();
     if (response.status == 200) {
-      let stats = response.data as ServerStat[];
+      let stats = response.data /*as ServerStat[]*/;
       for (let stat of stats) {
         delete stat.points;
         delete stat.eff;
+				delete stat.rebounds;
       }
       for (var i = 0; i < stats.length; i = i + 50) {
         let end = i+50;

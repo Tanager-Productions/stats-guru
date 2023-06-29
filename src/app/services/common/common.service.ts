@@ -46,7 +46,7 @@ export class CommonService {
   }
 
   public async fetchGames(db: SQLiteDBConnection) {
-    let games: Game[] = await this.crud.query(db, "games", false, undefined, "gameDate", 'desc');
+    let games: Game[] = await this.crud.query(db, "Games", undefined, "gameDate", 'desc');
     this.gamesSubject.next(games);
     this.isGamesReady.next(true);
   }
@@ -60,7 +60,7 @@ export class CommonService {
   }
 
   public async fetchEvents(db: SQLiteDBConnection) {
-    let events: Event[] = await this.crud.query(db, "events", false, undefined, "title", "asc");
+    let events: Event[] = await this.crud.query(db, "Events", undefined, "title", "asc");
     this.eventsSubject.next(events);
     this.isEventsReady.next(true);
   }
@@ -74,7 +74,7 @@ export class CommonService {
   }
 
   public async fetchPlayers(db: SQLiteDBConnection) {
-    let players: Player[] = await this.crud.query(db, "players");
+    let players: Player[] = await this.crud.query(db, "Players");
     this.playersSubject.next(players);
     this.isPlayersReady.next(true);
   }
@@ -88,7 +88,7 @@ export class CommonService {
   }
 
   public async fetchPlays(db: SQLiteDBConnection) {
-    let plays: Play[] = await this.crud.query(db, "plays");
+    let plays: Play[] = await this.crud.query(db, "Plays");
     this.playsSubject.next(plays);
     this.isPlaysReady.next(true);
   }
@@ -102,7 +102,7 @@ export class CommonService {
   }
 
   public async fetchTeams(db: SQLiteDBConnection) {
-    let teams: Team[] = await this.crud.query(db, "teams");
+    let teams: Team[] = await this.crud.query(db, "Teams");
     this.teamsSubject.next(teams);
     this.isTeamsReady.next(true);
   }
@@ -116,7 +116,7 @@ export class CommonService {
   }
 
   public async fetchStats(db: SQLiteDBConnection) {
-    let stats: Stat[] = await this.crud.query(db, "stats");
+    let stats: Stat[] = await this.crud.query(db, "Stats");
     this.statsSubject.next(stats);
     this.isStatsReady.next(true);
   }

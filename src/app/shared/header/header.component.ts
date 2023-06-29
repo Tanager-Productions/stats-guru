@@ -36,7 +36,7 @@ export class HeaderComponent implements OnInit {
     this.sync.syncComplete().subscribe(async complete => {
       if (complete) {
         let db = await this.sql.createConnection();
-        this.syncHistory = await this.crud.query(db, "SyncHistory", false, undefined, "dateOccurred", "desc");
+        this.syncHistory = await this.crud.query(db, "SyncHistory", undefined, "dateOccurred", "desc");
       }
     })
   }

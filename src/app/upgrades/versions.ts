@@ -21,6 +21,12 @@ export const version1: string[] = [
       picture TEXT NULL,
       team TEXT NOT NULL,
       isMale TEXT NOT NULL,
+      height INTEGER NULL,
+      weight INTEGER NULL,
+      age INTEGER NULL,
+      homeTown TEXT NULL,
+      homeState TEXT NULL,
+      socialMediaString TEXT NULL,
       syncState INTEGER NOT NULL DEFAULT 0
     );
   `,
@@ -52,12 +58,6 @@ export const version1: string[] = [
       period TEXT NULL,
       gameLink TEXT NULL,
       eventId INTEGER NULL,
-			homePartialTOL INTEGER NULL,
-			awayPartialTOL INTEGER NULL,
-			homeFullTOL INTEGER NULL,
-			awayFullTOL INTEGER NULL,
-			homeCurrentFouls INTEGER NULL,
-			awayCurrentFouls INTEGER NULL,
       syncState INTEGER NOT NULL DEFAULT 0
     );
   `,
@@ -66,7 +66,15 @@ export const version1: string[] = [
     CREATE TABLE IF NOT EXISTS Plays (
       playId INTEGER NOT NULL,
       gameId INTEGER NOT NULL,
-      data TEXT NOT NULL,
+      turboStatsData TEXT NULL,
+			teamName TEXT NULL,
+			playerName TEXT NULL,
+			playerNumber INTEGER NULL,
+			action INTEGER NULL,
+			period TEXT NULL,
+			gameClock TEXT NULL,
+			score TEXT NULL,
+			timeStamp TEXT NULL,
       syncState INTEGER NOT NULL DEFAULT 0,
       PRIMARY KEY (playId, gameId)
     );
@@ -137,7 +145,13 @@ export const version1: string[] = [
       minutesPerPeriod INTEGER NULL,
       minutesPerOvertime INTEGER NULL,
 			game INTEGER NOT NULL,
-			resetTimeoutsEveryPeriod TEXT NULL
+			resetTimeoutsEveryPeriod TEXT NULL,
+			homePartialTOL INTEGER NULL,
+			awayPartialTOL INTEGER NULL,
+			homeFullTOL INTEGER NULL,
+			awayFullTOL INTEGER NULL,
+			homeCurrentFouls INTEGER NULL,
+			awayCurrentFouls INTEGER NULL
     );
   `
 ];

@@ -11,8 +11,8 @@
 		<ion-button id="detailModal">
 			<ion-icon slot="icon-only" name="settings"></ion-icon>
 		</ion-button>
-		<ion-button color="success" *ngIf="currentGame?.complete == '1'">Complete</ion-button>
-		<ion-button color="danger" *ngIf="currentGame?.complete == '0'">Live</ion-button>
+		<ion-button color="success" (click)='toggleGameComplete()' *ngIf="currentGame?.complete == '1'">Complete</ion-button>
+		<ion-button color="danger" (click)='toggleGameComplete()' *ngIf="currentGame?.complete == '0'">Live</ion-button>
 	</ion-buttons>
   </ion-toolbar>
 </ion-header>
@@ -82,11 +82,23 @@
 										</ion-card-title>
 										<ion-label class="ion-margin-top ion-text-center">
 											<p class="team-score digital-number; home-font">{{ currentGame.homeFinal }}</p>
-											<p class="home-font">
-												Fouls: {{ currentGame.homeCurrentFouls == null ? 0 : currentGame.homeCurrentFouls }} |
-												Partial TO: {{ currentGame.homePartialTOL == null ? 0 : currentGame.homePartialTOL }} |
-												Full TO: {{currentGame.homeFullTOL == null ? 0 : currentGame.homeFullTOL }}
-											</p>
+											<div class="home-font">
+												<div class="input-div">
+													<div class="input">
+														<ion-label class="input-label" for="homeCurrentFouls">Fouls:</ion-label>
+														<ion-input type="number" id ="homeCurrentFouls" [placeholder]="currentGame.homeCurrentFouls == null ? 0 : currentGame.homeCurrentFouls" [(ngModel)]="currentGame.homeCurrentFouls"></ion-input>
+													</div>
+													<div class="input">
+														<ion-label class="input-label" for="homePartialTOL">Partial TO:</ion-label>
+														<ion-input type="number" id ="homePartialTOL" [placeholder]="currentGame.homePartialTOL == null ? 0 : currentGame.homePartialTOL" [(ngModel)]="currentGame.homePartialTOL"></ion-input>
+													</div>
+													<div class="input">
+														<ion-label class="input-label" for="homeFullTOL">Full TO:</ion-label>
+														<ion-input type="number" id ="homeFullTOL" [placeholder]="currentGame.homeFullTOL == null ? 0 : currentGame.homeFullTOL" [(ngModel)]="currentGame.homeFullTOL"></ion-input>
+													</div>
+												</div>
+												<ion-button (click)="this.updateGame()">Save</ion-button>
+											</div>
 										</ion-label>
 									</ion-card-header>
 									<ion-grid>
@@ -202,11 +214,23 @@
 										</ion-card-title>
 										<ion-label class="ion-margin-top ion-text-center">
 											<p class="team-score digital-number; away-font">{{ currentGame.awayFinal }}</p>
-											<p class="away-font">
-												Fouls: {{ currentGame.awayCurrentFouls == null ? 0 : currentGame.awayCurrentFouls }} |
-												Partial TO: {{ currentGame.awayPartialTOL == null ? 0 : currentGame.awayPartialTOL }} |
-												Full TO: {{currentGame.awayFullTOL == null ? 0 : currentGame.awayFullTOL }}
-											</p>
+											<div class="away-font">
+												<div class="input-div">
+													<div class="input">
+														<ion-label class="input-label" for="awayCurrentFouls">Fouls:</ion-label>
+														<ion-input type="number" id ="awayCurrentFouls" [placeholder]="currentGame.awayCurrentFouls == null ? 0 : currentGame.awayCurrentFouls" [(ngModel)]="currentGame.awayCurrentFouls"></ion-input>
+													</div>
+													<div class="input">
+														<ion-label class="input-label" for="awayPartialTOL">Partial TO:</ion-label>
+														<ion-input type="number" id ="awayPartialTOL" [placeholder]="currentGame.awayPartialTOL == null ? 0 : currentGame.awayPartialTOL" [(ngModel)]="currentGame.awayPartialTOL"></ion-input>
+													</div>
+													<div class="input">
+														<ion-label class="input-label" for="awayFullTOL">Full TO:</ion-label>
+														<ion-input type="number" id ="awayFullTOL" [placeholder]="currentGame.awayFullTOL == null ? 0 : currentGame.awayFullTOL" [(ngModel)]="currentGame.awayFullTOL"></ion-input>
+													</div>
+												</div>
+												<ion-button color="danger" (click)="this.updateGame()">Save</ion-button>
+											</div>
 										</ion-label>
 									</ion-card-header>
 									<ion-grid>
@@ -312,105 +336,84 @@
   </ion-grid>
   <ion-col style="padding-top: 5rem;" class="ion-padding" size="12"></ion-col>
 	<ion-row *ngIf="plays">
-	<ion-col size="1"></ion-col>
-	<ion-col id="playsModal" size="10">
-		<ion-list inset="true" lines="full">
-			<ion-item *ngFor="let play of plays | slice:0:3">
-				<ion-label>{{play.data}}</ion-label>
-			</ion-item>
-		</ion-list>
-	</ion-col>
-	<ion-modal [backdropDismiss]="false" #playsModal trigger="playsModal">
-	  <ng-template>
-		<ion-header>
-			<ion-toolbar>
-				<ion-title>Plays</ion-title>
-				<ion-buttons slot="end">
-					<ion-button (click)="playsModal.dismiss()">
-						<ion-icon slot="icon-only" name="close"></ion-icon>
-					</ion-button>
-				</ion-buttons>
-			</ion-toolbar>
-		</ion-header>
-		<ion-content class="ion-padding">
+		<ion-col size="1"></ion-col>
+		<ion-col id="playsModal" size="10">
 			<ion-list inset="true" lines="full">
-				<ion-item *ngFor="let play of plays">
-					<ion-label>{{play.data}}</ion-label>
+				<ion-item *ngFor="let play of plays | slice:0:3">
+					<ion-label>{{play.turboStatsData}}</ion-label>
 				</ion-item>
 			</ion-list>
-		</ion-content>
-	  </ng-template>
-	</ion-modal>
-	<ion-modal [backdropDismiss]="false" (willPresent)="loadBoxScore()" #statsModal trigger="liveStatsModal">
-		<ng-template>
+		</ion-col>
+		<ion-modal [backdropDismiss]="false" #playsModal trigger="playsModal">
+		  <ng-template>
 			<ion-header>
 				<ion-toolbar>
-					<ion-title>Box Score</ion-title>
+					<ion-title>Plays</ion-title>
 					<ion-buttons slot="end">
-						<ion-button (click)="statsModal.dismiss()">
-							<ion-icon slot="icon-only" name="close"></ion-icon>
-						</ion-button>
-					</ion-buttons>
-				</ion-toolbar>
-				<ion-toolbar>
-					<ion-segment color="medium" mode="md" [(ngModel)]="statsTab">
-						<ion-segment-button value="home">
-							<ion-label color="primary">{{currentGame?.homeTeam}}</ion-label>
-						</ion-segment-button>
-						<ion-segment-button value="away">
-							<ion-label color="danger">{{currentGame?.awayTeam}}</ion-label>
-						</ion-segment-button>
-					</ion-segment>
-				</ion-toolbar>
-			</ion-header>
-			<ion-content [scrollY]="false">
-				<ag-grid-angular
-					*ngIf="statsTab == 'home'"
-					class="ag-theme-alpine"
-					style="width: 100%; height: 100%;"
-					[columnDefs]="teamStats"
-					[defaultColDef]="{sortable: true, filter: true}"
-					[rowData]="homeTeamStats"
-					[rowSelection]="'single'"
-					[pagination]="true"
-					[suppressCellFocus]="true">
-				</ag-grid-angular>
-				<ag-grid-angular
-					*ngIf="statsTab == 'away'"
-					class="ag-theme-alpine"
-					style="width: 100%; height: 100%;"
-					[columnDefs]="teamStats"
-					[defaultColDef]="{sortable: true, filter: true}"
-					[rowData]="awayTeamStats"
-					[rowSelection]="'single'"
-					[pagination]="true"
-					[suppressCellFocus]="true">
-				</ag-grid-angular>
-			</ion-content>
-		</ng-template>
-	</ion-modal>
-	<ion-modal class="add-player-modal" trigger="addHomePlayerModal" #homePlayerModal [backdropDismiss]="false">
-		<ng-template>
-			<ion-content [scrollY]="false">
-				<app-add-home-player (dismiss)="homePlayerModal.dismiss()"></app-add-home-player>
-			</ion-content>
-		</ng-template>
-	</ion-modal>
-	<ion-modal class="add-player-modal" trigger="addAwayPlayerModal" #awayPlayerModal [backdropDismiss]="false">
-		<ng-template>
-			<ion-header>
-				<ion-toolbar color="danger">
-					<ion-title>Add Player</ion-title>
-					<ion-buttons slot="end">
-						<ion-button (click)="awayPlayerModal.dismiss()">
+						<ion-button (click)="playsModal.dismiss()">
 							<ion-icon slot="icon-only" name="close"></ion-icon>
 						</ion-button>
 					</ion-buttons>
 				</ion-toolbar>
 			</ion-header>
-		</ng-template>
-	</ion-modal>
-	<ion-col size="1"></ion-col>
+			<ion-content class="ion-padding">
+				<ion-list inset="true" lines="full">
+					<ion-item *ngFor="let play of plays">
+						<ion-label>{{play.turboStatsData}}</ion-label>
+					</ion-item>
+				</ion-list>
+			</ion-content>
+		  </ng-template>
+		</ion-modal>
+		<ion-modal [backdropDismiss]="false" (willPresent)="loadBoxScore()" #statsModal trigger="liveStatsModal">
+			<ng-template>
+				<ion-header>
+					<ion-toolbar>
+						<ion-title>Box Score</ion-title>
+						<ion-buttons slot="end">
+							<ion-button (click)="statsModal.dismiss()">
+								<ion-icon slot="icon-only" name="close"></ion-icon>
+							</ion-button>
+						</ion-buttons>
+					</ion-toolbar>
+					<ion-toolbar>
+						<ion-segment color="medium" mode="md" [(ngModel)]="statsTab">
+							<ion-segment-button value="home">
+								<ion-label color="primary">{{currentGame?.homeTeam}}</ion-label>
+							</ion-segment-button>
+							<ion-segment-button value="away">
+								<ion-label color="danger">{{currentGame?.awayTeam}}</ion-label>
+							</ion-segment-button>
+						</ion-segment>
+					</ion-toolbar>
+				</ion-header>
+				<ion-content [scrollY]="false">
+					<ag-grid-angular
+						*ngIf="statsTab == 'home'"
+						class="ag-theme-alpine"
+						style="width: 100%; height: 100%;"
+						[columnDefs]="teamStats"
+						[defaultColDef]="{sortable: true, filter: true}"
+						[rowData]="homeTeamStats"
+						[rowSelection]="'single'"
+						[pagination]="true"
+						[suppressCellFocus]="true">
+					</ag-grid-angular>
+					<ag-grid-angular
+						*ngIf="statsTab == 'away'"
+						class="ag-theme-alpine"
+						style="width: 100%; height: 100%;"
+						[columnDefs]="teamStats"
+						[defaultColDef]="{sortable: true, filter: true}"
+						[rowData]="awayTeamStats"
+						[rowSelection]="'single'"
+						[pagination]="true"
+						[suppressCellFocus]="true">
+					</ag-grid-angular>
+				</ion-content>
+			</ng-template>
+		</ion-modal>
+		<ion-col size="1"></ion-col>
 	</ion-row>
 </ion-content>
 
