@@ -334,10 +334,9 @@
 		</ion-col>
 	</ion-row>
   </ion-grid>
-  <ion-col style="padding-top: 5rem;" class="ion-padding" size="12"></ion-col>
 	<ion-row *ngIf="plays">
 		<ion-col size="1"></ion-col>
-		<ion-col id="playsModal" size="10">
+		<ion-col style="margin-top: 3rem;" id="playsModal" size="10">
 			<ion-list inset="true" lines="full">
 				<ion-item *ngFor="let play of plays | slice:0:3">
 					<ion-label>{{play.turboStatsData}}</ion-label>
@@ -410,6 +409,20 @@
 						[pagination]="true"
 						[suppressCellFocus]="true">
 					</ag-grid-angular>
+				</ion-content>
+			</ng-template>
+		</ion-modal>
+		<ion-modal class="add-player-modal" trigger="addHomePlayerModal" #homePlayerModal [backdropDismiss]="false">
+			<ng-template>
+				<ion-content [scrollY]="false">
+					<app-add-home-player (dismiss)="homePlayerModal.dismiss()"></app-add-home-player>
+				</ion-content>
+			</ng-template>
+		</ion-modal>
+		<ion-modal class="add-player-modal" trigger="addAwayPlayerModal" #awayPlayerModal [backdropDismiss]="false">
+			<ng-template>
+				<ion-content [scrollY]="false">
+					<app-add-away-player (dismiss)="awayPlayerModal.dismiss()"></app-add-away-player>
 				</ion-content>
 			</ng-template>
 		</ion-modal>

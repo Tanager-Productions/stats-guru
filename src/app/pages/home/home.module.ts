@@ -12,6 +12,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HammerModule } from '@angular/platform-browser';
 import { AgGridModule } from 'ag-grid-angular';
 import { AddHomePlayerComponent } from '../add-home-player/add-home-player.component';
+import { AddAwayPlayerComponent } from '../add-away-player/add-away-player.component';
 
 
 
@@ -22,7 +23,8 @@ import { AddHomePlayerComponent } from '../add-home-player/add-home-player.compo
     GamecastComponent,
     GamecastDetailComponent,
     AddGamesComponent,
-		AddHomePlayerComponent
+		AddHomePlayerComponent,
+		AddAwayPlayerComponent
   ],
   imports: [
 		AgGridModule,

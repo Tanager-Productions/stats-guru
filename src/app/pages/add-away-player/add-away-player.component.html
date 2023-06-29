@@ -1,0 +1,27 @@
+<ion-header>
+	<ion-toolbar color="danger">
+		<ion-title>
+			<ion-row style="display: flex; align-items: center;">
+				<ion-icon size="large" name="basketball-sharp"></ion-icon>
+				Add Player
+			</ion-row>
+		</ion-title>
+		<ion-buttons slot="end">
+			<ion-button (click)="dismiss.emit()">
+				<ion-icon slot="icon-only" name="close"></ion-icon>
+			</ion-button>
+		</ion-buttons>
+	</ion-toolbar>
+</ion-header>
+<ion-content>
+	<ion-grid class="ion-padding">
+		<ion-col size="10">
+			<ion-input [(ngModel)]="newPlayerNumber" color="danger" type="number" label="Player Number" labelPlacement="stacked"></ion-input>
+			<ion-input color="danger" label="First Name" type="text" labelPlacement="stacked"></ion-input>
+			<ion-input color="danger" label="Last Name" type="text" labelPlacement="stacked"></ion-input>
+			<ion-button class="submit-button" color="danger" [disabled]="!newPlayerNumber">
+				Submit
+			</ion-button>
+		</ion-col>
+	</ion-grid>
+</ion-content>
