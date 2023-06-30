@@ -17,9 +17,9 @@
 	<ion-grid class="ion-padding">
 		<ion-col size="10">
 			<ion-input [(ngModel)]="newPlayerNumber" color="danger" type="number" label="Player Number" labelPlacement="stacked"></ion-input>
-			<ion-input color="danger" label="First Name" type="text" labelPlacement="stacked"></ion-input>
-			<ion-input color="danger" label="Last Name" type="text" labelPlacement="stacked"></ion-input>
-			<ion-button class="submit-button" color="danger" [disabled]="!newPlayerNumber">
+			<ion-input [(ngModel)]="newPlayerFirstName" color="danger" label="First Name" type="text" labelPlacement="stacked"></ion-input>
+			<ion-input [(ngModel)]="newPlayerLastName" color="danger" label="Last Name" type="text" labelPlacement="stacked"></ion-input>
+			<ion-button class="submit-button" color="danger" (click)="addToTeam('away')" [disabled]="!newPlayerNumber">
 				Submit
 			</ion-button>
 		</ion-col>
