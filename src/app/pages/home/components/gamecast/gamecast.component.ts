@@ -87,7 +87,10 @@ export class GamecastComponent {
 		{field: 'plusOrMinus', headerName: '+/-', width: 80, editable: true},
 	];
 
-  constructor(private route: ActivatedRoute, private crud: CrudService, private sql: SqlService) {}
+  constructor(
+		private route: ActivatedRoute,
+		private crud: CrudService,
+		private sql: SqlService) {}
 
   ngOnInit() {
     this.route.params.subscribe((params: { [x: string]: string | number }) => {

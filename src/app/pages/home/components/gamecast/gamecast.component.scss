@@ -12,6 +12,11 @@
     font-weight: bold;
   }
 
+	.add-player-modal {
+		--height: 45%;
+		--width: 45%;
+	}
+
 	.selectedButton {
 		background: white;
 	}
@@ -41,7 +46,7 @@
   .players-container {
     text-align: center;
     width: auto;
-    height: 650px;
+    height: 520px;
     padding: 2px;
     overflow-y: auto;
 		overflow-x: hidden;

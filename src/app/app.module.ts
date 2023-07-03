@@ -18,7 +18,7 @@ import { AgGridModule } from 'ag-grid-angular';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
   ],
   imports: [
 		AgGridModule,
