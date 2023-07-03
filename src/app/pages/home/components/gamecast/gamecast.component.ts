@@ -62,7 +62,8 @@ export class GamecastComponent {
 	editPlayer:boolean = false;
 	statsTab: 'home' | 'away' = 'home';
 	gameCastSettings?: GameCastSettings;
-
+	gameActions = GameActions;
+	//gameActionskey = Object.keys(GameActions);
 	public teamStats: ColDef[] = [
 		{field: 'number', headerName: 'NUM', pinned: true},
 		{field: 'firstName', headerName: 'First Name'},
@@ -109,7 +110,13 @@ export class GamecastComponent {
 				game: this.gameId!,
 				homePlayersOnCourt: null,
 				awayPlayersOnCourt: null,
-				resetTimeoutsEveryPeriod: "true"
+				resetTimeoutsEveryPeriod: "true",
+				homePartialTOL: null,
+				awayPartialTOL: null,
+				homeFullTOL: null,
+				awayFullTOL: null,
+				homeCurrentFouls: null,
+				awayCurrentFouls: null
 			}
 			await this.crud.save(this.db, 'GameCastSettings', gameCastSetting);
 			this.gameCastSettings = (await this.crud.rawQuery(this.db, `SELECT * FROM GameCastSettings WHERE game = ${this.gameId}`))[0];
@@ -147,6 +154,11 @@ export class GamecastComponent {
 			ORDER BY	playId DESC
 		`);
 		await this.loadBoxScore();
+	}
+
+	gameActionsProtocolKeys() : Array<string> {
+		var keys = Object.keys(this.gameActions);
+		return keys.slice(keys.length / 2);
 	}
 
 	async loadBoxScore() {
@@ -226,26 +238,6 @@ export class GamecastComponent {
 			this.updateGame();
 		} else {
 			this.currentGame!.complete = '1';
-			this.updateGame();
-		}
-	}
-
-	editToPartialTOL(team: 'home' | 'away', TOL: number) {
-		if (team == 'home') {
-			this.currentGame!.homePartialTOL = TOL;
-			this.updateGame();
-		} else {
-			this.currentGame!.awayPartialTOL = TOL;
-			this.updateGame();
-		}
-	}
-
-	editToFullTOL(team: 'home' | 'away', TOL: number) {
-		if (team == 'home') {
-			this.currentGame!.homeFullTOL = TOL;
-			this.updateGame();
-		} else {
-			this.currentGame!.awayFullTOL = TOL;
 			this.updateGame();
 		}
 	}
@@ -372,7 +364,7 @@ export class GamecastComponent {
 		let play: Play = {
 			playId: this.plays!.length + 1,
 			gameId: this.gameId!,
-			turboStatsData: `${team == 'away' ? this.currentGame!.awayTeam : this.currentGame!.homeTeam} | ${player ? player.firstName + ' ' + player.lastName : null} | ${player ? player.number : null} | ${action} | ${this.currentGame!.period} | ${this.currentGame!.clock} | ${this.currentGame?.homeFinal}-${this.currentGame?.awayFinal} | ${new Date().toISOString()}`,
+			turboStatsData: null,
 			syncState: SyncState.Added,
 			period: null,
 			playerName: null,
@@ -647,6 +639,36 @@ export class GamecastComponent {
 		let currentGameCopy:any = this.currentGame;
 		for (let key in game) {
 			currentGameCopy[key] = game[key];
+		}
+	}
+
+	public async updateGameCastSetting() {
+	  await this.crud.save(this.db, 'GameCastSettings', this.gameCastSettings!, { "game": `${this.gameId}` });
+		let game = (await this.crud.rawQuery(this.db, `
+			SELECT 	*
+			FROM 		GameCastSettings
+			WHERE 	game = ${this.gameId}
+		`))[0];
+		let currentGameCastSettingsCopy:any = this.gameCastSettings;
+		for (let key in game) {
+			currentGameCastSettingsCopy[key] = game[key];
+		}
+	}
+
+	public async updatePlay(play: Play) {
+		let selectedActionString = play.action.toString() as keyof typeof GameActions;
+		let selectedAction = GameActions[selectedActionString];
+		play!.action = selectedAction;
+		play!.syncState = SyncState.Modified;
+	  await this.crud.save(this.db, 'Plays', play!, { "playId": `${play.playId}`,"gameId": `${this.gameId}` });
+		let plays = (await this.crud.rawQuery(this.db, `
+			SELECT 	*
+			FROM 		Plays
+			WHERE 	gameId = ${this.gameId} and playId = ${play.playId}
+		`))[0];
+		let currentPlayCopy:any = play;
+		for (let key in plays) {
+			currentPlayCopy[key] = plays[key];
 		}
 	}
 

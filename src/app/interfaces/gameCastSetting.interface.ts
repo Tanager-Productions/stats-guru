@@ -9,4 +9,10 @@ export interface GameCastSettings {
 		minutesPerOvertime: number | null;
 		game: number;
 		resetTimeoutsEveryPeriod: string | null;
+		homePartialTOL: number | null;
+		awayPartialTOL: number | null;
+		homeFullTOL: number | null;
+		awayFullTOL: number | null;
+		homeCurrentFouls: number | null;
+		awayCurrentFouls: number | null;
 }

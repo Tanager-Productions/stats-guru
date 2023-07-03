@@ -86,18 +86,35 @@
 												<div class="input-div">
 													<div class="input">
 														<ion-label class="input-label" for="homeCurrentFouls">Fouls:</ion-label>
-														<ion-input type="number" id ="homeCurrentFouls" [placeholder]="currentGame.homeCurrentFouls == null ? 0 : currentGame.homeCurrentFouls" [(ngModel)]="currentGame.homeCurrentFouls"></ion-input>
+														<ion-input class="input-box"
+																	type="number"
+																	id ="homeCurrentFouls"
+																	(ionChange)="updateGameCastSetting()"
+																	[placeholder]="this.gameCastSettings!.homeCurrentFouls == null ? 0 : this.gameCastSettings!.homeCurrentFouls"
+																	[(ngModel)]="this.gameCastSettings!.homeCurrentFouls">
+														</ion-input>
 													</div>
 													<div class="input">
 														<ion-label class="input-label" for="homePartialTOL">Partial TO:</ion-label>
-														<ion-input type="number" id ="homePartialTOL" [placeholder]="currentGame.homePartialTOL == null ? 0 : currentGame.homePartialTOL" [(ngModel)]="currentGame.homePartialTOL"></ion-input>
+														<ion-input class="input-box"
+																	type="number"
+																	id ="homePartialTOL"
+																	(ionChange)="updateGameCastSetting()"
+																	[placeholder]="this.gameCastSettings!.homePartialTOL == null ? 0 : this.gameCastSettings!.homePartialTOL"
+																	[(ngModel)]="this.gameCastSettings!.homePartialTOL">
+														</ion-input>
 													</div>
 													<div class="input">
 														<ion-label class="input-label" for="homeFullTOL">Full TO:</ion-label>
-														<ion-input type="number" id ="homeFullTOL" [placeholder]="currentGame.homeFullTOL == null ? 0 : currentGame.homeFullTOL" [(ngModel)]="currentGame.homeFullTOL"></ion-input>
+														<ion-input class="input-box"
+																	type="number"
+																	id ="homeFullTOL"
+																	(ionChange)="updateGameCastSetting()"
+																	[placeholder]="this.gameCastSettings!.homeFullTOL == null ? 0 : this.gameCastSettings!.homeFullTOL"
+																	[(ngModel)]="this.gameCastSettings!.homeFullTOL">
+														</ion-input>
 													</div>
 												</div>
-												<ion-button (click)="this.updateGame()">Save</ion-button>
 											</div>
 										</ion-label>
 									</ion-card-header>
@@ -212,18 +229,35 @@
 												<div class="input-div">
 													<div class="input">
 														<ion-label class="input-label" for="awayCurrentFouls">Fouls:</ion-label>
-														<ion-input type="number" id ="awayCurrentFouls" [placeholder]="currentGame.awayCurrentFouls == null ? 0 : currentGame.awayCurrentFouls" [(ngModel)]="currentGame.awayCurrentFouls"></ion-input>
+														<ion-input class="input-box"
+																	type="number"
+																	id ="awayCurrentFouls"
+																	(ionChange)="updateGameCastSetting()"
+																	[placeholder]="this.gameCastSettings!.awayCurrentFouls == null ? 0 : this.gameCastSettings!.awayCurrentFouls"
+																	[(ngModel)]="this.gameCastSettings!.awayCurrentFouls">
+														</ion-input>
 													</div>
 													<div class="input">
 														<ion-label class="input-label" for="awayPartialTOL">Partial TO:</ion-label>
-														<ion-input type="number" id ="awayPartialTOL" [placeholder]="currentGame.awayPartialTOL == null ? 0 : currentGame.awayPartialTOL" [(ngModel)]="currentGame.awayPartialTOL"></ion-input>
+														<ion-input class="input-box"
+																	type="number"
+																	id ="awayPartialTOL"
+																	(ionChange)="updateGameCastSetting()"
+																	[placeholder]="this.gameCastSettings!.awayPartialTOL == null ? 0 : this.gameCastSettings!.awayPartialTOL"
+																	[(ngModel)]="this.gameCastSettings!.awayPartialTOL">
+														</ion-input>
 													</div>
 													<div class="input">
 														<ion-label class="input-label" for="awayFullTOL">Full TO:</ion-label>
-														<ion-input type="number" id ="awayFullTOL" [placeholder]="currentGame.awayFullTOL == null ? 0 : currentGame.awayFullTOL" [(ngModel)]="currentGame.awayFullTOL"></ion-input>
+														<ion-input class="input-box"
+																	type="number"
+																	id ="awayFullTOL"
+																	(ionChange)="updateGameCastSetting()"
+																	[placeholder]="this.gameCastSettings!.awayFullTOL == null ? 0 : this.gameCastSettings!.awayFullTOL"
+																	[(ngModel)]="this.gameCastSettings!.awayFullTOL">
+														</ion-input>
 													</div>
 												</div>
-												<ion-button color="danger" (click)="this.updateGame()">Save</ion-button>
 											</div>
 										</ion-label>
 									</ion-card-header>
@@ -359,7 +393,17 @@
 		<ion-col id="playsModal" size="10">
 			<ion-list inset="true" lines="full">
 				<ion-item *ngFor="let play of plays | slice:0:3">
-					<ion-label>{{play.turboStatsData}}</ion-label>
+						<ion-label *ngIf="play.turboStatsData">{{play.turboStatsData}}</ion-label>
+						<ion-label *ngIf="!play.turboStatsData">{{ play.playId + ' | '+
+							 play.teamName + ' | ' +
+							 play.playerNumber + ' ' +
+							 play.playerName + ' | ' }}
+							{{gameActions[play.action]}} {{ ' | p'
+							+ play.period + ' | ' +
+							 play.gameClock + ' | ' +
+							 play.timeStamp + ' | Score:' +
+							 play.score }}
+						</ion-label>
 				</ion-item>
 			</ion-list>
 		</ion-col>
@@ -377,9 +421,92 @@
 			</ion-header>
 			<ion-content class="ion-padding">
 				<ion-list inset="true" lines="full">
-					<ion-item *ngFor="let play of plays">
-						<ion-label>{{play.turboStatsData}}</ion-label>
-					</ion-item>
+					<ng-container *ngFor="let play of plays">
+						<ion-item *ngIf="play.turboStatsData">
+							<ion-label>{{play.turboStatsData}}</ion-label>
+						</ion-item>
+						<ion-item *ngIf="!play.turboStatsData">
+							<ion-label>
+								{{play.playId + ' | '}}
+							</ion-label>
+							<ion-input
+								type="text"
+								id ="teamName"
+								(ionChange)="updatePlay(play)"
+								[(ngModel)]="play!.teamName"
+								[placeholder]="play.teamName == null ? 'Team' : play.teamName">
+							</ion-input>
+							<ion-label>
+								{{' | '}}
+							</ion-label>
+							<ion-input
+								class="no-spinner"
+								type="number"
+								id ="playerNumber"
+								(ionChange)="updatePlay(play)"
+								[(ngModel)]="play!.playerNumber"
+								[placeholder]="play.playerNumber == null ? 0 : play.playerNumber">
+							</ion-input>
+							<ion-label>
+								{{' '}}
+							</ion-label>
+							<ion-input
+								type="text"
+								id ="playerName"
+								(ionChange)="updatePlay(play)"
+								[(ngModel)]="play!.playerName"
+								[placeholder]="play.playerName == null ? 'Name' : play.playerName">
+							</ion-input>
+							<ion-label>
+								{{' | '}}
+							</ion-label>
+							<ion-item>
+								<ion-select (ionChange)="updatePlay(play)" [(ngModel)]="play.action" [placeholder]="gameActions[play.action] == null ? 'Action' : gameActions[play.action]">
+									<ion-select-option *ngFor="let action of gameActionsProtocolKeys()">{{action}}</ion-select-option>
+								</ion-select>
+							</ion-item>
+							<ion-label>
+								{{' | p'}}
+							</ion-label>
+							<ion-input
+								type="text"
+								id ="period"
+								(ionChange)="updatePlay(play)"
+								[(ngModel)]="play!.period"
+								[placeholder]="play.period == null ? '' : play.period">
+							</ion-input>
+							<ion-label>
+								{{' | '}}
+							</ion-label>
+							<ion-input
+								type="text"
+								id ="gameClock"
+								(ionChange)="updatePlay(play)"
+								[(ngModel)]="play!.gameClock"
+								[placeholder]="play.gameClock == null ? '' : play.gameClock">
+							</ion-input>
+							<ion-label>
+								{{' | '}}
+							</ion-label>
+							<ion-input
+								type="text"
+								id ="timeStamp"
+								(ionChange)="updatePlay(play)"
+								[(ngModel)]="play!.timeStamp"
+								[placeholder]="play.timeStamp == null ? '' : play.timeStamp">
+							</ion-input>
+							<ion-label>
+								{{' | Score:'}}
+							</ion-label>
+							<ion-input
+								type="text"
+								id ="score"
+								(ionChange)="updatePlay(play)"
+								[(ngModel)]="play!.score"
+								[placeholder]="play.score == null ? '' : play.score">
+							</ion-input>
+						</ion-item>
+					</ng-container>
 				</ion-list>
 			</ion-content>
 		  </ng-template>
