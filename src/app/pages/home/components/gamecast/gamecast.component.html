@@ -373,7 +373,17 @@
 	<ion-col id="playsModal" size="10">
 		<ion-list inset="true" lines="full">
 			<ion-item *ngFor="let play of plays | slice:0:3">
-				<ion-label>{{play.turboStatsData}}</ion-label>
+				<ion-label *ngIf="play.turboStatsData">{{play.turboStatsData}}</ion-label>
+				<ion-label *ngIf="!play.turboStatsData">{{ play.playId + ' | '+
+					 play.teamName + ' | ' +
+					 play.playerNumber + ' ' +
+					 play.playerName + ' | ' }}
+					{{gameActions[play.action]}} {{ ' | p'
+					+ play.period + ' | ' +
+					 play.gameClock + ' | ' +
+					 play.timeStamp + ' | Score:' +
+					 play.score }}
+				</ion-label>
 			</ion-item>
 		</ion-list>
 	</ion-col>
@@ -391,19 +401,92 @@
 		</ion-header>
 		<ion-content class="ion-padding">
 			<ion-list inset="true" lines="full">
-				<ion-item *ngFor="let play of plays | slice:0:3">
-						<ion-label *ngIf="play.turboStatsData">{{play.turboStatsData}}</ion-label>
-						<ion-label *ngIf="!play.turboStatsData">{{ play.playId + ' | '+
-							 play.teamName + ' | ' +
-							 play.playerNumber + ' ' +
-							 play.playerName + ' | ' }}
-							{{gameActions[play.action]}} {{ ' | p'
-							+ play.period + ' | ' +
-							 play.gameClock + ' | ' +
-							 play.timeStamp + ' | Score:' +
-							 play.score }}
+				<ng-container *ngFor="let play of plays">
+					<ion-item *ngIf="play.turboStatsData">
+						<ion-label>{{play.turboStatsData}}</ion-label>
+					</ion-item>
+					<ion-item *ngIf="!play.turboStatsData">
+						<ion-label>
+							{{play.playId + ' | '}}
 						</ion-label>
-				</ion-item>
+						<ion-input
+							type="text"
+							id ="teamName"
+							(ionChange)="updatePlay(play)"
+							[(ngModel)]="play!.teamName"
+							[placeholder]="play.teamName == null ? 'Team' : play.teamName">
+						</ion-input>
+						<ion-label>
+							{{' | '}}
+						</ion-label>
+						<ion-input
+							class="no-spinner"
+							type="number"
+							id ="playerNumber"
+							(ionChange)="updatePlay(play)"
+							[(ngModel)]="play!.playerNumber"
+							[placeholder]="play.playerNumber == null ? 0 : play.playerNumber">
+						</ion-input>
+						<ion-label>
+							{{' '}}
+						</ion-label>
+						<ion-input
+							type="text"
+							id ="playerName"
+							(ionChange)="updatePlay(play)"
+							[(ngModel)]="play!.playerName"
+							[placeholder]="play.playerName == null ? 'Name' : play.playerName">
+						</ion-input>
+						<ion-label>
+							{{' | '}}
+						</ion-label>
+						<ion-item>
+							<ion-select (ionChange)="updatePlay(play)" [(ngModel)]="play.action" [placeholder]="gameActions[play.action] == null ? 'Action' : gameActions[play.action]">
+								<ion-select-option *ngFor="let action of gameActionsProtocolKeys()">{{action}}</ion-select-option>
+							</ion-select>
+						</ion-item>
+						<ion-label>
+							{{' | p'}}
+						</ion-label>
+						<ion-input
+							type="text"
+							id ="period"
+							(ionChange)="updatePlay(play)"
+							[(ngModel)]="play!.period"
+							[placeholder]="play.period == null ? '' : play.period">
+						</ion-input>
+						<ion-label>
+							{{' | '}}
+						</ion-label>
+						<ion-input
+							type="text"
+							id ="gameClock"
+							(ionChange)="updatePlay(play)"
+							[(ngModel)]="play!.gameClock"
+							[placeholder]="play.gameClock == null ? '' : play.gameClock">
+						</ion-input>
+						<ion-label>
+							{{' | '}}
+						</ion-label>
+						<ion-input
+							type="text"
+							id ="timeStamp"
+							(ionChange)="updatePlay(play)"
+							[(ngModel)]="play!.timeStamp"
+							[placeholder]="play.timeStamp == null ? '' : play.timeStamp">
+						</ion-input>
+						<ion-label>
+							{{' | Score:'}}
+						</ion-label>
+						<ion-input
+							type="text"
+							id ="score"
+							(ionChange)="updatePlay(play)"
+							[(ngModel)]="play!.score"
+							[placeholder]="play.score == null ? '' : play.score">
+						</ion-input>
+					</ion-item>
+				</ng-container>
 			</ion-list>
 		</ion-content>
 	  </ng-template>
@@ -430,96 +513,6 @@
 					</ion-segment>
 				</ion-toolbar>
 			</ion-header>
-			<ion-content class="ion-padding">
-				<ion-list inset="true" lines="full">
-					<ng-container *ngFor="let play of plays">
-						<ion-item *ngIf="play.turboStatsData">
-							<ion-label>{{play.turboStatsData}}</ion-label>
-						</ion-item>
-						<ion-item *ngIf="!play.turboStatsData">
-							<ion-label>
-								{{play.playId + ' | '}}
-							</ion-label>
-							<ion-input
-								type="text"
-								id ="teamName"
-								(ionChange)="updatePlay(play)"
-								[(ngModel)]="play!.teamName"
-								[placeholder]="play.teamName == null ? 'Team' : play.teamName">
-							</ion-input>
-							<ion-label>
-								{{' | '}}
-							</ion-label>
-							<ion-input
-								class="no-spinner"
-								type="number"
-								id ="playerNumber"
-								(ionChange)="updatePlay(play)"
-								[(ngModel)]="play!.playerNumber"
-								[placeholder]="play.playerNumber == null ? 0 : play.playerNumber">
-							</ion-input>
-							<ion-label>
-								{{' '}}
-							</ion-label>
-							<ion-input
-								type="text"
-								id ="playerName"
-								(ionChange)="updatePlay(play)"
-								[(ngModel)]="play!.playerName"
-								[placeholder]="play.playerName == null ? 'Name' : play.playerName">
-							</ion-input>
-							<ion-label>
-								{{' | '}}
-							</ion-label>
-							<ion-item>
-								<ion-select (ionChange)="updatePlay(play)" [(ngModel)]="play.action" [placeholder]="gameActions[play.action] == null ? 'Action' : gameActions[play.action]">
-									<ion-select-option *ngFor="let action of gameActionsProtocolKeys()">{{action}}</ion-select-option>
-								</ion-select>
-							</ion-item>
-							<ion-label>
-								{{' | p'}}
-							</ion-label>
-							<ion-input
-								type="text"
-								id ="period"
-								(ionChange)="updatePlay(play)"
-								[(ngModel)]="play!.period"
-								[placeholder]="play.period == null ? '' : play.period">
-							</ion-input>
-							<ion-label>
-								{{' | '}}
-							</ion-label>
-							<ion-input
-								type="text"
-								id ="gameClock"
-								(ionChange)="updatePlay(play)"
-								[(ngModel)]="play!.gameClock"
-								[placeholder]="play.gameClock == null ? '' : play.gameClock">
-							</ion-input>
-							<ion-label>
-								{{' | '}}
-							</ion-label>
-							<ion-input
-								type="text"
-								id ="timeStamp"
-								(ionChange)="updatePlay(play)"
-								[(ngModel)]="play!.timeStamp"
-								[placeholder]="play.timeStamp == null ? '' : play.timeStamp">
-							</ion-input>
-							<ion-label>
-								{{' | Score:'}}
-							</ion-label>
-							<ion-input
-								type="text"
-								id ="score"
-								(ionChange)="updatePlay(play)"
-								[(ngModel)]="play!.score"
-								[placeholder]="play.score == null ? '' : play.score">
-							</ion-input>
-						</ion-item>
-					</ng-container>
-				</ion-list>
-			</ion-content>
 			<ion-content [scrollY]="false">
 				<ag-grid-angular
 					*ngIf="statsTab == 'home'"
