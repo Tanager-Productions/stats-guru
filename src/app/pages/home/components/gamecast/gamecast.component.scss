@@ -336,3 +336,15 @@
 .legacy-input {
 	--padding-start: 4px;
 }
+
+.playIdLabel,
+.playerNumberLabel,
+.periodLabel {
+	min-width: 5% !important;
+	max-width: 5% !important;
+}
+
+.slide{
+	min-width: 2% !important;
+	max-width: 2% !important;
+}
