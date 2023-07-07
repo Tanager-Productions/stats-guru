@@ -100,6 +100,11 @@ export class GamecastComponent {
     });
   }
 
+	onCellValueChanged(event: any) {
+    console.log(event);
+    event.data.modified = true;
+  }
+
 	private async fetchData() {
 		this.db = await this.sql.createConnection();
 		let res = await this.crud.rawQuery(this.db, `SELECT * FROM GameCastSettings WHERE game = ${this.gameId}`);

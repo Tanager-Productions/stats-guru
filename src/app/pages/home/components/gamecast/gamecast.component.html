@@ -502,7 +502,7 @@
 	<ion-modal [backdropDismiss]="false" (willPresent)="loadBoxScore()" #statsModal trigger="liveStatsModal">
 		<ng-template>
 			<ion-header>
-				<ion-toolbar>
+				<ion-toolbar color="medium">
 					<ion-title>Box Score</ion-title>
 					<ion-buttons slot="end">
 						<ion-button (click)="statsModal.dismiss()">
@@ -531,7 +531,8 @@
 					[rowData]="homeTeamStats"
 					[rowSelection]="'single'"
 					[pagination]="true"
-					[suppressCellFocus]="true">
+					[suppressCellFocus]="true"
+					(cellValueChanged)="onCellValueChanged($event)">
 				</ag-grid-angular>
 				<ag-grid-angular
 					*ngIf="statsTab == 'away'"
@@ -542,7 +543,8 @@
 					[rowData]="awayTeamStats"
 					[rowSelection]="'single'"
 					[pagination]="true"
-					[suppressCellFocus]="true">
+					[suppressCellFocus]="true"
+					(cellValueChanged)="onCellValueChanged($event)">
 				</ag-grid-angular>
 			</ion-content>
 		</ng-template>
