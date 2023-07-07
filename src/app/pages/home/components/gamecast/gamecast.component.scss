@@ -314,3 +314,37 @@
 	.away-font .ion-valid {
 		--highlight-color:#fc1616;
 	}
+
+	.input-box {
+		font-size: 20px;
+	}
+
+	#playId {
+    --placeholder-opacity: 1;
+	}
+
+	.native-input {
+		width: fit-content;
+	}
+
+	.no-spinner::ng-deep input[type=number]::-webkit-inner-spin-button,
+	input[type=number]::-webkit-outer-spin-button {
+	-webkit-appearance: none;
+	 margin: 0;
+}
+
+.legacy-input {
+	--padding-start: 4px;
+}
+
+.playIdLabel,
+.playerNumberLabel,
+.periodLabel {
+	min-width: 5% !important;
+	max-width: 5% !important;
+}
+
+.slide{
+	min-width: 2% !important;
+	max-width: 2% !important;
+}
