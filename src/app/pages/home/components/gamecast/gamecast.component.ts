@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { Observable, Subscription, interval, map } from 'rxjs';
+import { Observable, Subscription, interval, map, throwError } from 'rxjs';
 import { Game } from 'src/app/interfaces/game.interface';
 import { Player } from 'src/app/interfaces/player.interface';
 import { CrudService } from 'src/app/services/crud/crud.service';
@@ -42,6 +42,8 @@ export class GamecastComponent {
 	ro:boolean = true;
   gameId: number | undefined;
   currentGame?: Game;
+	currentHomeTeamPlayersId?: string[];
+	currentAwayTeamPlayersId?: string[];
 	homeTeamPlayers?: Player[];
 	awayTeamPlayers?: Player[];
 	homeTeamStats?: any[];
@@ -63,7 +65,6 @@ export class GamecastComponent {
 	statsTab: 'home' | 'away' = 'home';
 	gameCastSettings?: GameCastSettings;
 	gameActions = GameActions;
-	//gameActionskey = Object.keys(GameActions);
 	public teamStats: ColDef[] = [
 		{field: 'number', headerName: 'NUM', pinned: true},
 		{field: 'firstName', headerName: 'First Name'},
@@ -124,7 +125,10 @@ export class GamecastComponent {
 			await this.crud.save(this.db, 'GameCastSettings', gameCastSetting);
 			this.gameCastSettings = (await this.crud.rawQuery(this.db, `SELECT * FROM GameCastSettings WHERE game = ${this.gameId}`))[0];
 		} else {
+			this.currentHomeTeamPlayersId = res[0].homePlayersOnCourt?.split(',');
+			this.currentAwayTeamPlayersId = res[0].awayPlayersOnCourt?.split(',');
 			this.gameCastSettings = res[0];
+			this.loadCurrentPlayersOnCourt();
 		}
 		this.currentGame = (await this.crud.rawQuery(this.db, `
 			SELECT 	*
@@ -189,6 +193,28 @@ export class GamecastComponent {
 		`);
 	}
 
+	async loadCurrentPlayersOnCourt() {
+		 this.currentHomeTeamPlayersId?.forEach(async id => {
+			let player: Player = (await this.crud.rawQuery(this.db, `
+				SELECT 		*
+				FROM 			Players
+				WHERE 		playerId = ${id}
+				ORDER BY 	number;
+			`))[0];
+			this.homePlayersOnCourt.push(player);
+		 });
+
+		 this.currentAwayTeamPlayersId?.forEach(async id => {
+			let player: Player = (await this.crud.rawQuery(this.db, `
+				SELECT 		*
+				FROM 			Players
+				WHERE 		playerId = ${id}
+				ORDER BY 	number;
+			`))[0];
+			this.awayPlayersOnCourt.push(player);
+		 });
+	}
+
 	async savePlayer(player: Player) {
 		player.syncState = SyncState.Modified;
 		await this.crud.save(this.db, "Players", player, {"playerId": `${player.playerId}`});
@@ -249,10 +275,20 @@ export class GamecastComponent {
 		if (team == 'home') {
 			if(this.homePlayersOnCourt.length < 5) {
 				this.homePlayersOnCourt.push(player);
+				this.currentHomeTeamPlayersId?.push(player.playerId.toString());
+				if(this.gameCastSettings != null) {
+					this.gameCastSettings.homePlayersOnCourt = this.gameCastSettings.homePlayersOnCourt + ',' + player.playerId.toString();
+				}
+				this.updateGameCastSetting();
 			}
 		} else {
 			if (this.awayPlayersOnCourt.length < 5) {
 				this.awayPlayersOnCourt.push(player);
+				this.currentAwayTeamPlayersId?.push(player.playerId.toString());
+				if(this.gameCastSettings != null) {
+					this.gameCastSettings.awayPlayersOnCourt = this.gameCastSettings.awayPlayersOnCourt + ',' + player.playerId.toString();
+				}
+				this.updateGameCastSetting();
 			}
 		}
 	}
@@ -278,12 +314,51 @@ export class GamecastComponent {
 			if (this.awayPlayerSelected == index) {
 				this.awayPlayerSelected = -1;
 			}
+
+			if(this.currentAwayTeamPlayersId != null){
+				var index = this.currentAwayTeamPlayersId.indexOf(player.playerId.toString());
+				if (index !== -1) {
+					this.currentAwayTeamPlayersId.splice(index, 1);
+				}
+			}
+
 			this.awayPlayersOnCourt.splice(this.awayPlayersOnCourt.indexOf(player), 1);
+
+			if(this.gameCastSettings?.awayPlayersOnCourt != null) {
+				if(this.gameCastSettings.awayPlayersOnCourt.includes(',' + player.playerId.toString())) {
+					this.gameCastSettings.awayPlayersOnCourt = this.gameCastSettings.awayPlayersOnCourt.replace(',' + player.playerId.toString(), '');
+				} else if(this.gameCastSettings.awayPlayersOnCourt.startsWith(player.playerId.toString()+',')) {
+					this.gameCastSettings.awayPlayersOnCourt = this.gameCastSettings.awayPlayersOnCourt.replace(player.playerId.toString() + ',', '');
+				} else {
+				  this.gameCastSettings.awayPlayersOnCourt = this.gameCastSettings.awayPlayersOnCourt.replace(player.playerId.toString(), '');
+				}
+			}
+			this.updateGameCastSetting();
+
 		} else {
 			if (this.homePlayerSelected == index) {
 				this.homePlayerSelected = -1;
 			}
+
+			if(this.currentHomeTeamPlayersId != null){
+				var index = this.currentHomeTeamPlayersId.indexOf(player.playerId.toString());
+				if (index !== -1) {
+					this.currentHomeTeamPlayersId.splice(index, 1);
+				}
+			}
+
 			this.homePlayersOnCourt.splice(this.homePlayersOnCourt.indexOf(player), 1);
+
+			if(this.gameCastSettings?.homePlayersOnCourt != null) {
+				if(this.gameCastSettings.homePlayersOnCourt.includes(',' + player.playerId.toString())) {
+					this.gameCastSettings.homePlayersOnCourt = this.gameCastSettings.homePlayersOnCourt.replace(',' + player.playerId.toString(), '');
+				} else if(this.gameCastSettings.homePlayersOnCourt.startsWith(player.playerId.toString()+',')) {
+					this.gameCastSettings.homePlayersOnCourt = this.gameCastSettings.homePlayersOnCourt.replace(player.playerId.toString() + ',', '');
+				} else {
+				  this.gameCastSettings.homePlayersOnCourt = this.gameCastSettings.homePlayersOnCourt.replace(player.playerId.toString(), '');
+				}
+			}
+			this.updateGameCastSetting();
 		}
   }
 
@@ -673,14 +748,6 @@ export class GamecastComponent {
 		for (let key in plays) {
 			currentPlayCopy[key] = plays[key];
 		}
-	}
-
-	public async editHomeGame() {
-		this.currentGame!.syncState = SyncState.Modified;
-		let game:any = this.currentGame;
-		delete game.homeCurrentFouls;
-		delete game.homePartialTOL;
-		delete game.homeFullTOL;
 	}
 
 	startStopTimer() {
