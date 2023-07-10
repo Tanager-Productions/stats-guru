@@ -9,7 +9,7 @@ import { SyncState } from 'src/app/interfaces/syncState.enum';
 import { Stat } from 'src/app/interfaces/stat.interface';
 import { Play } from 'src/app/interfaces/play.interface';
 import { SQLiteDBConnection } from '@capacitor-community/sqlite';
-import { ColDef } from 'ag-grid-community';
+import { ColDef, GridApi, SelectionChangedEvent } from 'ag-grid-community';
 import { GameCastSettings } from 'src/app/interfaces/gameCastSetting.interface';
 
 //teamName | player name | player number | GameAction | period | gameClock | score | timestamp
@@ -49,6 +49,7 @@ export class GamecastComponent {
 	homePlayersOnCourt: Player[] = [];
 	awayPlayersOnCourt: Player[] = [];
 	stats?: Stat[];
+	selectedStat: Stat | undefined;
 	plays?: Play[];
 	homeTeamFouls: number = 0;
 	awayTeamFouls:number = 0;
@@ -56,13 +57,15 @@ export class GamecastComponent {
   timerDuration: number = 8 * 60;
   timeLeft: number = this.timerDuration;
   timerRunning: boolean = false;
-	newPlayerNumber:string = '';
+	newPlayerNumber: string = '';
 	homePlayerSelected: number = -1;
 	awayPlayerSelected: number = -1;
-	editPlayer:boolean = false;
+	editPlayer: boolean = false;
 	statsTab: 'home' | 'away' = 'home';
 	gameCastSettings?: GameCastSettings;
 	gameActions = GameActions;
+	statGridApi!: GridApi<Stat>;
+
 	//gameActionskey = Object.keys(GameActions);
 	public teamStats: ColDef[] = [
 		{field: 'number', headerName: 'NUM', pinned: true},
@@ -102,6 +105,17 @@ export class GamecastComponent {
 	onCellValueChanged(event: any) {
     console.log(event);
     event.data.modified = true;
+  }
+
+	setStat($event: SelectionChangedEvent<Stat>) {
+		if ($event) this.selectedStat = $event.api.getSelectedRows()[0];
+	}
+
+	public isRowSelected() {
+    if (this.statGridApi)
+      return this.statGridApi.getSelectedRows().length > 0;
+    else
+      return false;
   }
 
 	private async fetchData() {

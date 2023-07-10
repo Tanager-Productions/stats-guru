@@ -542,7 +542,7 @@
 					[rowSelection]="'single'"
 					[pagination]="true"
 					[suppressCellFocus]="true"
-					(cellValueChanged)="onCellValueChanged($event)">
+					(selectionChanged)="setStat($event)">
 				</ag-grid-angular>
 			</ion-content>
 		</ng-template>
