@@ -43,19 +43,6 @@
     border-radius: 10px;
   }
 
-  .players-container {
-    text-align: center;
-    width: auto;
-    height: 650px;
-    padding: 2px;
-    overflow-y: auto;
-		overflow-x: hidden;
-  }
-
-  .players-container::-webkit-scrollbar {
-    display: none;
-  }
-
   .top-width {
     width: 100%;
     display: flex;
@@ -266,10 +253,6 @@
 
   .away-font {
     color: #fc1616;
-  }
-
-  #team-numbers {
-    font-size: 20px;
   }
 
   #home-button {
