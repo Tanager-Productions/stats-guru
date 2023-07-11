@@ -273,7 +273,6 @@ export class GamecastComponent {
 				if(this.gameCastSettings != null) {
 					this.gameCastSettings.homePlayersOnCourt = this.gameCastSettings.homePlayersOnCourt + ',' + player.playerId.toString();
 				}
-				this.updateGameCastSetting();
 			}
 		} else {
 			if (this.awayPlayersOnCourt.length < 5) {
@@ -281,9 +280,9 @@ export class GamecastComponent {
 				if(this.gameCastSettings != null) {
 					this.gameCastSettings.awayPlayersOnCourt = this.gameCastSettings.awayPlayersOnCourt + ',' + player.playerId.toString();
 				}
-				this.updateGameCastSetting();
 			}
 		}
+		this.updateGameCastSetting();
 	}
 
 	selectPlayer(team: 'home' | 'away', index: number) {
@@ -307,10 +306,16 @@ export class GamecastComponent {
 			if (this.awayPlayerSelected == index) {
 				this.awayPlayerSelected = -1;
 			}
+			if(this.gameCastSettings?.awayPlayersOnCourt != null){
+				this.gameCastSettings.awayPlayersOnCourt = this.gameCastSettings.awayPlayersOnCourt.replace(',' + player.playerId.toString(), '');
+			}
 			this.awayPlayersOnCourt.splice(this.awayPlayersOnCourt.indexOf(player), 1);
 		} else {
 			if (this.homePlayerSelected == index) {
 				this.homePlayerSelected = -1;
+			}
+			if(this.gameCastSettings?.homePlayersOnCourt != null){
+				this.gameCastSettings.homePlayersOnCourt = this.gameCastSettings.homePlayersOnCourt.replace(',' + player.playerId.toString(), '');
 			}
 			this.homePlayersOnCourt.splice(this.homePlayersOnCourt.indexOf(player), 1);
 		}
