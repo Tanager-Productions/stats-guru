@@ -9,8 +9,9 @@ import { SyncState } from 'src/app/interfaces/syncState.enum';
 import { Stat } from 'src/app/interfaces/stat.interface';
 import { Play } from 'src/app/interfaces/play.interface';
 import { SQLiteDBConnection } from '@capacitor-community/sqlite';
-import { ColDef, GridApi, SelectionChangedEvent } from 'ag-grid-community';
+import { ColDef, GridApi, GridReadyEvent, SelectionChangedEvent } from 'ag-grid-community';
 import { GameCastSettings } from 'src/app/interfaces/gameCastSetting.interface';
+import { ApiService } from 'src/app/services/api/api.service';
 
 //teamName | player name | player number | GameAction | period | gameClock | score | timestamp
 
@@ -32,6 +33,29 @@ export enum GameActions {
 	PartialTO = 75
 }
 
+type StatsRow =  {
+  game: number,
+  modified: boolean,
+  player: number,
+  blocks: number,
+  fieldGoalsAttempted: number,
+  fieldGoalsMade: number,
+  fouls: number,
+  freethrowsAttempted: number,
+  freethrowsMade: number,
+  minutes: number,
+  plusOrMinus: number,
+  points: number,
+  rebounds: number,
+  defensiveRebounds: number,
+  offensiveRebounds: number,
+  steals: number,
+  threesAttempted: number,
+  threesMade: number,
+  turnovers: number,
+	technicalFouls: number
+}
+
 @Component({
   selector: 'app-gamecast',
   templateUrl: './gamecast.component.html',
@@ -40,14 +64,15 @@ export enum GameActions {
 export class GamecastComponent {
 	db!:SQLiteDBConnection;
 	ro:boolean = true;
-  gameId: number | undefined;
+  gameId!: number;
+	playerId!: number;
   currentGame?: Game;
 	currentHomeTeamPlayersId?: string[];
 	currentAwayTeamPlayersId?: string[];
 	homeTeamPlayers?: Player[];
 	awayTeamPlayers?: Player[];
-	homeTeamStats?: any[];
-	awayTeamStats?: any[];
+	homeTeamStats!: StatsRow[];
+	awayTeamStats!: StatsRow[];
 	homePlayersOnCourt: Player[] = [];
 	awayPlayersOnCourt: Player[] = [];
 	stats?: Stat[];
@@ -66,36 +91,38 @@ export class GamecastComponent {
 	statsTab: 'home' | 'away' = 'home';
 	gameCastSettings?: GameCastSettings;
 	gameActions = GameActions;
-	statGridApi!: GridApi<Stat>;
+	homeStatGridApi!: GridApi<StatsRow>;
+	awayStatGridApi!: GridApi<StatsRow>;
 
 	//gameActionskey = Object.keys(GameActions);
 	public teamStats: ColDef[] = [
-		{field: 'number', headerName: 'NUM', pinned: true},
-		{field: 'firstName', headerName: 'First Name'},
-		{field: 'lastName', headerName: 'Last Name'},
-		{field: 'minutes', headerName: 'MIN', width: 80, editable: true},
-		{field: 'rebounds', headerName: 'REB', width: 80, editable: true},
-		{field: 'defensiveRebounds', headerName: 'DREB', width: 90, editable: true},
-		{field: 'offensiveRebounds', headerName: 'OREB', width: 90, editable: true},
-		{field: 'fieldGoalsMade', headerName: 'FGM', width: 90, editable: true},
-		{field: 'fieldGoalsAttempted', headerName: 'FGA', width: 80, editable: true},
-		{field: 'blocks', headerName: 'BLK', width: 80, editable: true},
-		{field: 'steals', headerName: 'STL', width: 80, editable: true},
-		{field: 'threesMade', headerName: '3FGM', width: 90, editable: true},
-		{field: 'threesAttempted', headerName: '3FGA', width: 90, editable: true},
-		{field: 'freethrowsMade', headerName: 'FTM', width: 80, editable: true},
-		{field: 'freethrowsAttempted', headerName: 'FTA', width: 80, editable: true},
-		{field: 'points', headerName: 'PTS', width: 80, editable: true},
-		{field: 'turnovers', headerName: 'TO', width: 80, editable: true},
-		{field: 'fouls', headerName: 'FOUL', width: 90, editable: true},
-		{field: 'technicalFouls', headerName: 'TECH', width: 90, editable: true},
-		{field: 'plusOrMinus', headerName: '+/-', width: 80, editable: true},
+		{field: 'number', headerName: 'NUM', pinned: true, editable: false},
+		{field: 'firstName', headerName: 'First Name', editable: false},
+		{field: 'lastName', headerName: 'Last Name', editable: false},
+		{field: 'minutes', headerName: 'MIN', width: 80},
+		{field: 'rebounds', headerName: 'REB', width: 80},
+		{field: 'defensiveRebounds', headerName: 'DREB', width: 90},
+		{field: 'offensiveRebounds', headerName: 'OREB', width: 90},
+		{field: 'fieldGoalsMade', headerName: 'FGM', width: 90},
+		{field: 'fieldGoalsAttempted', headerName: 'FGA', width: 80},
+		{field: 'blocks', headerName: 'BLK', width: 80},
+		{field: 'steals', headerName: 'STL', width: 80},
+		{field: 'threesMade', headerName: '3FGM', width: 90},
+		{field: 'threesAttempted', headerName: '3FGA', width: 90},
+		{field: 'freethrowsMade', headerName: 'FTM', width: 80},
+		{field: 'freethrowsAttempted', headerName: 'FTA', width: 80},
+		{field: 'points', headerName: 'PTS', width: 80},
+		{field: 'turnovers', headerName: 'TO', width: 80},
+		{field: 'fouls', headerName: 'FOUL', width: 90},
+		{field: 'technicalFouls', headerName: 'TECH', width: 90},
+		{field: 'plusOrMinus', headerName: '+/-', width: 80},
 	];
 
   constructor(
 		private route: ActivatedRoute,
 		private crud: CrudService,
-		private sql: SqlService) {}
+		private sql: SqlService,
+		) {}
 
   ngOnInit() {
     this.route.params.subscribe((params: { [x: string]: string | number }) => {
@@ -109,15 +136,44 @@ export class GamecastComponent {
     event.data.modified = true;
   }
 
-	setStat($event: SelectionChangedEvent<Stat>) {
-		if ($event) this.selectedStat = $event.api.getSelectedRows()[0];
-	}
+	public async updateStats() {
+    let modifiedRows: StatsRow[] = this.homeTeamStats.filter(i => i.modified == true);
+    modifiedRows.push(...this.awayTeamStats.filter(i => i.modified == true));
+    for (var element of modifiedRows) {
+      try {
+					await this.updateStat(element);
+      } catch (error) {
+        console.log('An error occurred on the sever. ', true, error);
+      }
+    }
+  }
 
-	public isRowSelected() {
-    if (this.statGridApi)
-      return this.statGridApi.getSelectedRows().length > 0;
-    else
-      return false;
+	private async updateStat(stat: StatsRow) {
+		let statToUpdate: Stat = {
+			game: Number(this.gameId),
+			player: Number (stat.player),
+			assists: 0,
+			blocks: Number(stat.blocks),
+			fieldGoalsAttempted: Number(stat.fieldGoalsAttempted),
+			fieldGoalsMade: Number(stat.fieldGoalsMade),
+			fouls: Number(stat.fouls),
+			freeThrowsAttempted: Number(stat.freethrowsAttempted),
+			freeThrowsMade: Number(stat.freethrowsMade),
+			offensiveRebounds: Number(stat.offensiveRebounds),
+			defensiveRebounds: Number(stat.defensiveRebounds),
+			minutes: Number(stat.minutes),
+			plusOrMinus: Number(stat.plusOrMinus),
+			points: Number(stat.points),
+			rebounds: Number(stat.rebounds),
+			steals: Number(stat.steals),
+			threesAttempted: Number(stat.threesAttempted),
+			threesMade: Number(stat.threesMade),
+			turnovers: Number(stat.turnovers),
+			eff: 0,
+			syncState: SyncState.Modified,
+			technicalFouls: Number(stat.technicalFouls)
+		}
+		return await this.saveStat(statToUpdate);
   }
 
 	private async fetchData() {
@@ -190,7 +246,7 @@ export class GamecastComponent {
 
 	async loadBoxScore() {
 		this.homeTeamStats = await this.crud.rawQuery(this.db, `
-			SELECT			Players.number, Players.firstName, Players.lastName, Stats.minutes, Stats.rebounds, Stats.defensiveRebounds,
+			SELECT			Players.number, Players.firstName, Players.lastName, Stats.player, Stats.minutes, Stats.rebounds, Stats.defensiveRebounds,
 									Stats.offensiveRebounds, Stats.fieldGoalsMade, Stats.fieldGoalsAttempted, Stats.blocks, Stats.steals, Stats.threesMade,
 									Stats.threesAttempted, Stats.freethrowsMade, Stats.freethrowsAttempted, Stats.points, Stats.turnovers,
 									Stats.fouls, Stats.technicalFouls, Stats.plusOrMinus
@@ -201,7 +257,7 @@ export class GamecastComponent {
 			ORDER BY 		Players.number;
 		`);
 		this.awayTeamStats = await this.crud.rawQuery(this.db, `
-			SELECT		Players.number, Players.firstName, Players.lastName, Stats.minutes, Stats.rebounds, Stats.defensiveRebounds,
+			SELECT		Players.number, Players.firstName, Players.lastName, Stats.player, Stats.minutes, Stats.rebounds, Stats.defensiveRebounds,
 								Stats.offensiveRebounds, Stats.fieldGoalsMade, Stats.fieldGoalsAttempted, Stats.blocks, Stats.steals, Stats.threesMade,
 								Stats.threesAttempted, Stats.freethrowsMade, Stats.freethrowsAttempted, Stats.points, Stats.turnovers,
 								Stats.fouls, Stats.technicalFouls, Stats.plusOrMinus

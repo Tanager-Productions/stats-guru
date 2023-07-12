@@ -105,4 +105,6 @@ export class ApiService {
     };
     return await CapacitorHttp.get(options);
   }
+
+
 }
