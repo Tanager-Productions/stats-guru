@@ -12,6 +12,9 @@ import { SQLiteDBConnection } from '@capacitor-community/sqlite';
 import { ColDef, GridApi, GridReadyEvent, SelectionChangedEvent } from 'ag-grid-community';
 import { GameCastSettings } from 'src/app/interfaces/gameCastSetting.interface';
 import { ApiService } from 'src/app/services/api/api.service';
+import { ToastController } from '@ionic/angular';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { ToastrService } from 'ngx-toastr';
 
 //teamName | player name | player number | GameAction | period | gameClock | score | timestamp
 
@@ -120,6 +123,9 @@ export class GamecastComponent {
 		private route: ActivatedRoute,
 		private crud: CrudService,
 		private sql: SqlService,
+		public toastCtrl: ToastController,
+		public modalService: NgbModal,
+		private toastr: ToastrService
 		) {}
 
   ngOnInit() {
@@ -134,6 +140,15 @@ export class GamecastComponent {
     event.data.modified = true;
   }
 
+	async openToast(message: string, isError = false, error?: any) {
+    const toast = await this.toastCtrl.create({
+      message: message,
+      duration: 2000,
+      color: isError ? 'danger' : 'primary',
+    });
+    toast.present();
+  }
+
 	public async updateStats() {
     let modifiedRows: StatsRow[] = this.homeTeamStats.filter(i => i.modified == true);
     modifiedRows.push(...this.awayTeamStats.filter(i => i.modified == true));
@@ -141,9 +156,10 @@ export class GamecastComponent {
       try {
 					await this.updateStat(element);
       } catch (error) {
-        console.log('An error occurred on the sever. ', true, error);
+        this.openToast('An error occurred on the sever. ', true, error);
       }
     }
+		this.openToast('Stats successfully updated!');
   }
 
 	private async updateStat(stat: StatsRow) {
