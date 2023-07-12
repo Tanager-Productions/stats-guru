@@ -67,8 +67,6 @@ export class GamecastComponent {
   gameId!: number;
 	playerId!: number;
   currentGame?: Game;
-	currentHomeTeamPlayersId?: string[];
-	currentAwayTeamPlayersId?: string[];
 	homeTeamPlayers?: Player[];
 	awayTeamPlayers?: Player[];
 	homeTeamStats!: StatsRow[];
@@ -201,10 +199,7 @@ export class GamecastComponent {
 			await this.crud.save(this.db, 'GameCastSettings', gameCastSetting);
 			this.gameCastSettings = (await this.crud.rawQuery(this.db, `SELECT * FROM GameCastSettings WHERE game = ${this.gameId}`))[0];
 		} else {
-			this.currentHomeTeamPlayersId = res[0].homePlayersOnCourt?.split(',');
-			this.currentAwayTeamPlayersId = res[0].awayPlayersOnCourt?.split(',');
 			this.gameCastSettings = res[0];
-			this.loadCurrentPlayersOnCourt();
 		}
 		this.currentGame = (await this.crud.rawQuery(this.db, `
 			SELECT 	*
@@ -237,6 +232,8 @@ export class GamecastComponent {
 			ORDER BY	playId DESC
 		`);
 		await this.loadBoxScore();
+		this.homePlayersOnCourt = this.homeTeamPlayers?.filter(t => this.gameCastSettings!.homePlayersOnCourt!.split(',').includes(t.playerId.toString()))!;
+		this.awayPlayersOnCourt = this.awayTeamPlayers?.filter(t => this.gameCastSettings!.awayPlayersOnCourt!.split(',').includes(t.playerId.toString()))!;
 	}
 
 	gameActionsProtocolKeys() : Array<string> {
@@ -267,28 +264,6 @@ export class GamecastComponent {
 			AND				Stats.game = ${this.gameId}
 			ORDER BY 	Players.number;
 		`);
-	}
-
-	async loadCurrentPlayersOnCourt() {
-		 this.currentHomeTeamPlayersId?.forEach(async id => {
-			let player: Player = (await this.crud.rawQuery(this.db, `
-				SELECT 		*
-				FROM 			Players
-				WHERE 		playerId = ${id}
-				ORDER BY 	number;
-			`))[0];
-			this.homePlayersOnCourt.push(player);
-		 });
-
-		 this.currentAwayTeamPlayersId?.forEach(async id => {
-			let player: Player = (await this.crud.rawQuery(this.db, `
-				SELECT 		*
-				FROM 			Players
-				WHERE 		playerId = ${id}
-				ORDER BY 	number;
-			`))[0];
-			this.awayPlayersOnCourt.push(player);
-		 });
 	}
 
 	async savePlayer(player: Player) {
@@ -351,22 +326,19 @@ export class GamecastComponent {
 		if (team == 'home') {
 			if(this.homePlayersOnCourt.length < 5) {
 				this.homePlayersOnCourt.push(player);
-				this.currentHomeTeamPlayersId?.push(player.playerId.toString());
 				if(this.gameCastSettings != null) {
 					this.gameCastSettings.homePlayersOnCourt = this.gameCastSettings.homePlayersOnCourt + ',' + player.playerId.toString();
 				}
-				this.updateGameCastSetting();
 			}
 		} else {
 			if (this.awayPlayersOnCourt.length < 5) {
 				this.awayPlayersOnCourt.push(player);
-				this.currentAwayTeamPlayersId?.push(player.playerId.toString());
 				if(this.gameCastSettings != null) {
 					this.gameCastSettings.awayPlayersOnCourt = this.gameCastSettings.awayPlayersOnCourt + ',' + player.playerId.toString();
 				}
-				this.updateGameCastSetting();
 			}
 		}
+		this.updateGameCastSetting();
 	}
 
 	selectPlayer(team: 'home' | 'away', index: number) {
@@ -390,52 +362,20 @@ export class GamecastComponent {
 			if (this.awayPlayerSelected == index) {
 				this.awayPlayerSelected = -1;
 			}
-
-			if(this.currentAwayTeamPlayersId != null){
-				var index = this.currentAwayTeamPlayersId.indexOf(player.playerId.toString());
-				if (index !== -1) {
-					this.currentAwayTeamPlayersId.splice(index, 1);
-				}
+			if(this.gameCastSettings?.awayPlayersOnCourt != null){
+				this.gameCastSettings.awayPlayersOnCourt = this.gameCastSettings.awayPlayersOnCourt.replace(',' + player.playerId.toString(), '');
 			}
-
 			this.awayPlayersOnCourt.splice(this.awayPlayersOnCourt.indexOf(player), 1);
-
-			if(this.gameCastSettings?.awayPlayersOnCourt != null) {
-				if(this.gameCastSettings.awayPlayersOnCourt.includes(',' + player.playerId.toString())) {
-					this.gameCastSettings.awayPlayersOnCourt = this.gameCastSettings.awayPlayersOnCourt.replace(',' + player.playerId.toString(), '');
-				} else if(this.gameCastSettings.awayPlayersOnCourt.startsWith(player.playerId.toString()+',')) {
-					this.gameCastSettings.awayPlayersOnCourt = this.gameCastSettings.awayPlayersOnCourt.replace(player.playerId.toString() + ',', '');
-				} else {
-				  this.gameCastSettings.awayPlayersOnCourt = this.gameCastSettings.awayPlayersOnCourt.replace(player.playerId.toString(), '');
-				}
-			}
-			this.updateGameCastSetting();
-
 		} else {
 			if (this.homePlayerSelected == index) {
 				this.homePlayerSelected = -1;
 			}
-
-			if(this.currentHomeTeamPlayersId != null){
-				var index = this.currentHomeTeamPlayersId.indexOf(player.playerId.toString());
-				if (index !== -1) {
-					this.currentHomeTeamPlayersId.splice(index, 1);
-				}
+			if(this.gameCastSettings?.homePlayersOnCourt != null){
+				this.gameCastSettings.homePlayersOnCourt = this.gameCastSettings.homePlayersOnCourt.replace(',' + player.playerId.toString(), '');
 			}
-
 			this.homePlayersOnCourt.splice(this.homePlayersOnCourt.indexOf(player), 1);
-
-			if(this.gameCastSettings?.homePlayersOnCourt != null) {
-				if(this.gameCastSettings.homePlayersOnCourt.includes(',' + player.playerId.toString())) {
-					this.gameCastSettings.homePlayersOnCourt = this.gameCastSettings.homePlayersOnCourt.replace(',' + player.playerId.toString(), '');
-				} else if(this.gameCastSettings.homePlayersOnCourt.startsWith(player.playerId.toString()+',')) {
-					this.gameCastSettings.homePlayersOnCourt = this.gameCastSettings.homePlayersOnCourt.replace(player.playerId.toString() + ',', '');
-				} else {
-				  this.gameCastSettings.homePlayersOnCourt = this.gameCastSettings.homePlayersOnCourt.replace(player.playerId.toString(), '');
-				}
-			}
-			this.updateGameCastSetting();
 		}
+		this.updateGameCastSetting();
   }
 
 	private async getStat(playerId:number) {
