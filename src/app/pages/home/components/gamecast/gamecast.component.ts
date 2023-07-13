@@ -19,7 +19,6 @@ import { GamecastResult } from 'src/app/interfaces/gamecastResult.interface';
 import { AuthService } from 'src/app/services/auth/auth.service';
 import { ToastController } from '@ionic/angular';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { ToastrService } from 'ngx-toastr';
 
 //teamName | player name | player number | GameAction | period | gameClock | score | timestamp
 
@@ -134,8 +133,7 @@ export class GamecastComponent {
 		private api:ApiService,
 		private auth: AuthService,
 		public toastCtrl: ToastController,
-		public modalService: NgbModal,
-		private toastr: ToastrService
+		public modalService: NgbModal
 		) {
 		this.socketUrl = this.api.serverUrl.replace("http", "ws");
 	}
