@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { BehaviorSubject, Observable, Subscription, interval, map, throwError } from 'rxjs';
 import { Game } from 'src/app/interfaces/game.interface';
@@ -17,7 +17,7 @@ import { currentDatabaseVersion } from 'src/app/upgrades/versions';
 import { SyncMode } from 'src/app/interfaces/sync.interface';
 import { GamecastResult } from 'src/app/interfaces/gamecastResult.interface';
 import { AuthService } from 'src/app/services/auth/auth.service';
-import { ToastController } from '@ionic/angular';
+import { IonSelect, SelectChangeEventDetail, ToastController } from '@ionic/angular';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 //teamName | player name | player number | GameAction | period | gameClock | score | timestamp
@@ -70,7 +70,6 @@ type StatsRow =  {
 })
 export class GamecastComponent {
 	db!:SQLiteDBConnection;
-	ro:boolean = true;
   gameId!: number;
 	playerId!: number;
   currentGame?: Game;
@@ -108,6 +107,7 @@ export class GamecastComponent {
 	socket?:WebSocket;
 	socketUrl:string;
 	sending: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+	actions = Object.entries(GameActions).reverse();
 
 	//gameActionskey = Object.keys(GameActions);
 	public teamStats: ColDef[] = [
@@ -143,6 +143,7 @@ export class GamecastComponent {
 		public modalService: NgbModal
 		) {
 		this.socketUrl = this.api.serverUrl.replace("http", "ws");
+		console.log(this.actions);
 	}
 
   ngOnInit() {
@@ -152,6 +153,7 @@ export class GamecastComponent {
 				.then(async () => {
 					let ticket = (await this.api.GenerateTicket()).data;
 					this.socket = new WebSocket(`${this.socketUrl}/WebSocket/GameCast?ticket=${ticket}&userId=${this.auth.getUser()?.userId}`);
+					this.socket.onopen = () => this.send();
 					this.socket.onmessage = async (mess) => {
 						let res:GamecastResult = JSON.parse(mess.data);
 						if (!res.result) console.error(res.error);
@@ -171,10 +173,14 @@ export class GamecastComponent {
 							stat.syncState = SyncState.Unchanged;
 							await this.crud.save(this.db, "Stats", stat, {"player": `${item}`, "game": `${this.gameId}`});
 						}
-						this.sending.next(true);
-						setTimeout(() => this.send(), 15000);
+						this.sending.next(false);
+						setTimeout(() => {
+							if (this.socket && this.socket.readyState == WebSocket.OPEN) {
+								this.sending.next(true);
+								this.send();
+							}
+						}, 15000);
 					}
-					this.socket.onopen = () => this.send();
 				});
     });
   }
@@ -192,12 +198,12 @@ export class GamecastComponent {
 			plays: this.plays!
 		}
 		this.socket!.send(JSON.stringify(dto));
-		this.sending.next(false);
 	}
 
-	onCellValueChanged(event: any) {
-    console.log(event);
-    event.data.modified = true;
+	editingStopped(event: any) {
+		console.log(event);
+    event.data.SyncState = SyncState.Modified;
+		this.saveStat(event.data);
   }
 
 	async openToast(message: string, isError = false, error?: any) {
@@ -308,13 +314,12 @@ export class GamecastComponent {
 			ORDER BY	playId DESC
 		`);
 		await this.loadBoxScore();
-		this.homePlayersOnCourt = this.homeTeamPlayers?.filter(t => this.gameCastSettings!.homePlayersOnCourt!.split(',').includes(t.playerId.toString()))!;
-		this.awayPlayersOnCourt = this.awayTeamPlayers?.filter(t => this.gameCastSettings!.awayPlayersOnCourt!.split(',').includes(t.playerId.toString()))!;
-	}
-
-	gameActionsProtocolKeys() : Array<string> {
-		var keys = Object.keys(this.gameActions);
-		return keys.slice(keys.length / 2);
+		if (this.gameCastSettings!.homePlayersOnCourt != null) {
+			this.homePlayersOnCourt = this.homeTeamPlayers?.filter(t => this.gameCastSettings!.homePlayersOnCourt!.split(',').includes(t.playerId.toString()))!;
+		}
+		if (this.gameCastSettings!.awayPlayersOnCourt != null) {
+			this.awayPlayersOnCourt = this.awayTeamPlayers?.filter(t => this.gameCastSettings!.awayPlayersOnCourt!.split(',').includes(t.playerId.toString()))!;
+		}
 	}
 
 	async loadBoxScore() {
@@ -454,6 +459,13 @@ export class GamecastComponent {
 		this.updateGameCastSetting();
   }
 
+	public updatePlayerPlay($event:any, play:Play) {
+		console.log($event);
+		play.playerNumber = $event.detail.value.number;
+		play.playerName = `${$event.detail.value.firstName} ${$event.detail.value.lastName}`;
+		this.updatePlay(play);
+	}
+
 	private async getStat(playerId:number) {
 		let stat = this.stats!.find(t => t.player == playerId);
 		if (stat == undefined) {
@@ -536,14 +548,14 @@ export class GamecastComponent {
 			gameId: this.gameId!,
 			turboStatsData: null,
 			syncState: SyncState.Added,
-			period: null,
-			playerName: null,
-			playerNumber: null,
-			score: null,
-			teamName: null,
-			timeStamp: null,
-			action: GameActions.Assist,
-			gameClock: null
+			period: this.currentGame!.period,
+			playerName: player ? `${player.firstName} ${player.lastName}` : null,
+			playerNumber: player ? player.number : null,
+			score: `${this.currentGame!.homeFinal} - ${this.currentGame!.awayFinal}`,
+			teamName: player ? player.team : null,
+			timeStamp: new Date().toJSON(),
+			action: action,
+			gameClock: this.currentGame!.clock
 		}
 		await this.crud.save(this.db, 'Plays', play);
 		this.plays?.unshift(play);
@@ -832,20 +844,13 @@ export class GamecastComponent {
 	}
 
 	public async updatePlay(play: Play) {
-		let selectedActionString = play.action.toString() as keyof typeof GameActions;
-		let selectedAction = GameActions[selectedActionString];
-		play!.action = selectedAction;
-		play!.syncState = SyncState.Modified;
-	  await this.crud.save(this.db, 'Plays', play!, { "playId": `${play.playId}`,"gameId": `${this.gameId}` });
-		let plays = (await this.crud.rawQuery(this.db, `
-			SELECT 	*
-			FROM 		Plays
-			WHERE 	gameId = ${this.gameId} and playId = ${play.playId}
-		`))[0];
-		let currentPlayCopy:any = play;
-		for (let key in plays) {
-			currentPlayCopy[key] = plays[key];
-		}
+		play.syncState = SyncState.Modified;
+		console.log(play);
+	  await this.crud.save(this.db, 'Plays', play, { "playId": `${play.playId}`,"gameId": `${this.gameId}` });
+	}
+
+	public getPlayer(play:Play) {
+		return this.homeTeamPlayers!.find(t => t.number == play.playerNumber && `${t.firstName} ${t.lastName}` == play.playerName);
 	}
 
 	startStopTimer() {

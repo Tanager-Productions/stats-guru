@@ -234,6 +234,13 @@
     opacity: 1;
   }
 
+	ion-row.playsRow {
+		ion-col {
+			padding: 0px;
+			border-right: black solid 1px;
+		}
+	}
+
   .period-button {
     height: auto;
     width: 2.8rem;
