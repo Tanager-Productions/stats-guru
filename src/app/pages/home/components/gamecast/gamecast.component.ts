@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { Observable, Subscription, interval, map, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription, interval, map, throwError } from 'rxjs';
 import { Game } from 'src/app/interfaces/game.interface';
 import { Player } from 'src/app/interfaces/player.interface';
 import { CrudService } from 'src/app/services/crud/crud.service';
@@ -11,6 +11,12 @@ import { Play } from 'src/app/interfaces/play.interface';
 import { SQLiteDBConnection } from '@capacitor-community/sqlite';
 import { ColDef, GridApi, GridReadyEvent, SelectionChangedEvent } from 'ag-grid-community';
 import { GameCastSettings } from 'src/app/interfaces/gameCastSetting.interface';
+import { ApiService } from 'src/app/services/api/api.service';
+import { GamecastDto } from 'src/app/interfaces/gamecastDto.interface';
+import { currentDatabaseVersion } from 'src/app/upgrades/versions';
+import { SyncMode } from 'src/app/interfaces/sync.interface';
+import { GamecastResult } from 'src/app/interfaces/gamecastResult.interface';
+import { AuthService } from 'src/app/services/auth/auth.service';
 import { ToastController } from '@ionic/angular';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
@@ -99,6 +105,9 @@ export class GamecastComponent {
 	reboundAwayOffDeff: boolean = false;
 	assistDisplay: boolean = false;
 	stealDisplay: boolean = false;
+	socket?:WebSocket;
+	socketUrl:string;
+	sending: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
 	//gameActionskey = Object.keys(GameActions);
 	public teamStats: ColDef[] = [
@@ -128,16 +137,63 @@ export class GamecastComponent {
 		private route: ActivatedRoute,
 		private crud: CrudService,
 		private sql: SqlService,
+		private api:ApiService,
+		private auth: AuthService,
 		public toastCtrl: ToastController,
-		public modalService: NgbModal,
-		) {}
+		public modalService: NgbModal
+		) {
+		this.socketUrl = this.api.serverUrl.replace("http", "ws");
+	}
 
   ngOnInit() {
     this.route.params.subscribe((params: { [x: string]: string | number }) => {
       this.gameId = params['gameId'] as number;
-			this.fetchData();
+			this.fetchData()
+				.then(async () => {
+					let ticket = (await this.api.GenerateTicket()).data;
+					this.socket = new WebSocket(`${this.socketUrl}/WebSocket/GameCast?ticket=${ticket}&userId=${this.auth.getUser()?.userId}`);
+					this.socket.onmessage = async (mess) => {
+						let res:GamecastResult = JSON.parse(mess.data);
+						if (!res.result) console.error(res.error);
+						if (res.resetGame) {
+							await this.updateGame(SyncState.Unchanged);
+						}
+						for (let item of res.playersToReset) {
+							let player = this.homeTeamPlayers!.find(t => t.playerId == item);
+							if (player == undefined) {
+								player = this.awayTeamPlayers!.find(t => t.playerId == item);
+							}
+							player!.syncState = SyncState.Unchanged;
+							await this.crud.save(this.db, "Players", player!, {"playerId": `${item}`});
+						}
+						for (let item of res.statsToReset) {
+							let stat = this.stats!.find(t => t.player == item)!;
+							stat.syncState = SyncState.Unchanged;
+							await this.crud.save(this.db, "Stats", stat, {"player": `${item}`, "game": `${this.gameId}`});
+						}
+						this.sending.next(true);
+						setTimeout(() => this.send(), 15000);
+					}
+					this.socket.onopen = () => this.send();
+				});
     });
   }
+
+	private send() {
+		let players = this.homeTeamPlayers!.slice();
+		players.push(...this.awayTeamPlayers!);
+		let dto: GamecastDto = {
+			game: this.currentGame!,
+			version: currentDatabaseVersion,
+			overwrite: null,
+			mode: SyncMode.Full,
+			stats: this.stats!,
+			players: players,
+			plays: this.plays!
+		}
+		this.socket!.send(JSON.stringify(dto));
+		this.sending.next(false);
+	}
 
 	onCellValueChanged(event: any) {
     console.log(event);
@@ -746,8 +802,10 @@ export class GamecastComponent {
 		}
 	}
 
-	public async updateGame() {
-		this.currentGame!.syncState = SyncState.Modified;
+	public async updateGame(state: SyncState = SyncState.Modified) {
+		if (this.currentGame!.syncState != SyncState.Added) {
+			this.currentGame!.syncState = state;
+		}
 		await this.crud.save(this.db, 'Games', this.currentGame!, { "gameId": `${this.gameId}` });
 		let game = (await this.crud.rawQuery(this.db, `
 			SELECT 	*
@@ -825,6 +883,11 @@ export class GamecastComponent {
 
   ngOnDestroy() {
     this.stopTimer();
+		this.sending.asObservable().subscribe(sending => {
+			console.log('subscribed', sending);
+			if (!sending)
+				this.socket?.close();
+		});
   }
 
 }

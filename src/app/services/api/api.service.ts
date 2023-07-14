@@ -8,8 +8,8 @@ import { SyncDto } from 'src/app/interfaces/sync.interface';
   providedIn: 'root'
 })
 export class ApiService {
-  private serverUrl:string = "http://localhost:57812";
-  //private serverUrl:string = "https://api.thegrindsession.com";
+  public serverUrl:string = "http://localhost:57812";
+  //public serverUrl:string = "https://api.thegrindsession.com";
 
   constructor() { }
 
@@ -96,6 +96,14 @@ export class ApiService {
       headers: {"API_KEY": key, "ADMIN_ID": admin}
     };
     return await CapacitorHttp.post(options);
+  }
+
+	public async GenerateTicket() {
+    let options: HttpOptions = {
+      url: `${this.serverUrl}/WebSocket/GenerateTicket`,
+      headers: {"X-ACCESS-TOKEN": this.getApiToken()}
+    };
+    return await CapacitorHttp.get(options);
   }
 
   public async GetUser(token:string) {
