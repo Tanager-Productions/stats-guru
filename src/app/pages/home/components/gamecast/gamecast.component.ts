@@ -11,10 +11,8 @@ import { Play } from 'src/app/interfaces/play.interface';
 import { SQLiteDBConnection } from '@capacitor-community/sqlite';
 import { ColDef, GridApi, GridReadyEvent, SelectionChangedEvent } from 'ag-grid-community';
 import { GameCastSettings } from 'src/app/interfaces/gameCastSetting.interface';
-import { ApiService } from 'src/app/services/api/api.service';
 import { ToastController } from '@ionic/angular';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { ToastrService } from 'ngx-toastr';
 
 //teamName | player name | player number | GameAction | period | gameClock | score | timestamp
 
@@ -94,6 +92,13 @@ export class GamecastComponent {
 	gameActions = GameActions;
 	homeStatGridApi!: GridApi<StatsRow>;
 	awayStatGridApi!: GridApi<StatsRow>;
+	//Displaying Auto-Complete Options:
+	reboundHomeDisplay: boolean = false;
+	reboundAwayDisplay: boolean = false;
+	reboundHomeOffDeff: boolean = false;
+	reboundAwayOffDeff: boolean = false;
+	assistDisplay: boolean = false;
+	stealDisplay: boolean = false;
 
 	//gameActionskey = Object.keys(GameActions);
 	public teamStats: ColDef[] = [
@@ -125,7 +130,6 @@ export class GamecastComponent {
 		private sql: SqlService,
 		public toastCtrl: ToastController,
 		public modalService: NgbModal,
-		private toastr: ToastrService
 		) {}
 
   ngOnInit() {
@@ -470,7 +474,7 @@ export class GamecastComponent {
 		}
 	}
 
-	private async addPlay(team: 'home' | 'away', action:GameActions, player?:Player) {
+	private async addPlay(team: 'home' | 'away', action: GameActions, player?: Player) {
 		let play: Play = {
 			playId: this.plays!.length + 1,
 			gameId: this.gameId!,
@@ -510,6 +514,8 @@ export class GamecastComponent {
 						await this.addPlay(team, GameActions.ShotMade, this.awayPlayersOnCourt[this.awayPlayerSelected]);
 					} else {
 						await this.addPlay(team, GameActions.ShotMissed, this.awayPlayersOnCourt[this.awayPlayerSelected]);
+						this.reboundAwayDisplay = true;
+						console.log(this.reboundAwayDisplay);
 					}
 				} else {
 					stat.fieldGoalsAttempted++;
@@ -545,6 +551,8 @@ export class GamecastComponent {
 						await this.addPlay(team, GameActions.ShotMade, this.homePlayersOnCourt[this.homePlayerSelected]);
 					} else {
 						await this.addPlay(team, GameActions.ShotMissed, this.homePlayersOnCourt[this.homePlayerSelected]);
+						this.reboundHomeDisplay = true;
+						console.log(this.reboundHomeDisplay);
 					}
 				} else {
 					stat.fieldGoalsAttempted++;
@@ -670,7 +678,7 @@ export class GamecastComponent {
 		if (team == 'away') {
 			if (this.awayPlayerSelected != -1) {
 				let player = this.awayPlayersOnCourt[this.awayPlayerSelected];
-				let stat = await this.getStat(player.playerId);
+				let stat = await this.getStat(player?.playerId);
 				stat.rebounds++;
 				if (offensive) {
 					stat.offensiveRebounds++;
@@ -684,7 +692,7 @@ export class GamecastComponent {
 		} else {
 			if (this.homePlayerSelected != -1) {
 				let player = this.homePlayersOnCourt[this.homePlayerSelected];
-				let stat = await this.getStat(player.playerId);
+				let stat = await this.getStat(player?.playerId);
 				stat.rebounds++;
 				if (offensive) {
 					stat.offensiveRebounds++;

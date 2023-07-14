@@ -208,6 +208,26 @@
 														</ion-button>
 													</ion-col>
 													<ion-button class="timer-style" color="medium" (click)="startStopTimer()">{{ timerRunning ? 'Stop' : 'Start' }}</ion-button>
+													<ion-col size="1"></ion-col>
+													<ion-col size="10">
+														<div *ngIf="reboundHomeDisplay">
+															<ion-button color="primary" (click)="reboundHomeOffDeff = true; reboundHomeDisplay = false">Rebound</ion-button>
+															<ion-button color="primary" (click)="reboundHomeDisplay = false">No Rebound</ion-button>
+														</div>
+														<div *ngIf="reboundHomeOffDeff">
+															<ion-button color="primary" (click)="addRebound('home', true); reboundHomeOffDeff = false">Offensive</ion-button>
+															<ion-button color="danger" (click)="addRebound('home', false); reboundHomeOffDeff = false">Defensive</ion-button>
+														</div>
+														<div *ngIf="reboundAwayDisplay">
+															<ion-button color="danger" (click)="reboundAwayOffDeff = true; reboundAwayDisplay = false">Rebound</ion-button>
+															<ion-button color="danger" (click)="reboundAwayDisplay = false">No Rebound</ion-button>
+														</div>
+														<div *ngIf="reboundAwayOffDeff">
+															<ion-button color="danger" (click)="addRebound('away', true); reboundAwayOffDeff = false">Offensive</ion-button>
+															<ion-button color="primary" (click)="addRebound('away', false); reboundAwayOffDeff = false">Defensive</ion-button>
+														</div>
+													</ion-col>
+													<ion-col size="1"></ion-col>
 												</ion-row>
 											</ion-grid>
 										</ion-col>
