@@ -76,6 +76,12 @@ export const version1: string[] = [
 			score TEXT NULL,
 			timeStamp TEXT NULL,
       syncState INTEGER NOT NULL DEFAULT 0,
+			height INTEGER NULL,
+			weight INTEGER NULL,
+			age INTEGER NULL,
+			homeTown TEXT NULL,
+			homeState TEXT NULL,
+			socialMediaString TEXT NULL,
       PRIMARY KEY (playId, gameId)
     );
   `,

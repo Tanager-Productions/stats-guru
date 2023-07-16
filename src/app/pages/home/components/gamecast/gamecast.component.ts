@@ -9,7 +9,7 @@ import { SyncState } from 'src/app/interfaces/syncState.enum';
 import { Stat } from 'src/app/interfaces/stat.interface';
 import { Play } from 'src/app/interfaces/play.interface';
 import { SQLiteDBConnection } from '@capacitor-community/sqlite';
-import { ColDef, GridApi, GridReadyEvent, SelectionChangedEvent } from 'ag-grid-community';
+import { ColDef, GridApi } from 'ag-grid-community';
 import { GameCastSettings } from 'src/app/interfaces/gameCastSetting.interface';
 import { ApiService } from 'src/app/services/api/api.service';
 import { GamecastDto } from 'src/app/interfaces/gamecastDto.interface';
@@ -17,8 +17,7 @@ import { currentDatabaseVersion } from 'src/app/upgrades/versions';
 import { SyncMode } from 'src/app/interfaces/sync.interface';
 import { GamecastResult } from 'src/app/interfaces/gamecastResult.interface';
 import { AuthService } from 'src/app/services/auth/auth.service';
-import { IonSelect, SelectChangeEventDetail, ToastController } from '@ionic/angular';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { ToastController } from '@ionic/angular';
 
 //teamName | player name | player number | GameAction | period | gameClock | score | timestamp
 
@@ -139,9 +138,8 @@ export class GamecastComponent {
 		private sql: SqlService,
 		private api:ApiService,
 		private auth: AuthService,
-		public toastCtrl: ToastController,
-		public modalService: NgbModal
-		) {
+		public toastCtrl: ToastController
+	) {
 		this.socketUrl = this.api.serverUrl.replace("http", "ws");
 		console.log(this.actions);
 	}
