@@ -9,7 +9,7 @@ import { SyncState } from 'src/app/interfaces/syncState.enum';
 import { Stat } from 'src/app/interfaces/stat.interface';
 import { Play } from 'src/app/interfaces/play.interface';
 import { SQLiteDBConnection } from '@capacitor-community/sqlite';
-import { ColDef, GridApi, GridReadyEvent, SelectionChangedEvent } from 'ag-grid-community';
+import { ColDef, GridApi } from 'ag-grid-community';
 import { GameCastSettings } from 'src/app/interfaces/gameCastSetting.interface';
 import { ApiService } from 'src/app/services/api/api.service';
 import { GamecastDto } from 'src/app/interfaces/gamecastDto.interface';
@@ -105,9 +105,9 @@ export class GamecastComponent {
 	assistDisplay: boolean = false;
 	stealDisplay: boolean = false;
 	socket?:WebSocket;
-	socketUrl:string;
+	socketUrl:string = this.api.serverUrl.replace("http", "ws");
 	sending: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-	actions = Object.entries(GameActions).reverse();
+	actions: {key:number, value:string}[] = Object.entries(GameActions).reverse().slice(0,15).map(t => { return { key:Number(t[1]), value:t[0] as string } });
 
 	//gameActionskey = Object.keys(GameActions);
 	public teamStats: ColDef[] = [
@@ -147,7 +147,7 @@ export class GamecastComponent {
 
   ngOnInit() {
     this.route.params.subscribe((params: { [x: string]: string | number }) => {
-      this.gameId = params['gameId'] as number;
+      this.gameId = Number(params['gameId']);
 			this.fetchData()
 				.then(async () => {
 					let ticket = (await this.api.GenerateTicket()).data;
@@ -201,32 +201,63 @@ export class GamecastComponent {
 
 	editingStopped(event: any) {
 		console.log(event);
-		let updatedStat: Stat = {
-			player: event.data.player,
-			game: this.gameId,
-			minutes: event.data.minutes,
-			assists: event.data.assists,
-			rebounds: event.data.rebounds,
-			defensiveRebounds: event.data.defensiveRebounds,
-			offensiveRebounds: event.data.offensiveRebounds,
-			fieldGoalsMade: event.data.fieldGoalsMade,
-			fieldGoalsAttempted: event.data.fieldGoalsAttempted,
-			blocks: event.data.blocks,
-			steals: event.data.steals,
-			threesMade: event.data.threesMade,
-			threesAttempted: event.data.threesAttempted,
-			freeThrowsMade: event.data.freeThrowsMade,
-			freeThrowsAttempted: event.data.freeThrowsMade,
-			points: event.data.points,
-			turnovers: event.data.turnovers,
-			fouls: event.data.fouls,
-			plusOrMinus: event.data.plusOrMinus,
-			eff: event.data.eff,
-			syncState: event.data.syncState = SyncState.Modified,
-			technicalFouls: event.data.technicalFouls
-		}
-		this.saveStat(updatedStat);
+    event.data.SyncState = SyncState.Modified;
+		this.saveStat(event.data);
   }
+
+	async openToast(message: string, isError = false, error?: any) {
+    const toast = await this.toastCtrl.create({
+      message: message,
+      duration: 2000,
+      color: isError ? 'danger' : 'primary',
+    });
+    toast.present();
+  }
+
+	public async updateStats() {
+    let modifiedRows: StatsRow[] = this.homeTeamStats.filter(i => i.modified == true);
+    modifiedRows.push(...this.awayTeamStats.filter(i => i.modified == true));
+    for (var element of modifiedRows) {
+      try {
+					await this.updateStat(element);
+      } catch (error) {
+        this.openToast('An error occurred on the sever. ', true, error);
+      }
+    }
+		this.openToast('Stats successfully updated!');
+  }
+
+	private async updateStat(stat: StatsRow) {
+		let statToUpdate: Stat = {
+			game: Number(this.gameId),
+			player: Number (stat.player),
+			assists: 0,
+			blocks: Number(stat.blocks),
+			fieldGoalsAttempted: Number(stat.fieldGoalsAttempted),
+			fieldGoalsMade: Number(stat.fieldGoalsMade),
+			fouls: Number(stat.fouls),
+			freeThrowsAttempted: Number(stat.freethrowsAttempted),
+			freeThrowsMade: Number(stat.freethrowsMade),
+			offensiveRebounds: Number(stat.offensiveRebounds),
+			defensiveRebounds: Number(stat.defensiveRebounds),
+			minutes: Number(stat.minutes),
+			plusOrMinus: Number(stat.plusOrMinus),
+			points: Number(stat.points),
+			rebounds: Number(stat.rebounds),
+			steals: Number(stat.steals),
+			threesAttempted: Number(stat.threesAttempted),
+			threesMade: Number(stat.threesMade),
+			turnovers: Number(stat.turnovers),
+			eff: 0,
+			syncState: SyncState.Modified,
+			technicalFouls: Number(stat.technicalFouls)
+		}
+		return await this.saveStat(statToUpdate);
+  }
+
+	public getAction(action:number) {
+		return this.actions.find(t => t.key == action)!.value;
+	}
 
 	private async fetchData() {
 		this.db = await this.sql.createConnection();
@@ -433,8 +464,13 @@ export class GamecastComponent {
 
 	public updatePlayerPlay($event:any, play:Play) {
 		console.log($event);
-		play.playerNumber = $event.detail.value.number;
-		play.playerName = `${$event.detail.value.firstName} ${$event.detail.value.lastName}`;
+		if ($event.detail.value == null) {
+			play.playerNumber = null;
+			play.playerName = null;
+		} else {
+			play.playerNumber = $event.detail.value.number;
+			play.playerName = `${$event.detail.value.firstName} ${$event.detail.value.lastName}`;
+		}
 		this.updatePlay(play);
 	}
 
@@ -529,6 +565,7 @@ export class GamecastComponent {
 			action: action,
 			gameClock: this.currentGame!.clock
 		}
+		console.log(play);
 		await this.crud.save(this.db, 'Plays', play);
 		this.plays?.unshift(play);
 	}
@@ -822,7 +859,11 @@ export class GamecastComponent {
 	}
 
 	public getPlayer(play:Play) {
-		return this.homeTeamPlayers!.find(t => t.number == play.playerNumber && `${t.firstName} ${t.lastName}` == play.playerName);
+		if (play.teamName == this.currentGame!.homeTeam) {
+			return this.homeTeamPlayers!.find(t => t.number == play.playerNumber && `${t.firstName} ${t.lastName}` == play.playerName);
+		} else {
+			return this.awayTeamPlayers!.find(t => t.number == play.playerNumber && `${t.firstName} ${t.lastName}` == play.playerName);
+		}
 	}
 
 	startStopTimer() {

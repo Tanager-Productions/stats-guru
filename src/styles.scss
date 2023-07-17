@@ -72,3 +72,8 @@ ion-modal {
 [hidden] {
   display: none !important;
 }
+
+ion-popover.scrollable {
+	--max-height: 400px;
+	overflow-y: scroll;
+}

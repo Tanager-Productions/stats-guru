@@ -86,7 +86,6 @@ export const version1: string[] = [
       game INTEGER NOT NULL,
       minutes INTEGER NULL,
       assists INTEGER NULL,
-      rebounds INTEGER NULL,
       fieldGoalsMade INTEGER NULL,
       fieldGoalsAttempted INTEGER NULL,
       blocks INTEGER NULL,
@@ -101,8 +100,9 @@ export const version1: string[] = [
       plusOrMinus INTEGER NULL,
       offensiveRebounds INTEGER NULL,
       defensiveRebounds INTEGER NULL,
+      rebounds GENERATED ALWAYS AS ([offensiveRebounds]+[defensiveRebounds]),
       eff GENERATED ALWAYS AS (
-				(([threesMade]*3)+[freeThrowsMade]+(([fieldGoalsMade]-[threesMade])*2))+[rebounds]+[assists]+[steals]+[blocks]-([fieldGoalsAttempted]-[fieldGoalsMade])-([freethrowsAttempted]-[freethrowsMade])-[turnovers]
+				(([threesMade]*3)+[freeThrowsMade]+(([fieldGoalsMade]-[threesMade])*2))+[offensiveRebounds]+[defensiveRebounds]+[assists]+[steals]+[blocks]-([fieldGoalsAttempted]-[fieldGoalsMade])-([freethrowsAttempted]-[freethrowsMade])-[turnovers]
       ),
 			technicalFouls INTEGER NULL,
       syncState INTEGER NOT NULL DEFAULT 0,

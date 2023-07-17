@@ -428,21 +428,59 @@
 								<ion-row class="ion-align-items-center playsRow">
 									<ion-col>{{play.playId}}</ion-col>
 									<ion-col size="2">
-										<ion-input (ionChange)="updatePlay(play)" [(ngModel)]="play!.teamName"></ion-input>
+										<div id="teamNameTrigger{{play.playId}}">{{play.teamName}}</div>
+										<ion-popover trigger="teamNameTrigger{{play.playId}}" [dismissOnSelect]="true">
+											<ng-template>
+												<ion-content>
+													<ion-radio-group (ionChange)="updatePlay(play)" [(ngModel)]="play.teamName">
+														<ion-item lines="full">
+															<ion-radio [value]="currentGame.homeTeam">{{currentGame.homeTeam}}</ion-radio>
+														</ion-item>
+														<ion-item lines="full">
+															<ion-radio [value]="currentGame.awayTeam">{{currentGame.awayTeam}}</ion-radio>
+														</ion-item>
+													</ion-radio-group>
+												</ion-content>
+											</ng-template>
+										</ion-popover>
 									</ion-col>
 									<ion-col size="2">
-										<ion-select label="" interface="popover" (ionChange)="updatePlayerPlay($event, play)" [value]="getPlayer(play)">
-											<ion-select-option [value]="item" *ngFor="let item of homeTeamPlayers">{{item.number}} {{item.firstName}} {{item.lastName}}</ion-select-option>
-										</ion-select>
+										<div id="playerTrigger{{play.playId}}">{{play.playerName != null ? play.playerNumber + ' ' + play.playerName : 'Null'}}</div>
+										<ion-popover class="scrollable" trigger="playerTrigger{{play.playId}}" [dismissOnSelect]="true">
+											<ng-template>
+												<ion-content>
+													<ion-radio-group (ionChange)="updatePlayerPlay($event, play)" [value]="getPlayer(play)">
+														<ion-item lines="full">
+															<ion-radio [value]="null">Null</ion-radio>
+														</ion-item>
+														<ion-item [hidden]="play.teamName == currentGame.awayTeam" lines="full" *ngFor="let item of homeTeamPlayers">
+															<ion-radio [value]="item">{{item.number}} {{item.firstName}} {{item.lastName}}</ion-radio>
+														</ion-item>
+														<ion-item [hidden]="play.teamName == currentGame.homeTeam" lines="full" *ngFor="let item of awayTeamPlayers">
+															<ion-radio [value]="item">{{item.number}} {{item.firstName}} {{item.lastName}}</ion-radio>
+														</ion-item>
+													</ion-radio-group>
+												</ion-content>
+											</ng-template>
+										</ion-popover>
 									</ion-col>
 									<ion-col size="2">
-										<ion-select label="" interface="popover" (ionChange)="updatePlay(play)" [(ngModel)]="play.action">
-											<ion-select-option *ngFor="let action of actions|slice:15" [value]="action[0]">{{action[1]}}</ion-select-option>
-										</ion-select>
+										<div id="actionTrigger{{play.playId}}">{{getAction(play.action)}}</div>
+										<ion-popover class="scrollable" trigger="actionTrigger{{play.playId}}" [dismissOnSelect]="true">
+											<ng-template>
+												<ion-content>
+													<ion-radio-group (ionChange)="updatePlay(play)" [(ngModel)]="play.action">
+														<ion-item lines="full" *ngFor="let action of actions">
+															<ion-radio [value]="action.key">{{action.value}}</ion-radio>
+														</ion-item>
+													</ion-radio-group>
+												</ion-content>
+											</ng-template>
+										</ion-popover>
 									</ion-col>
 									<ion-col>P{{play.period}}</ion-col>
 									<ion-col>
-										<ion-input (ionChange)="updatePlay(play)" [(ngModel)]="play!.gameClock"></ion-input>
+										{{play.gameClock}}
 									</ion-col>
 									<ion-col>
 										{{play.score}}
@@ -450,13 +488,11 @@
 									<ion-col>
 										{{play.timeStamp | date: 'shortTime'}}
 									</ion-col>
-									<ion-col>
-										<ion-button>
-											<ion-icon slot="icon-only" name="trash"></ion-icon>
-										</ion-button>
-									</ion-col>
 								</ion-row>
 							</ion-grid>
+							<ion-button slot="end" fill="clear">
+								<ion-icon slot="icon-only" name="trash"></ion-icon>
+							</ion-button>
 						</ion-item>
 					</ng-container>
 				</ion-list>
