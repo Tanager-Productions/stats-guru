@@ -17,7 +17,6 @@ import { currentDatabaseVersion } from 'src/app/upgrades/versions';
 import { SyncMode } from 'src/app/interfaces/sync.interface';
 import { GamecastResult } from 'src/app/interfaces/gamecastResult.interface';
 import { AuthService } from 'src/app/services/auth/auth.service';
-import { IonSelect, SelectChangeEventDetail, ToastController } from '@ionic/angular';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 //teamName | player name | player number | GameAction | period | gameClock | score | timestamp
@@ -97,6 +96,7 @@ export class GamecastComponent {
 	gameActions = GameActions;
 	homeStatGridApi!: GridApi<StatsRow>;
 	awayStatGridApi!: GridApi<StatsRow>;
+
 	//Displaying Auto-Complete Options:
 	reboundHomeDisplay: boolean = false;
 	reboundAwayDisplay: boolean = false;
@@ -115,7 +115,7 @@ export class GamecastComponent {
 		{field: 'firstName', headerName: 'First Name', editable: false},
 		{field: 'lastName', headerName: 'Last Name', editable: false},
 		{field: 'minutes', headerName: 'MIN', width: 80},
-		{field: 'rebounds', headerName: 'REB', width: 80},
+		{field: 'rebounds', headerName: 'REB', width: 80, editable: false},
 		{field: 'defensiveRebounds', headerName: 'DREB', width: 90},
 		{field: 'offensiveRebounds', headerName: 'OREB', width: 90},
 		{field: 'fieldGoalsMade', headerName: 'FGM', width: 90},
@@ -126,7 +126,7 @@ export class GamecastComponent {
 		{field: 'threesAttempted', headerName: '3FGA', width: 90},
 		{field: 'freethrowsMade', headerName: 'FTM', width: 80},
 		{field: 'freethrowsAttempted', headerName: 'FTA', width: 80},
-		{field: 'points', headerName: 'PTS', width: 80},
+		{field: 'points', headerName: 'PTS', width: 80, editable: false},
 		{field: 'turnovers', headerName: 'TO', width: 80},
 		{field: 'fouls', headerName: 'FOUL', width: 90},
 		{field: 'technicalFouls', headerName: 'TECH', width: 90},
@@ -139,7 +139,6 @@ export class GamecastComponent {
 		private sql: SqlService,
 		private api:ApiService,
 		private auth: AuthService,
-		public toastCtrl: ToastController,
 		public modalService: NgbModal
 		) {
 		this.socketUrl = this.api.serverUrl.replace("http", "ws");
@@ -202,58 +201,31 @@ export class GamecastComponent {
 
 	editingStopped(event: any) {
 		console.log(event);
-    event.data.SyncState = SyncState.Modified;
-		this.saveStat(event.data);
-  }
-
-	async openToast(message: string, isError = false, error?: any) {
-    const toast = await this.toastCtrl.create({
-      message: message,
-      duration: 2000,
-      color: isError ? 'danger' : 'primary',
-    });
-    toast.present();
-  }
-
-	public async updateStats() {
-    let modifiedRows: StatsRow[] = this.homeTeamStats.filter(i => i.modified == true);
-    modifiedRows.push(...this.awayTeamStats.filter(i => i.modified == true));
-    for (var element of modifiedRows) {
-      try {
-					await this.updateStat(element);
-      } catch (error) {
-        this.openToast('An error occurred on the sever. ', true, error);
-      }
-    }
-		this.openToast('Stats successfully updated!');
-  }
-
-	private async updateStat(stat: StatsRow) {
-		let statToUpdate: Stat = {
-			game: Number(this.gameId),
-			player: Number (stat.player),
-			assists: 0,
-			blocks: Number(stat.blocks),
-			fieldGoalsAttempted: Number(stat.fieldGoalsAttempted),
-			fieldGoalsMade: Number(stat.fieldGoalsMade),
-			fouls: Number(stat.fouls),
-			freeThrowsAttempted: Number(stat.freethrowsAttempted),
-			freeThrowsMade: Number(stat.freethrowsMade),
-			offensiveRebounds: Number(stat.offensiveRebounds),
-			defensiveRebounds: Number(stat.defensiveRebounds),
-			minutes: Number(stat.minutes),
-			plusOrMinus: Number(stat.plusOrMinus),
-			points: Number(stat.points),
-			rebounds: Number(stat.rebounds),
-			steals: Number(stat.steals),
-			threesAttempted: Number(stat.threesAttempted),
-			threesMade: Number(stat.threesMade),
-			turnovers: Number(stat.turnovers),
-			eff: 0,
-			syncState: SyncState.Modified,
-			technicalFouls: Number(stat.technicalFouls)
+		let updatedStat: Stat = {
+			player: event.data.player,
+			game: this.gameId,
+			minutes: event.data.minutes,
+			assists: event.data.assists,
+			rebounds: event.data.rebounds,
+			defensiveRebounds: event.data.defensiveRebounds,
+			offensiveRebounds: event.data.offensiveRebounds,
+			fieldGoalsMade: event.data.fieldGoalsMade,
+			fieldGoalsAttempted: event.data.fieldGoalsAttempted,
+			blocks: event.data.blocks,
+			steals: event.data.steals,
+			threesMade: event.data.threesMade,
+			threesAttempted: event.data.threesAttempted,
+			freeThrowsMade: event.data.freeThrowsMade,
+			freeThrowsAttempted: event.data.freeThrowsMade,
+			points: event.data.points,
+			turnovers: event.data.turnovers,
+			fouls: event.data.fouls,
+			plusOrMinus: event.data.plusOrMinus,
+			eff: event.data.eff,
+			syncState: event.data.syncState = SyncState.Modified,
+			technicalFouls: event.data.technicalFouls
 		}
-		return await this.saveStat(statToUpdate);
+		this.saveStat(updatedStat);
   }
 
 	private async fetchData() {
