@@ -102,8 +102,11 @@ export class GamecastComponent {
 	reboundAwayDisplay: boolean = false;
 	reboundHomeOffDeff: boolean = false;
 	reboundAwayOffDeff: boolean = false;
-	assistDisplay: boolean = false;
-	stealDisplay: boolean = false;
+	stealHomeDisplay: boolean = false;
+	stealAwayDisplay: boolean = false;
+	assistHomeDisplay: boolean = false;
+	assistAwayDisplay: boolean = false;
+
 	socket?:WebSocket;
 	socketUrl:string = this.api.serverUrl.replace("http", "ws");
 	sending: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
@@ -562,6 +565,7 @@ export class GamecastComponent {
 						stat.fieldGoalsMade++;
 						await this.updatePeriodTotal(team, 2);
 						await this.addPlay(team, GameActions.ShotMade, this.awayPlayersOnCourt[this.awayPlayerSelected]);
+						this.assistAwayDisplay = true;
 					} else {
 						await this.addPlay(team, GameActions.ShotMissed, this.awayPlayersOnCourt[this.awayPlayerSelected]);
 						this.reboundAwayDisplay = true;
@@ -599,6 +603,7 @@ export class GamecastComponent {
 						stat.fieldGoalsMade++;
 						await this.updatePeriodTotal(team, 2);
 						await this.addPlay(team, GameActions.ShotMade, this.homePlayersOnCourt[this.homePlayerSelected]);
+						this.assistHomeDisplay = true;
 					} else {
 						await this.addPlay(team, GameActions.ShotMissed, this.homePlayersOnCourt[this.homePlayerSelected]);
 						this.reboundHomeDisplay = true;
@@ -687,6 +692,7 @@ export class GamecastComponent {
 				let stat = await this.getStat(player.playerId);
 				stat.steals++;
 				await this.saveStat(stat);
+				this.stealAwayDisplay = true;
 				this.addPlay(team, GameActions.Steal, player);
 			}
 		} else {
@@ -695,6 +701,7 @@ export class GamecastComponent {
 				let stat = await this.getStat(player.playerId);
 				stat.steals++;
 				await this.saveStat(stat);
+				this.stealHomeDisplay = true;
 				this.addPlay(team, GameActions.Steal, player);
 			}
 		}
