@@ -459,7 +459,7 @@ export class GamecastComponent {
 
 	public updatePlayerPlay($event:any, play:Play) {
 		console.log($event);
-		if ($event.detail.vale == null) {
+		if ($event.detail.value == null) {
 			play.playerNumber = null;
 			play.playerName = null;
 		} else {
@@ -854,7 +854,11 @@ export class GamecastComponent {
 	}
 
 	public getPlayer(play:Play) {
-		return this.homeTeamPlayers!.find(t => t.number == play.playerNumber && `${t.firstName} ${t.lastName}` == play.playerName);
+		if (play.teamName == this.currentGame!.homeTeam) {
+			return this.homeTeamPlayers!.find(t => t.number == play.playerNumber && `${t.firstName} ${t.lastName}` == play.playerName);
+		} else {
+			return this.awayTeamPlayers!.find(t => t.number == play.playerNumber && `${t.firstName} ${t.lastName}` == play.playerName);
+		}
 	}
 
 	startStopTimer() {
