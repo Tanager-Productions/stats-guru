@@ -56,9 +56,9 @@
 				</div>
 			</ion-col>
 			<ion-col class="ion-no-padding" size="10">
-				<ion-grid>
+				<ion-grid class="ion-no-padding">
 					<ion-row>
-						<ion-col>
+						<ion-col class="ion-no-padding">
 							<ion-grid style="border-radius: 10px; background-color: #d8d0fe; width: 100%; padding: 0;">
 								<ion-row>
 									<ng-container *ngFor="let player of homePlayersOnCourt; let i = index">
@@ -170,8 +170,8 @@
 								</ion-grid>
 							</ion-card>
 						</ion-col>
-						<ion-col class="ion-no-padding">
-							<ion-grid class="ion-no-padding">
+						<ion-col>
+							<ion-grid>
 								<ion-row class="ion-align-items-center">
 									<ion-col size="3">
 										<ion-button fill="clear" expand="block" color="primary" (click)="addTimeout('home', true)">T30</ion-button>
@@ -233,7 +233,7 @@
 								</ion-row>
 							</ion-grid>
 						</ion-col>
-						<ion-col>
+						<ion-col class="ion-no-padding">
 							<ion-grid style="border-radius: 10px; background-color: #fec3c3; width: 100%; padding: 0;">
 								<ion-row>
 									<ng-container *ngFor="let player of awayPlayersOnCourt; let i = index">
