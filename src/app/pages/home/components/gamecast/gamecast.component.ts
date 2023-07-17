@@ -17,7 +17,6 @@ import { currentDatabaseVersion } from 'src/app/upgrades/versions';
 import { SyncMode } from 'src/app/interfaces/sync.interface';
 import { GamecastResult } from 'src/app/interfaces/gamecastResult.interface';
 import { AuthService } from 'src/app/services/auth/auth.service';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 //teamName | player name | player number | GameAction | period | gameClock | score | timestamp
 
@@ -141,8 +140,7 @@ export class GamecastComponent {
 		private crud: CrudService,
 		private sql: SqlService,
 		private api:ApiService,
-		private auth: AuthService,
-		public modalService: NgbModal
+		private auth: AuthService
 		) {
 		this.socketUrl = this.api.serverUrl.replace("http", "ws");
 		console.log(this.actions);
