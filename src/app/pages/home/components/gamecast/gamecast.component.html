@@ -63,11 +63,11 @@
 								<ion-grid>
 									<ion-row>
 										<ion-col>
-											<ion-grid style="border-radius: 10px; background-color: #d8d0fe; width: 100%; padding: 0;">
+											<ion-grid style="border-radius: 5px; background-color: #d8d0fe; width: 100%; padding: 5px;">
 												<ion-row>
 													<ng-container *ngFor="let player of homePlayersOnCourt; let i = index">
 														<ion-col id="context-menu-trigger-homeCourt{{i}}" *ngIf="homePlayersOnCourt.length >= i">
-															<ion-button [ngClass]="{'selectedButton':homePlayerSelected == i}" color="primary" fill="clear" expand="block" (tap)="selectPlayer('home', i)" (doubleTap)="removeFromCourt('home', player, i)">
+															<ion-button style="border-radius: 50px;" [ngClass]="{'selectedButton':homePlayerSelected == i}" color="primary" fill="clear" shape="round" expand="block" (tap)="selectPlayer('home', i)" (doubleTap)="removeFromCourt('home', player, i)">
 																<ion-label>{{player.number}}</ion-label>
 															</ion-button>
 														</ion-col>
@@ -262,11 +262,11 @@
 											</ion-grid>
 										</ion-col>
 										<ion-col>
-											<ion-grid style="border-radius: 10px; background-color: #fec3c3; width: 100%; padding: 0;">
+											<ion-grid style="border-radius: 5px; background-color: #fec3c3; width: 100%; padding: 5px;">
 												<ion-row>
 													<ng-container *ngFor="let player of awayPlayersOnCourt; let i = index">
 														<ion-col id="context-menu-trigger-awayCourt{{i}}" *ngIf="awayPlayersOnCourt.length >= i">
-															<ion-button [ngClass]="{'selectedButton':awayPlayerSelected == i}" color="danger" fill="clear" expand="block" (tap)="selectPlayer('away', i)" (doubleTap)="removeFromCourt('away', player, i)">
+															<ion-button style="border-radius: 50px;" [ngClass]="{'selectedButton':awayPlayerSelected == i}" color="danger" fill="clear" shape="round" expand="block" (tap)="selectPlayer('away', i)" (doubleTap)="removeFromCourt('away', player, i)">
 																<ion-label>{{player.number}}</ion-label>
 															</ion-button>
 														</ion-col>
