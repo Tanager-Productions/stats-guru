@@ -201,58 +201,31 @@ export class GamecastComponent {
 
 	editingStopped(event: any) {
 		console.log(event);
-    event.data.SyncState = SyncState.Modified;
-		this.saveStat(event.data);
-  }
-
-	async openToast(message: string, isError = false, error?: any) {
-    const toast = await this.toastCtrl.create({
-      message: message,
-      duration: 2000,
-      color: isError ? 'danger' : 'primary',
-    });
-    toast.present();
-  }
-
-	public async updateStats() {
-    let modifiedRows: StatsRow[] = this.homeTeamStats.filter(i => i.modified == true);
-    modifiedRows.push(...this.awayTeamStats.filter(i => i.modified == true));
-    for (var element of modifiedRows) {
-      try {
-					await this.updateStat(element);
-      } catch (error) {
-        this.openToast('An error occurred on the sever. ', true, error);
-      }
-    }
-		this.openToast('Stats successfully updated!');
-  }
-
-	private async updateStat(stat: StatsRow) {
-		let statToUpdate: Stat = {
-			game: Number(this.gameId),
-			player: Number (stat.player),
-			assists: 0,
-			blocks: Number(stat.blocks),
-			fieldGoalsAttempted: Number(stat.fieldGoalsAttempted),
-			fieldGoalsMade: Number(stat.fieldGoalsMade),
-			fouls: Number(stat.fouls),
-			freeThrowsAttempted: Number(stat.freethrowsAttempted),
-			freeThrowsMade: Number(stat.freethrowsMade),
-			offensiveRebounds: Number(stat.offensiveRebounds),
-			defensiveRebounds: Number(stat.defensiveRebounds),
-			minutes: Number(stat.minutes),
-			plusOrMinus: Number(stat.plusOrMinus),
-			points: Number(stat.points),
-			rebounds: Number(stat.rebounds),
-			steals: Number(stat.steals),
-			threesAttempted: Number(stat.threesAttempted),
-			threesMade: Number(stat.threesMade),
-			turnovers: Number(stat.turnovers),
-			eff: 0,
-			syncState: SyncState.Modified,
-			technicalFouls: Number(stat.technicalFouls)
+    let updatedStat: Stat = {
+			player: event.data.player,
+			game: this.gameId,
+			minutes: event.data.minutes,
+			assists: event.data.assists,
+			rebounds: event.data.rebounds,
+			defensiveRebounds: event.data.defensiveRebounds,
+			offensiveRebounds: event.data.offensiveRebounds,
+			fieldGoalsMade: event.data.fieldGoalsMade,
+			fieldGoalsAttempted: event.data.fieldGoalsAttempted,
+			blocks: event.data.blocks,
+			steals: event.data.steals,
+			threesMade: event.data.threesMade,
+			threesAttempted: event.data.threesAttempted,
+			freeThrowsMade: event.data.freeThrowsMade,
+			freeThrowsAttempted: event.data.freeThrowsMade,
+			points: event.data.points,
+			turnovers: event.data.turnovers,
+			fouls: event.data.fouls,
+			plusOrMinus: event.data.plusOrMinus,
+			eff: event.data.eff,
+			syncState: event.data.syncState = SyncState.Modified,
+			technicalFouls: event.data.technicalFouls
 		}
-		return await this.saveStat(statToUpdate);
+		this.saveStat(updatedStat);
   }
 
 	public getAction(action:number) {
