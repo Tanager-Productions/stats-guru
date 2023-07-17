@@ -104,9 +104,9 @@ export class GamecastComponent {
 	assistDisplay: boolean = false;
 	stealDisplay: boolean = false;
 	socket?:WebSocket;
-	socketUrl:string;
+	socketUrl:string = this.api.serverUrl.replace("http", "ws");
 	sending: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-	actions = Object.entries(GameActions).reverse();
+	actions: {key:number, value:string}[] = Object.entries(GameActions).reverse().slice(0,15).map(t => { return { key:Number(t[1]), value:t[0] as string } });
 
 	//gameActionskey = Object.keys(GameActions);
 	public teamStats: ColDef[] = [
@@ -138,15 +138,11 @@ export class GamecastComponent {
 		private sql: SqlService,
 		private api:ApiService,
 		private auth: AuthService,
-		public toastCtrl: ToastController
-	) {
-		this.socketUrl = this.api.serverUrl.replace("http", "ws");
-		console.log(this.actions);
-	}
+		public toastCtrl: ToastController) {}
 
   ngOnInit() {
     this.route.params.subscribe((params: { [x: string]: string | number }) => {
-      this.gameId = params['gameId'] as number;
+      this.gameId = Number(params['gameId']);
 			this.fetchData()
 				.then(async () => {
 					let ticket = (await this.api.GenerateTicket()).data;
@@ -253,6 +249,10 @@ export class GamecastComponent {
 		}
 		return await this.saveStat(statToUpdate);
   }
+
+	public getAction(action:number) {
+		return this.actions.find(t => t.key == action)!.value;
+	}
 
 	private async fetchData() {
 		this.db = await this.sql.createConnection();
@@ -459,8 +459,13 @@ export class GamecastComponent {
 
 	public updatePlayerPlay($event:any, play:Play) {
 		console.log($event);
-		play.playerNumber = $event.detail.value.number;
-		play.playerName = `${$event.detail.value.firstName} ${$event.detail.value.lastName}`;
+		if ($event.detail.vale == null) {
+			play.playerNumber = null;
+			play.playerName = null;
+		} else {
+			play.playerNumber = $event.detail.value.number;
+			play.playerName = `${$event.detail.value.firstName} ${$event.detail.value.lastName}`;
+		}
 		this.updatePlay(play);
 	}
 
@@ -555,6 +560,7 @@ export class GamecastComponent {
 			action: action,
 			gameClock: this.currentGame!.clock
 		}
+		console.log(play);
 		await this.crud.save(this.db, 'Plays', play);
 		this.plays?.unshift(play);
 	}
