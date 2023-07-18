@@ -106,9 +106,6 @@ export class GamecastComponent {
 	assistHomeDisplay: boolean = false;
 	assistAwayDisplay: boolean = false;
 
-	socket?:WebSocket;
-	socketUrl:string = this.api.serverUrl.replace("http", "ws");
-	sending: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 	actions: {key:number, value:string}[] = Object.entries(GameActions).reverse().slice(0,15).map(t => { return { key:Number(t[1]), value:t[0] as string } });
 
 	//gameActionskey = Object.keys(GameActions);
