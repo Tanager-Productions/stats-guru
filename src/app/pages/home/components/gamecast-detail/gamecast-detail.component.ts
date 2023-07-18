@@ -10,7 +10,7 @@ import { SqlService } from 'src/app/services/sql/sql.service';
   styleUrls: ['./gamecast-detail.component.scss']
 })
 export class GamecastDetailComponent {
-	@Input() gameId!:number;
+	@Input() gameId!:string;
 	@Output() dismiss: EventEmitter<void> = new EventEmitter();
 	gamecastDetails!:GameCastSettings;
 	db!: SQLiteDBConnection;
@@ -19,7 +19,7 @@ export class GamecastDetailComponent {
 
 	async ngOnInit() {
 		this.db = await this.sql.createConnection();
-		this.gamecastDetails = (await this.crud.rawQuery(this.db, `select * from GameCastSettings where game = ${this.gameId}`))[0];
+		this.gamecastDetails = (await this.crud.rawQuery(this.db, `select * from GameCastSettings where game = '${this.gameId}'`))[0];
 	}
 
 	async save() {

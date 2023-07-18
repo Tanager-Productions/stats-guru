@@ -61,7 +61,7 @@ export class GamesComponent implements OnInit {
     this.router.navigateByUrl('/add-game');
   }
 
-  navigateToGamecast(gameId: number) {
+  navigateToGamecast(gameId: string) {
     this.router.navigateByUrl(`/gamecast/${gameId}`);
   }
 

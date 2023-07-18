@@ -1,5 +1,5 @@
 export interface Player {
-  playerId: number;
+  playerId: string;
   firstName: string;
   lastName: string;
   number: number;
@@ -17,7 +17,7 @@ export interface Player {
 }
 
 export interface ServerPlayer {
-	playerId: number;
+	playerId: string;
 	firstName: string;
 	lastName: string;
 	number: number;

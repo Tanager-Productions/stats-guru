@@ -1,6 +1,6 @@
 export interface Stat {
-  player: number;
-  game: number;
+  player: string;
+  game: string;
   minutes: number;
   assists: number;
   rebounds: number;
@@ -24,8 +24,8 @@ export interface Stat {
 }
 
 export interface ServerStat {
-  player: number;
-  game: number;
+  player: string;
+  game: string;
   minutes: number;
   assists: number;
   rebounds: number;

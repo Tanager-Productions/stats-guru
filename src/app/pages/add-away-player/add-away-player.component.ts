@@ -24,7 +24,7 @@ export class AddAwayPlayerComponent {
 
 		async addToTeam(team: 'home' | 'away') {
 			let newTeamPlayer: Player = {
-				playerId: 0,
+				playerId: crypto.randomUUID(),
 				firstName: this.newPlayerFirstName || "New",
 				lastName: this.newPlayerLastName || "Player",
 				number: Number(this.newPlayerNumber),
