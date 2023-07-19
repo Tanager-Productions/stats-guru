@@ -217,44 +217,36 @@
 													<ion-col size="12">
 														<ion-row style="justify-content: space-evenly;">
 															<div *ngIf="reboundHomeDisplay">
-																<ion-button color="primary" (click)="reboundHomeOffDeff = true; reboundHomeDisplay = false">Rebound</ion-button>
-																<ion-button color="primary" (click)="reboundHomeDisplay = false">No Rebound</ion-button>
+																<ion-button color="primary" (click)="reboundHomeOffDeff = true; reboundHomeDisplay = false">REB</ion-button>
+																<ion-button color="primary" (click)="reboundHomeDisplay = false">No REB</ion-button>
 															</div>
 															<div *ngIf="reboundHomeOffDeff">
-																<ion-button color="primary" (click)="addRebound('home', true); reboundHomeOffDeff = false">Offensive</ion-button>
-																<ion-button color="danger" (click)="addRebound('home', false); reboundHomeOffDeff = false">Defensive</ion-button>
+																<ion-button color="primary" (click)="addRebound('home', true); reboundHomeOffDeff = false">OR</ion-button>
+																<ion-button color="danger" (click)="addRebound('home', false); reboundHomeOffDeff = false">DR</ion-button>
 															</div>
 															<div *ngIf="reboundAwayDisplay">
-																<ion-button color="danger" (click)="reboundAwayOffDeff = true; reboundAwayDisplay = false">Rebound</ion-button>
-																<ion-button color="danger" (click)="reboundAwayDisplay = false">No Rebound</ion-button>
+																<ion-button color="danger" (click)="reboundAwayOffDeff = true; reboundAwayDisplay = false">REB</ion-button>
+																<ion-button color="danger" (click)="reboundAwayDisplay = false">No REB</ion-button>
 															</div>
 															<div *ngIf="reboundAwayOffDeff">
-																<ion-button color="danger" (click)="addRebound('away', true); reboundAwayOffDeff = false">Offensive</ion-button>
-																<ion-button color="primary" (click)="addRebound('away', false); reboundAwayOffDeff = false">Defensive</ion-button>
+																<ion-button color="danger" (click)="addRebound('away', true); reboundAwayOffDeff = false">OR</ion-button>
+																<ion-button color="primary" (click)="addRebound('away', false); reboundAwayOffDeff = false">DR</ion-button>
 															</div>
-														</ion-row>
-													</ion-col>
-													<ion-col size="12">
-														<ion-row style="justify-content: space-evenly;">
 															<div *ngIf="assistHomeDisplay">
-																<ion-button color="primary" (click)="addAssist('home'); assistHomeDisplay = false">Assist</ion-button>
-																<ion-button color="primary" (click)="assistHomeDisplay = false">No Assist</ion-button>
+																<ion-button color="primary" (click)="addAssist('home'); assistHomeDisplay = false">Ast</ion-button>
+																<ion-button color="primary" (click)="assistHomeDisplay = false">No Ast</ion-button>
 															</div>
 															<div *ngIf="assistAwayDisplay">
-																<ion-button color="danger" (click)="addAssist('away'); assistAwayDisplay = false">Assist</ion-button>
-																<ion-button color="danger" (click)="assistHomeDisplay = false">No Assist</ion-button>
+																<ion-button color="danger" (click)="addAssist('away'); assistAwayDisplay = false">Ast</ion-button>
+																<ion-button color="danger" (click)="assistHomeDisplay = false">No Ast</ion-button>
 															</div>
-														</ion-row>
-													</ion-col>
-													<ion-col size="12">
-														<ion-row style="justify-content: space-evenly;">
 															<div *ngIf="stealHomeDisplay">
-																<ion-button color="primary" (click)="addTurnover('home'); stealHomeDisplay = false">Turnover</ion-button>
-																<ion-button color="primary" (click)="stealHomeDisplay = false">No Turnover</ion-button>
+																<ion-button color="primary" (click)="addTurnover('home'); stealHomeDisplay = false">TO</ion-button>
+																<ion-button color="primary" (click)="stealHomeDisplay = false">No TO</ion-button>
 															</div>
 															<div *ngIf="stealAwayDisplay">
-																<ion-button color="danger" (click)="addTurnover('away'); stealAwayDisplay = false">Turnover</ion-button>
-																<ion-button color="danger" (click)="stealAwayDisplay = false">No Turnover</ion-button>
+																<ion-button color="danger" (click)="addTurnover('away'); stealAwayDisplay = false">TO</ion-button>
+																<ion-button color="danger" (click)="stealAwayDisplay = false">No TO</ion-button>
 															</div>
 														</ion-row>
 													</ion-col>
@@ -521,7 +513,7 @@
 								</ion-row>
 							</ion-grid>
 							<ion-button slot="end" fill="clear">
-								<ion-icon slot="icon-only" name="trash"></ion-icon>
+								<ion-icon color="medium" slot="icon-only" name="trash"></ion-icon>
 							</ion-button>
 						</ion-item>
 					</ng-container>

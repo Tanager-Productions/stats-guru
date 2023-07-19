@@ -35,7 +35,9 @@ export enum GameActions {
 	FreeThrowMissed = 60,
 	FreeThrowMade = 65,
 	FullTO = 70,
-	PartialTO = 75
+	PartialTO = 75,
+	Passback = 80,
+	FailedPassback = 85
 }
 
 type StatsRow =  {
@@ -726,7 +728,28 @@ export class GamecastComponent {
 	}
 
 	addPassback(team: 'home' | 'away', made: boolean) {
-
+		if (team == 'away') {
+			if (this.awayPlayerSelected != -1) {
+				let player = this.awayPlayersOnCourt[this.awayPlayerSelected];
+				if (made) {
+					this.addPlay(team, GameActions.Passback, player);
+				}
+				else {
+					this.addPlay(team, GameActions.FailedPassback, player);
+				}
+			}
+		}
+		else {
+			if (this.homePlayerSelected != -1) {
+				let player = this.homePlayersOnCourt[this.homePlayerSelected];
+				if (made) {
+					this.addPlay(team, GameActions.Passback, player);
+				}
+				else {
+					this.addPlay(team, GameActions.FailedPassback, player);
+				}
+			}
+		}
 	}
 
 	async addRebound(team: 'home' | 'away', offensive: boolean) {
