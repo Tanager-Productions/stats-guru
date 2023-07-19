@@ -25,4 +25,9 @@ export class GamecastDetailComponent {
 	async save() {
 		await this.crud.save(this.db, 'GameCastSettings', this.gamecastDetails, {"id": `${this.gamecastDetails.id}`});
 	}
+
+	setCheckbox($event:any) {
+		let val:boolean = $event.detail.checked;
+		this.gamecastDetails.resetTimeoutsEveryPeriod = val ? '1' : '0';
+	}
 }

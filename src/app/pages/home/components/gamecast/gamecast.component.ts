@@ -79,8 +79,7 @@ export class GamecastComponent {
 	homeTeamFouls: number = 0;
 	awayTeamFouls: number = 0;
   timerSubscription?: Subscription;
-  timerDuration: number = 8 * 60;
-  timeLeft: number = this.timerDuration;
+  timerDuration!: number;
   timerRunning: boolean = false;
 	newPlayerNumber: string = '';
 	homePlayerSelected: number = -1;
@@ -104,6 +103,11 @@ export class GamecastComponent {
 	reboundDisplay: boolean = false;
 	stealDisplay: boolean = false;
 	assistDisplay: boolean = false;
+	foulDisplay: boolean = false;
+
+	//plusOrMinus
+	homeTeamPlusOrMinus = 0;
+	awayTeamPlusOrMinus = 0;
 
 	public teamStats: ColDef[] = [
 		{field: 'number', headerName: 'NUM', pinned: true, editable: false},
@@ -251,13 +255,13 @@ export class GamecastComponent {
 				game: this.gameId,
 				homePlayersOnCourt: null,
 				awayPlayersOnCourt: null,
-				resetTimeoutsEveryPeriod: "true",
-				homePartialTOL: null,
-				awayPartialTOL: null,
-				homeFullTOL: null,
-				awayFullTOL: null,
-				homeCurrentFouls: null,
-				awayCurrentFouls: null
+				resetTimeoutsEveryPeriod: "1",
+				homePartialTOL: 0,
+				awayPartialTOL: 0,
+				homeFullTOL: 2,
+				awayFullTOL: 2,
+				homeCurrentFouls: 0,
+				awayCurrentFouls: 0
 			}
 			await this.crud.save(this.db, 'GameCastSettings', gameCastSetting);
 			this.gameCastSettings = (await this.crud.rawQuery(this.db, `SELECT * FROM GameCastSettings WHERE game = '${this.gameId}'`))[0];
@@ -433,6 +437,19 @@ export class GamecastComponent {
 		}
 	}
 
+	async addTechnical() {
+		if (this.homePlayerSelected == -1) {
+			let stat = await this.getStat(this.awayPlayersOnCourt[this.awayPlayerSelected].playerId);
+			stat.technicalFouls = stat.technicalFouls == null ? 1 : stat.technicalFouls+1;
+			this.saveStat(stat);
+		} else {
+			let stat = await this.getStat(this.homePlayersOnCourt[this.homePlayerSelected].playerId);
+			stat.technicalFouls = stat.technicalFouls == null ? 1 : stat.technicalFouls+1;
+			this.saveStat(stat);
+		}
+		this.foulDisplay = false;
+	}
+
   removeFromCourt (team: 'home' | 'away', player: Player, index:number) {
 		if (team == 'away') {
 			if (this.awayPlayerSelected == index) {
@@ -552,8 +569,8 @@ export class GamecastComponent {
 			action: action,
 			gameClock: this.currentGame!.clock
 		}
-		this.plays?.unshift(play);
 		await this.crud.save(this.db, 'Plays', play);
+		this.plays?.unshift(play);
 	}
 
   async addPoints(team: 'home' | 'away', points: number, missed: boolean = false) {
@@ -641,59 +658,62 @@ export class GamecastComponent {
   async addFoul(team: 'home' | 'away') {
 		if (team == 'away') {
 			if (this.awayPlayerSelected != -1) {
-				this.stopTimer();
+				await this.stopTimer();
 				let player = this.awayPlayersOnCourt[this.awayPlayerSelected];
 				let stat = await this.getStat(player.playerId);
 				stat.fouls++;
 				await this.saveStat(stat);
-				if (this.currentGame!.awayCurrentFouls == null) {
-					this.currentGame!.awayCurrentFouls = 1;
+				if (this.gameCastSettings!.awayCurrentFouls == null) {
+					this.gameCastSettings!.awayCurrentFouls = 1;
 				} else {
-					this.currentGame!.awayCurrentFouls++;
+					this.gameCastSettings!.awayCurrentFouls++;
 				}
-				this.updateGame();
+				await this.updateGameCastSetting();
 				this.addPlay(team, GameActions.Foul, player);
 			}
 		} else {
 			if (this.homePlayerSelected != -1) {
-				this.stopTimer();
+				await this.stopTimer();
 				let player = this.homePlayersOnCourt[this.homePlayerSelected];
 				let stat = await this.getStat(player.playerId);
 				stat.fouls++;
 				await this.saveStat(stat);
-				if (this.currentGame!.awayCurrentFouls == null) {
-					this.currentGame!.awayCurrentFouls = 1;
+				if (this.gameCastSettings!.homeCurrentFouls == null) {
+					this.gameCastSettings!.homeCurrentFouls = 1;
 				} else {
-					this.currentGame!.awayCurrentFouls++;
+					this.gameCastSettings!.homeCurrentFouls++;
 				}
-				this.updateGame();
-				this.addPlay(team, GameActions.Foul, player);
+				await this.updateGameCastSetting();
+				await this.addPlay(team, GameActions.Foul, player);
 			}
 		}
+		this.foulDisplay = true;
   }
 
-  addTimeout(team: 'home' | 'away', partial: boolean) {
-		this.stopTimer();
+  async addTimeout(team: 'home' | 'away', partial: boolean) {
+		await this.stopTimer();
 		if (team == 'away') {
 			if (this.currentGame!.awayTeamTOL > 0) {
 				this.currentGame!.awayTeamTOL--;
 			}
-			if (partial && this.currentGame!.awayPartialTOL != null && this.currentGame!.awayPartialTOL > 0) {
-				this.currentGame!.awayPartialTOL--;
-			} else if (!partial && this.currentGame!.awayFullTOL != null && this.currentGame!.awayFullTOL > 0) {
-				this.currentGame!.awayFullTOL--;
+			if (partial && this.gameCastSettings!.awayPartialTOL != null && this.gameCastSettings!.awayPartialTOL > 0) {
+				this.gameCastSettings!.awayPartialTOL--;
+			} else if (!partial && this.gameCastSettings!.awayFullTOL != null && this.gameCastSettings!.awayFullTOL > 0) {
+				this.gameCastSettings!.awayFullTOL--;
 			}
-			this.updateGame();
+			await this.updateGame();
+			await this.updateGameCastSetting();
 		} else {
 			if (this.currentGame!.homeTeamTOL > 0) {
 				this.currentGame!.homeTeamTOL--;
 			}
-			if (partial && this.currentGame!.homePartialTOL != null && this.currentGame!.homePartialTOL > 0) {
-				this.currentGame!.homePartialTOL--;
-			} else if (!partial && this.currentGame!.homeFullTOL != null && this.currentGame!.homeFullTOL > 0) {
-				this.currentGame!.homeFullTOL--;
+			if (partial && this.gameCastSettings!.homePartialTOL != null && this.gameCastSettings!.homePartialTOL > 0) {
+				this.gameCastSettings!.homePartialTOL--;
+			} else if (!partial && this.gameCastSettings!.homeFullTOL != null && this.gameCastSettings!.homeFullTOL > 0) {
+				this.gameCastSettings!.homeFullTOL--;
 			}
-			this.updateGame();
+			await this.updateGame();
+			await this.updateGameCastSetting();
 		}
   }
 
@@ -738,8 +758,10 @@ export class GamecastComponent {
 		}
 	}
 
-	addPassback(team: 'home' | 'away', made: boolean) {
-
+	async addPassback(team: 'home' | 'away', made: boolean) {
+		await this.addPoints(team, 2, true);
+		await this.addRebound(team, true);
+		await this.addPoints(team, 2, !made);
 	}
 
 	async addRebound(team: 'home' | 'away', offensive: boolean) {
@@ -847,10 +869,23 @@ export class GamecastComponent {
   }
 
   startTimer() {
+		this.homeTeamPlusOrMinus = this.currentGame!.homeFinal;
+		this.awayTeamPlusOrMinus = this.currentGame!.awayFinal;
+		if (this.currentGame!.clock == "00:00") {
+			if (this.currentGame!.period < this.gameCastSettings!.periodsPerGame!)
+				this.timerDuration = this.gameCastSettings!.minutesPerPeriod! * 60;
+			else
+				this.timerDuration = this.gameCastSettings!.minutesPerOvertime! * 60;
+			this.currentGame!.period++;
+			this.resetTOs();
+		} else {
+			let times = this.currentGame!.clock.split(':');
+			this.timerDuration = Number(times[0].startsWith('0') ? times[0].charAt(1) : times[0]) * 60 + Number(times[1].startsWith('0') ? times[1].charAt(1) : times[1]);
+		}
     this.timerRunning = true;
     this.timerSubscription = interval(1000).subscribe(() => {
-      if (this.timeLeft > 0) {
-        this.timeLeft--;
+      if (this.timerDuration > 0) {
+        this.timerDuration--;
         this.updateTimerDisplay();
       } else {
         this.stopTimer();
@@ -858,17 +893,45 @@ export class GamecastComponent {
     });
   }
 
-  stopTimer() {
+	resetTOs() {
+		if (this.gameCastSettings!.resetTimeoutsEveryPeriod == "1") {
+			this.gameCastSettings!.homeFullTOL = this.gameCastSettings!.fullTimeouts;
+			this.gameCastSettings!.awayFullTOL = this.gameCastSettings!.fullTimeouts;
+			this.gameCastSettings!.homePartialTOL = this.gameCastSettings!.partialTimeouts;
+			this.gameCastSettings!.awayPartialTOL = this.gameCastSettings!.partialTimeouts;
+			this.updateGameCastSetting();
+		}
+	}
+
+  async stopTimer() {
     this.timerRunning = false;
     if (this.timerSubscription) {
       this.timerSubscription.unsubscribe();
     }
+		if (this.homeTeamPlusOrMinus != 0 || this.awayTeamPlusOrMinus != 0) {
+			let homePlusOrMinusToAdd = (this.currentGame!.homeFinal - this.homeTeamPlusOrMinus) - (this.currentGame!.awayFinal - this.awayTeamPlusOrMinus);
+			let awayPlusOrMinusToAdd = (this.currentGame!.awayFinal - this.awayTeamPlusOrMinus) - (this.currentGame!.homeFinal - this.homeTeamPlusOrMinus);
+			let homePlayers = this.homePlayersOnCourt.slice(0);
+			let awayPlayers = this.awayPlayersOnCourt.slice(0);
+			for (let item of homePlayers) {
+				let stat = await this.getStat(item.playerId);
+				stat.plusOrMinus += homePlusOrMinusToAdd;
+				await this.saveStat(stat);
+			}
+			for (let item of awayPlayers) {
+				let stat = await this.getStat(item.playerId);
+				stat.plusOrMinus += awayPlusOrMinusToAdd;
+				await this.saveStat(stat);
+			}
+			this.homeTeamPlusOrMinus = 0;
+			this.awayTeamPlusOrMinus = 0;
+		}
   }
 
   updateTimerDisplay() {
-    const minutes = Math.floor(this.timeLeft / 60);
-    const seconds = this.timeLeft % 60;
-    this.currentGame!.clock = `${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+    const minutes = Math.floor(this.timerDuration / 60);
+    const seconds = this.timerDuration % 60;
+    this.currentGame!.clock = `${minutes < 10 ? '0' + minutes : minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
   }
 
   ngOnDestroy() {

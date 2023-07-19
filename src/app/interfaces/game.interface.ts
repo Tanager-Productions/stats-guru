@@ -25,12 +25,6 @@ export interface Game {
   gameLink: string | null;
   eventId: number | null;
   syncState: number;
-	homePartialTOL: number | null;
-	awayPartialTOL: number | null;
-	homeFullTOL: number | null;
-	awayFullTOL: number | null;
-	homeCurrentFouls: number | null;
-	awayCurrentFouls: number | null;
 }
 
 export interface ServerGame {
