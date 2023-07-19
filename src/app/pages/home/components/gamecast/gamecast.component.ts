@@ -76,6 +76,7 @@ export class GamecastComponent {
 	awayPlayersOnCourt: Player[] = [];
 	stats?: Stat[];
 	plays?: Play[];
+	prevPlays?: Play[];
 	homeTeamFouls: number = 0;
 	awayTeamFouls: number = 0;
   timerSubscription?: Subscription;
@@ -232,6 +233,16 @@ export class GamecastComponent {
 		this.saveStat(updatedStat);
   }
 
+	async setPrevPlays() {
+		this.prevPlays = await this.crud.rawQuery(this.db, `
+			SELECT 		*
+			FROM 			Plays
+			WHERE 		gameId = '${this.gameId}'
+			AND				syncState != 3
+			ORDER BY	playId DESC
+		`);
+	}
+
 	async addPlayer(player:Player) {
 		if (this.addHomePlayer) {
 			this.homeTeamPlayers!.push(player);
@@ -296,6 +307,7 @@ export class GamecastComponent {
 			SELECT 		*
 			FROM 			Plays
 			WHERE 		gameId = '${this.gameId}'
+			AND				syncState != 3
 			ORDER BY	playId DESC
 		`);
 		if (this.gameCastSettings!.homePlayersOnCourt != null) {
@@ -569,7 +581,13 @@ export class GamecastComponent {
 			action: action,
 			gameClock: this.currentGame!.clock
 		}
-		await this.crud.save(this.db, 'Plays', play);
+		let existingPlay = (await this.crud.query(this.db, 'Plays', {"playId": `${play.playId}`}));
+		if (existingPlay.length == 1) {
+			play.syncState = SyncState.Modified;
+			await this.crud.save(this.db, 'Plays', play, {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`});
+		} else {
+			await this.crud.save(this.db, 'Plays', play);
+		}
 		this.plays?.unshift(play);
 	}
 
@@ -847,9 +865,403 @@ export class GamecastComponent {
 	  await this.crud.save(this.db, 'GameCastSettings', this.gameCastSettings!, { "game": `'${this.gameId}'` });
 	}
 
-	public async updatePlay(play: Play) {
-		play.syncState = SyncState.Modified;
+	public async removeLastPlay() {
+		let play = this.plays![0];
+		await this.undoAction(play);
+		play.syncState = SyncState.Deleted;
 		await this.crud.save(this.db, 'Plays', play, { "playId": `${play.playId}`,"gameId": `'${this.gameId}'` });
+		this.plays = this.plays!.filter(t => t.syncState != SyncState.Deleted);
+	}
+
+	public async undoAction(play:Play) {
+		if (play.action == GameActions.Assist) {
+			let stat = await this.getStat(this.getPlayer(play)!.playerId);
+			stat.assists--;
+			await this.saveStat(stat);
+		} else if (play.action == GameActions.Block) {
+			let stat = await this.getStat(this.getPlayer(play)!.playerId);
+			stat.blocks--;
+			await this.saveStat(stat);
+		} else if (play.action == GameActions.DefRebound) {
+			let stat = await this.getStat(this.getPlayer(play)!.playerId);
+			stat.defensiveRebounds--;
+			await this.saveStat(stat);
+		} else if (play.action == GameActions.Foul) {
+			let player = this.getPlayer(play)!;
+			let stat = await this.getStat(player.playerId);
+			stat.fouls--;
+			await this.saveStat(stat);
+			if (player.team == this.currentGame!.homeTeam) {
+				this.gameCastSettings!.homeCurrentFouls!--;
+				await this.updateGameCastSetting();
+			} else {
+				this.gameCastSettings!.awayCurrentFouls!--;
+				await this.updateGameCastSetting();
+			}
+		} else if (play.action == GameActions.FreeThrowMade) {
+			let player = this.getPlayer(play)!;
+			let stat = await this.getStat(player.playerId);
+			stat.freeThrowsMade--;
+			stat.freeThrowsAttempted--;
+			await this.saveStat(stat);
+			if (player.team == this.currentGame!.homeTeam) {
+				if (play.period == 1) {
+					this.currentGame!.homePointsQ1--;
+				} else if (play.period == 2) {
+					this.currentGame!.homePointsQ2--;
+				} else if (play.period == 3 && this.gameCastSettings!.periodsPerGame == 2) {
+					this.currentGame!.homePointsOT--;
+				} else if (play.period == 3 && this.gameCastSettings!.periodsPerGame == 4) {
+					this.currentGame!.homePointsQ3--;
+				} else if (play.period == 4) {
+					this.currentGame!.homePointsQ4--;
+				} else if (play.period == 5) {
+					this.currentGame!.homePointsOT--;
+				}
+				this.currentGame!.homeFinal--;
+			} else {
+				if (play.period == 1) {
+					this.currentGame!.awayPointsQ1--;
+				} else if (play.period == 2) {
+					this.currentGame!.awayPointsQ2--;
+				} else if (play.period == 3 && this.gameCastSettings!.periodsPerGame == 2) {
+					this.currentGame!.awayPointsOT--;
+				} else if (play.period == 3 && this.gameCastSettings!.periodsPerGame == 4) {
+					this.currentGame!.awayPointsQ3--;
+				} else if (play.period == 4) {
+					this.currentGame!.awayPointsQ4--;
+				} else if (play.period == 5) {
+					this.currentGame!.awayPointsOT--;
+				}
+				this.currentGame!.awayFinal--;
+			}
+			await this.updateGame();
+		} else if (play.action == GameActions.FreeThrowMissed) {
+			let stat = await this.getStat(this.getPlayer(play)!.playerId);
+			stat.freeThrowsAttempted--;
+			await this.saveStat(stat);
+		} else if (play.action == GameActions.FullTO) {
+			if (play.teamName == this.currentGame!.homeTeam) {
+				this.currentGame!.homeTeamTOL++;
+				this.gameCastSettings!.homeFullTOL!++;
+			} else {
+				this.currentGame!.awayTeamTOL++;
+				this.gameCastSettings!.awayFullTOL!++;
+			}
+			await this.updateGame();
+			await this.updateGameCastSetting();
+		} else if (play.action == GameActions.OffRebound) {
+			let stat = await this.getStat(this.getPlayer(play)!.playerId);
+			stat.offensiveRebounds--;
+			await this.saveStat(stat);
+		} else if (play.action == GameActions.PartialTO) {
+			if (play.teamName == this.currentGame!.homeTeam) {
+				this.currentGame!.homeTeamTOL++;
+				this.gameCastSettings!.homePartialTOL!++;
+			} else {
+				this.currentGame!.awayTeamTOL++;
+				this.gameCastSettings!.awayPartialTOL!++;
+			}
+			await this.updateGame();
+			await this.updateGameCastSetting();
+		} else if (play.action == GameActions.ShotMade) {
+			let player = this.getPlayer(play)!;
+			let stat = await this.getStat(player.playerId);
+			stat.fieldGoalsMade--;
+			stat.fieldGoalsAttempted--;
+			await this.saveStat(stat);
+			if (player.team == this.currentGame!.homeTeam) {
+				if (play.period == 1) {
+					this.currentGame!.homePointsQ1 -= 2;
+				} else if (play.period == 2) {
+					this.currentGame!.homePointsQ2 -= 2;
+				} else if (play.period == 3 && this.gameCastSettings!.periodsPerGame == 2) {
+					this.currentGame!.homePointsOT -= 2;
+				} else if (play.period == 3 && this.gameCastSettings!.periodsPerGame == 4) {
+					this.currentGame!.homePointsQ3 -= 2;
+				} else if (play.period == 4) {
+					this.currentGame!.homePointsQ4 -= 2;
+				} else if (play.period == 5) {
+					this.currentGame!.homePointsOT -= 2;
+				}
+				this.currentGame!.homeFinal -= 2;
+			} else {
+				if (play.period == 1) {
+					this.currentGame!.awayPointsQ1 -= 2;
+				} else if (play.period == 2) {
+					this.currentGame!.awayPointsQ2 -= 2;
+				} else if (play.period == 3 && this.gameCastSettings!.periodsPerGame == 2) {
+					this.currentGame!.awayPointsOT -= 2;
+				} else if (play.period == 3 && this.gameCastSettings!.periodsPerGame == 4) {
+					this.currentGame!.awayPointsQ3 -= 2;
+				} else if (play.period == 4) {
+					this.currentGame!.awayPointsQ4 -= 2;
+				} else if (play.period == 5) {
+					this.currentGame!.awayPointsOT -= 2;
+				}
+				this.currentGame!.awayFinal -= 2;
+			}
+			await this.updateGame();
+		} else if (play.action == GameActions.ShotMissed) {
+			let stat = await this.getStat(this.getPlayer(play)!.playerId);
+			stat.fieldGoalsAttempted--;
+			await this.saveStat(stat);
+		} else if (play.action == GameActions.Steal) {
+			let stat = await this.getStat(this.getPlayer(play)!.playerId);
+			stat.steals--;
+			await this.saveStat(stat);
+		} else if (play.action == GameActions.ThreeMade) {
+			let player = this.getPlayer(play)!;
+			let stat = await this.getStat(player.playerId);
+			stat.threesMade--;
+			stat.threesAttempted--;
+			await this.saveStat(stat);
+			if (player.team == this.currentGame!.homeTeam) {
+				if (play.period == 1) {
+					this.currentGame!.homePointsQ1 -= 3;
+				} else if (play.period == 2) {
+					this.currentGame!.homePointsQ2 -= 3;
+				} else if (play.period == 3 && this.gameCastSettings!.periodsPerGame == 2) {
+					this.currentGame!.homePointsOT -= 3;
+				} else if (play.period == 3 && this.gameCastSettings!.periodsPerGame == 4) {
+					this.currentGame!.homePointsQ3 -= 3;
+				} else if (play.period == 4) {
+					this.currentGame!.homePointsQ4 -= 3;
+				} else if (play.period == 5) {
+					this.currentGame!.homePointsOT -= 3;
+				}
+				this.currentGame!.homeFinal -= 3;
+			} else {
+				if (play.period == 1) {
+					this.currentGame!.awayPointsQ1 -= 3;
+				} else if (play.period == 2) {
+					this.currentGame!.awayPointsQ2 -= 3;
+				} else if (play.period == 3 && this.gameCastSettings!.periodsPerGame == 2) {
+					this.currentGame!.awayPointsOT -= 3;
+				} else if (play.period == 3 && this.gameCastSettings!.periodsPerGame == 4) {
+					this.currentGame!.awayPointsQ3 -= 3;
+				} else if (play.period == 4) {
+					this.currentGame!.awayPointsQ4 -= 3;
+				} else if (play.period == 5) {
+					this.currentGame!.awayPointsOT -= 3;
+				}
+				this.currentGame!.awayFinal -= 3;
+			}
+			await this.updateGame();
+		} else if (play.action == GameActions.ThreeMissed) {
+			let stat = await this.getStat(this.getPlayer(play)!.playerId);
+			stat.threesAttempted--;
+			await this.saveStat(stat);
+		} else if (play.action == GameActions.Turnover) {
+			let stat = await this.getStat(this.getPlayer(play)!.playerId);
+			stat.turnovers--;
+			await this.saveStat(stat);
+		}
+	}
+
+	public async redoAction(play:Play) {
+		if (play.action == GameActions.Assist) {
+			let stat = await this.getStat(this.getPlayer(play)!.playerId);
+			stat.assists++;
+			await this.saveStat(stat);
+		} else if (play.action == GameActions.Block) {
+			let stat = await this.getStat(this.getPlayer(play)!.playerId);
+			stat.blocks++;
+			await this.saveStat(stat);
+		} else if (play.action == GameActions.DefRebound) {
+			let stat = await this.getStat(this.getPlayer(play)!.playerId);
+			stat.defensiveRebounds++;
+			await this.saveStat(stat);
+		} else if (play.action == GameActions.Foul) {
+			let player = this.getPlayer(play)!;
+			let stat = await this.getStat(player.playerId);
+			stat.fouls++;
+			await this.saveStat(stat);
+			if (player.team == this.currentGame!.homeTeam) {
+				this.gameCastSettings!.homeCurrentFouls!++;
+				await this.updateGameCastSetting();
+			} else {
+				this.gameCastSettings!.awayCurrentFouls!++;
+				await this.updateGameCastSetting();
+			}
+		} else if (play.action == GameActions.FreeThrowMade) {
+			let player = this.getPlayer(play)!;
+			let stat = await this.getStat(player.playerId);
+			stat.freeThrowsMade++;
+			stat.freeThrowsAttempted++;
+			await this.saveStat(stat);
+			if (player.team == this.currentGame!.homeTeam) {
+				if (play.period == 1) {
+					this.currentGame!.homePointsQ1++;
+				} else if (play.period == 2) {
+					this.currentGame!.homePointsQ2++;
+				} else if (play.period == 3 && this.gameCastSettings!.periodsPerGame == 2) {
+					this.currentGame!.homePointsOT++;
+				} else if (play.period == 3 && this.gameCastSettings!.periodsPerGame == 4) {
+					this.currentGame!.homePointsQ3++;
+				} else if (play.period == 4) {
+					this.currentGame!.homePointsQ4++;
+				} else if (play.period == 5) {
+					this.currentGame!.homePointsOT++;
+				}
+				this.currentGame!.homeFinal++;
+			} else {
+				if (play.period == 1) {
+					this.currentGame!.awayPointsQ1++;
+				} else if (play.period == 2) {
+					this.currentGame!.awayPointsQ2++;
+				} else if (play.period == 3 && this.gameCastSettings!.periodsPerGame == 2) {
+					this.currentGame!.awayPointsOT++;
+				} else if (play.period == 3 && this.gameCastSettings!.periodsPerGame == 4) {
+					this.currentGame!.awayPointsQ3++;
+				} else if (play.period == 4) {
+					this.currentGame!.awayPointsQ4++;
+				} else if (play.period == 5) {
+					this.currentGame!.awayPointsOT++;
+				}
+				this.currentGame!.awayFinal++;
+			}
+			await this.updateGame();
+		} else if (play.action == GameActions.FreeThrowMissed) {
+			let stat = await this.getStat(this.getPlayer(play)!.playerId);
+			stat.freeThrowsAttempted++;
+			await this.saveStat(stat);
+		} else if (play.action == GameActions.FullTO) {
+			if (play.teamName == this.currentGame!.homeTeam) {
+				this.currentGame!.homeTeamTOL--;
+				this.gameCastSettings!.homeFullTOL!--;
+			} else {
+				this.currentGame!.awayTeamTOL--;
+				this.gameCastSettings!.awayFullTOL!--;
+			}
+			await this.updateGame();
+			await this.updateGameCastSetting();
+		} else if (play.action == GameActions.OffRebound) {
+			let stat = await this.getStat(this.getPlayer(play)!.playerId);
+			stat.offensiveRebounds++;
+			await this.saveStat(stat);
+		} else if (play.action == GameActions.PartialTO) {
+			if (play.teamName == this.currentGame!.homeTeam) {
+				this.currentGame!.homeTeamTOL--;
+				this.gameCastSettings!.homePartialTOL!--;
+			} else {
+				this.currentGame!.awayTeamTOL--;
+				this.gameCastSettings!.awayPartialTOL!--;
+			}
+			await this.updateGame();
+			await this.updateGameCastSetting();
+		} else if (play.action == GameActions.ShotMade) {
+			let player = this.getPlayer(play)!;
+			let stat = await this.getStat(player.playerId);
+			stat.fieldGoalsMade++;
+			stat.fieldGoalsAttempted++;
+			await this.saveStat(stat);
+			if (player.team == this.currentGame!.homeTeam) {
+				if (play.period == 1) {
+					this.currentGame!.homePointsQ1 += 2;
+				} else if (play.period == 2) {
+					this.currentGame!.homePointsQ2 += 2;
+				} else if (play.period == 3 && this.gameCastSettings!.periodsPerGame == 2) {
+					this.currentGame!.homePointsOT += 2;
+				} else if (play.period == 3 && this.gameCastSettings!.periodsPerGame == 4) {
+					this.currentGame!.homePointsQ3 += 2;
+				} else if (play.period == 4) {
+					this.currentGame!.homePointsQ4 += 2;
+				} else if (play.period == 5) {
+					this.currentGame!.homePointsOT += 2;
+				}
+				this.currentGame!.homeFinal += 2;
+			} else {
+				if (play.period == 1) {
+					this.currentGame!.awayPointsQ1 += 2;
+				} else if (play.period == 2) {
+					this.currentGame!.awayPointsQ2 += 2;
+				} else if (play.period == 3 && this.gameCastSettings!.periodsPerGame == 2) {
+					this.currentGame!.awayPointsOT += 2;
+				} else if (play.period == 3 && this.gameCastSettings!.periodsPerGame == 4) {
+					this.currentGame!.awayPointsQ3 += 2;
+				} else if (play.period == 4) {
+					this.currentGame!.awayPointsQ4 += 2;
+				} else if (play.period == 5) {
+					this.currentGame!.awayPointsOT += 2;
+				}
+				this.currentGame!.awayFinal += 2;
+			}
+			await this.updateGame();
+		} else if (play.action == GameActions.ShotMissed) {
+			let stat = await this.getStat(this.getPlayer(play)!.playerId);
+			stat.fieldGoalsAttempted++;
+			await this.saveStat(stat);
+		} else if (play.action == GameActions.Steal) {
+			let stat = await this.getStat(this.getPlayer(play)!.playerId);
+			stat.steals++;
+			await this.saveStat(stat);
+		} else if (play.action == GameActions.ThreeMade) {
+			let player = this.getPlayer(play)!;
+			let stat = await this.getStat(player.playerId);
+			stat.threesMade++;
+			stat.threesAttempted++;
+			await this.saveStat(stat);
+			if (player.team == this.currentGame!.homeTeam) {
+				if (play.period == 1) {
+					this.currentGame!.homePointsQ1 += 3;
+				} else if (play.period == 2) {
+					this.currentGame!.homePointsQ2 += 3;
+				} else if (play.period == 3 && this.gameCastSettings!.periodsPerGame == 2) {
+					this.currentGame!.homePointsOT += 3;
+				} else if (play.period == 3 && this.gameCastSettings!.periodsPerGame == 4) {
+					this.currentGame!.homePointsQ3 += 3;
+				} else if (play.period == 4) {
+					this.currentGame!.homePointsQ4 += 3;
+				} else if (play.period == 5) {
+					this.currentGame!.homePointsOT += 3;
+				}
+				this.currentGame!.homeFinal += 3;
+			} else {
+				if (play.period == 1) {
+					this.currentGame!.awayPointsQ1 += 3;
+				} else if (play.period == 2) {
+					this.currentGame!.awayPointsQ2 += 3;
+				} else if (play.period == 3 && this.gameCastSettings!.periodsPerGame == 2) {
+					this.currentGame!.awayPointsOT += 3;
+				} else if (play.period == 3 && this.gameCastSettings!.periodsPerGame == 4) {
+					this.currentGame!.awayPointsQ3 += 3;
+				} else if (play.period == 4) {
+					this.currentGame!.awayPointsQ4 += 3;
+				} else if (play.period == 5) {
+					this.currentGame!.awayPointsOT += 3;
+				}
+				this.currentGame!.awayFinal += 3;
+			}
+			await this.updateGame();
+		} else if (play.action == GameActions.ThreeMissed) {
+			let stat = await this.getStat(this.getPlayer(play)!.playerId);
+			stat.threesAttempted++;
+			await this.saveStat(stat);
+		} else if (play.action == GameActions.Turnover) {
+			let stat = await this.getStat(this.getPlayer(play)!.playerId);
+			stat.turnovers++;
+			await this.saveStat(stat);
+		}
+	}
+
+	public async updatePlay(play: Play) {
+		let prevPlay = this.prevPlays!.find(t => t.playId == play.playId)!;
+		if (prevPlay.teamName != play.teamName && play.playerName != null) {
+			if (play.teamName == this.currentGame!.homeTeam) {
+				play.playerName = this.homeTeamPlayers![0].firstName + ' ' + this.homeTeamPlayers![0].lastName;
+				play.playerNumber = this.homeTeamPlayers![0].number;
+			} else {
+				play.playerName = this.awayTeamPlayers![0].firstName + ' ' + this.awayTeamPlayers![0].lastName;
+				play.playerNumber = this.awayTeamPlayers![0].number;
+			}
+		}
+		await this.undoAction(prevPlay);
+		await this.redoAction(play);
+		play.syncState = SyncState.Modified;
+		play.score = `${this.currentGame!.homeFinal} - ${this.currentGame!.awayFinal}`;
+		await this.crud.save(this.db, 'Plays', play, { "playId": `${play.playId}`,"gameId": `'${this.gameId}'` });
+		await this.setPrevPlays();
 	}
 
 	public getPlayer(play:Play) {

@@ -5,7 +5,7 @@
       <ion-breadcrumb>Gamecast: {{ currentGame.homeTeam }} VS {{currentGame.awayTeam}} ({{currentGame.isMale! == '1' ? 'Mens' : 'Womens'}})</ion-breadcrumb>
     </ion-breadcrumbs>
 	<ion-buttons slot="end">
-		<ion-button>
+		<ion-button (click)="removeLastPlay()">
 			<ion-icon slot="icon-only" name="arrow-undo"></ion-icon>
 		</ion-button>
 		<ion-button id="liveStatsModal">
@@ -394,7 +394,7 @@
 			<app-gamecast-detail [gameId]="gameId"></app-gamecast-detail>
 		</ng-template>
 	</ion-popover>
-	<ion-modal [backdropDismiss]="false" #playsModal trigger="playsModalTrigger">
+	<ion-modal (willPresent)="setPrevPlays()" [backdropDismiss]="false" #playsModal trigger="playsModalTrigger">
 		<ng-template>
 			<ion-header>
 				<ion-toolbar color="medium">
@@ -453,16 +453,21 @@
 											</ng-template>
 										</ion-popover>
 									</ion-col>
-									<ion-col size="2">
+									<ion-col>
 										<div id="actionTrigger{{play.playId}}">{{gameActions[play.action]}}</div>
 										<ion-popover class="scrollable" trigger="actionTrigger{{play.playId}}" [dismissOnSelect]="true">
 											<ng-template>
 												<ion-content>
-													<ion-radio-group (ionChange)="updatePlay(play)" [(ngModel)]="play.action">
-														<ion-item lines="full" *ngFor="let action of actions">
-															<ion-radio [value]="action.key">{{action.value}}</ion-radio>
-														</ion-item>
-													</ion-radio-group>
+													<ion-list>
+														<ion-list-header>
+															Please verify the team and player before changing the action!
+														</ion-list-header>
+														<ion-radio-group (ionChange)="updatePlay(play)" [(ngModel)]="play.action">
+															<ion-item lines="full" *ngFor="let action of actions">
+																<ion-radio [value]="action.key">{{action.value}}</ion-radio>
+															</ion-item>
+														</ion-radio-group>
+													</ion-list>
 												</ion-content>
 											</ng-template>
 										</ion-popover>
@@ -470,7 +475,7 @@
 									<ion-col>P{{play.period}}</ion-col>
 									<ion-col>{{play.gameClock}}</ion-col>
 									<ion-col>{{play.score}}</ion-col>
-									<ion-col>{{play.timeStamp | date: 'shortTime'}}</ion-col>
+									<ion-col style="border-right: none;">{{play.timeStamp | date: 'shortTime'}}</ion-col>
 								</ion-row>
 							</ion-grid>
 						</ion-item>
