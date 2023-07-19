@@ -18,8 +18,6 @@ import { SyncMode } from 'src/app/interfaces/sync.interface';
 import { GamecastResult } from 'src/app/interfaces/gamecastResult.interface';
 import { AuthService } from 'src/app/services/auth/auth.service';
 
-//teamName | player name | player number | GameAction | period | gameClock | score | timestamp
-
 export enum GameActions {
 	OffRebound = 5,
 	DefRebound = 10,
@@ -69,7 +67,6 @@ type StatsRow =  {
 export class GamecastComponent {
 	db!:SQLiteDBConnection;
   gameId!: string;
-	playerId!: number;
   currentGame?: Game;
 	homeTeamPlayers?: Player[];
 	awayTeamPlayers?: Player[];
@@ -78,10 +75,9 @@ export class GamecastComponent {
 	homePlayersOnCourt: Player[] = [];
 	awayPlayersOnCourt: Player[] = [];
 	stats?: Stat[];
-	selectedStat: Stat | undefined;
 	plays?: Play[];
 	homeTeamFouls: number = 0;
-	awayTeamFouls:number = 0;
+	awayTeamFouls: number = 0;
   timerSubscription?: Subscription;
   timerDuration: number = 8 * 60;
   timeLeft: number = this.timerDuration;
@@ -93,22 +89,22 @@ export class GamecastComponent {
 	statsTab: 'home' | 'away' = 'home';
 	gameCastSettings?: GameCastSettings;
 	gameActions = GameActions;
+	actions: {key:number, value:string}[] = Object.entries(GameActions)
+																						.reverse()
+																						.slice(0,15)
+																						.map(t => {
+																							return { key:Number(t[1]), value:t[0] as string }
+																						});
 	homeStatGridApi!: GridApi<StatsRow>;
 	awayStatGridApi!: GridApi<StatsRow>;
+	addHomePlayer:boolean = true;
+	showAddPlayer:boolean = false;
 
 	//Displaying Auto-Complete Options:
-	reboundHomeDisplay: boolean = false;
-	reboundAwayDisplay: boolean = false;
-	reboundHomeOffDeff: boolean = false;
-	reboundAwayOffDeff: boolean = false;
-	stealHomeDisplay: boolean = false;
-	stealAwayDisplay: boolean = false;
-	assistHomeDisplay: boolean = false;
-	assistAwayDisplay: boolean = false;
+	reboundDisplay: boolean = false;
+	stealDisplay: boolean = false;
+	assistDisplay: boolean = false;
 
-	actions: {key:number, value:string}[] = Object.entries(GameActions).reverse().slice(0,15).map(t => { return { key:Number(t[1]), value:t[0] as string } });
-
-	//gameActionskey = Object.keys(GameActions);
 	public teamStats: ColDef[] = [
 		{field: 'number', headerName: 'NUM', pinned: true, editable: false},
 		{field: 'firstName', headerName: 'First Name', editable: false},
@@ -232,8 +228,13 @@ export class GamecastComponent {
 		this.saveStat(updatedStat);
   }
 
-	public getAction(action:number) {
-		return this.actions.find(t => t.key == action)!.value;
+	async addPlayer(player:Player) {
+		if (this.addHomePlayer) {
+			this.homeTeamPlayers!.push(player);
+		} else {
+			this.awayTeamPlayers!.push(player);
+		}
+		await this.crud.save(this.db, 'Players', player)
 	}
 
 	private async fetchData() {
@@ -384,36 +385,51 @@ export class GamecastComponent {
 
 	addToCourt(team: 'home' | 'away', player: Player) {
 		if (team == 'home') {
-			if(this.homePlayersOnCourt.length < 5) {
+			if (this.homePlayersOnCourt.length < 5) {
 				this.homePlayersOnCourt.push(player);
-				if(this.gameCastSettings != null) {
-					this.gameCastSettings.homePlayersOnCourt = this.gameCastSettings.homePlayersOnCourt + ',' + player.playerId.toString();
-				}
+				this.gameCastSettings!.homePlayersOnCourt = this.homePlayersOnCourt.map(t => t.playerId).toString();
 			}
 		} else {
 			if (this.awayPlayersOnCourt.length < 5) {
 				this.awayPlayersOnCourt.push(player);
-				if(this.gameCastSettings != null) {
-					this.gameCastSettings.awayPlayersOnCourt = this.gameCastSettings.awayPlayersOnCourt + ',' + player.playerId.toString();
-				}
+				this.gameCastSettings!.awayPlayersOnCourt = this.awayPlayersOnCourt.map(t => t.playerId).toString();
 			}
 		}
 		this.updateGameCastSetting();
 	}
 
 	selectPlayer(team: 'home' | 'away', index: number) {
+		var prevPlayerWasHome = this.awayPlayerSelected == -1;
 		if (team == 'away') {
 			if (this.awayPlayerSelected == index) {
 				this.awayPlayerSelected = -1;
 			} else {
 				this.awayPlayerSelected = index;
+				this.homePlayerSelected = -1;
 			}
 		} else {
 			if (this.homePlayerSelected == index) {
 				this.homePlayerSelected = -1;
 			} else {
 				this.homePlayerSelected = index;
+				this.awayPlayerSelected = -1;
 			}
+		}
+
+		//auto complete
+		if (this.stealDisplay) {
+			this.addTurnover(team);
+			this.stealDisplay = false;
+		} else if (this.reboundDisplay) {
+			if ((prevPlayerWasHome && team == 'home') || (!prevPlayerWasHome && team == 'away')) {
+				this.addRebound(team, true);
+			} else if ((prevPlayerWasHome && team == 'away') || (!prevPlayerWasHome && team == 'home')) {
+				this.addRebound(team, false);
+			}
+			this.reboundDisplay = false;
+		} else if (this.assistDisplay) {
+			this.addAssist(team);
+			this.assistDisplay = false;
 		}
 	}
 
@@ -422,18 +438,14 @@ export class GamecastComponent {
 			if (this.awayPlayerSelected == index) {
 				this.awayPlayerSelected = -1;
 			}
-			if(this.gameCastSettings?.awayPlayersOnCourt != null){
-				this.gameCastSettings.awayPlayersOnCourt = this.gameCastSettings.awayPlayersOnCourt.replace(',' + player.playerId.toString(), '');
-			}
 			this.awayPlayersOnCourt.splice(this.awayPlayersOnCourt.indexOf(player), 1);
+			this.gameCastSettings!.awayPlayersOnCourt = this.awayPlayersOnCourt.map(t => t.playerId).toString();
 		} else {
 			if (this.homePlayerSelected == index) {
 				this.homePlayerSelected = -1;
 			}
-			if(this.gameCastSettings?.homePlayersOnCourt != null){
-				this.gameCastSettings.homePlayersOnCourt = this.gameCastSettings.homePlayersOnCourt.replace(',' + player.playerId.toString(), '');
-			}
 			this.homePlayersOnCourt.splice(this.homePlayersOnCourt.indexOf(player), 1);
+			this.gameCastSettings!.homePlayersOnCourt = this.homePlayersOnCourt.map(t => t.playerId).toString();
 		}
 		this.updateGameCastSetting();
   }
@@ -563,10 +575,10 @@ export class GamecastComponent {
 						stat.fieldGoalsMade++;
 						await this.updatePeriodTotal(team, 2);
 						await this.addPlay(team, GameActions.ShotMade, this.awayPlayersOnCourt[this.awayPlayerSelected]);
-						this.assistAwayDisplay = true;
+						this.assistDisplay = true;
 					} else {
 						await this.addPlay(team, GameActions.ShotMissed, this.awayPlayersOnCourt[this.awayPlayerSelected]);
-						this.reboundAwayDisplay = true;
+						this.reboundDisplay = true;
 					}
 				} else {
 					stat.fieldGoalsAttempted++;
@@ -576,8 +588,10 @@ export class GamecastComponent {
 						stat.threesMade++;
 						await this.updatePeriodTotal(team, 3);
 						await this.addPlay(team, GameActions.ThreeMade, this.awayPlayersOnCourt[this.awayPlayerSelected]);
+						this.assistDisplay = true;
 					} else {
 						await this.addPlay(team, GameActions.ThreeMissed, this.awayPlayersOnCourt[this.awayPlayerSelected]);
+						this.reboundDisplay = true;
 					}
 				}
 				await this.saveStat(stat);
@@ -600,10 +614,10 @@ export class GamecastComponent {
 						stat.fieldGoalsMade++;
 						await this.updatePeriodTotal(team, 2);
 						await this.addPlay(team, GameActions.ShotMade, this.homePlayersOnCourt[this.homePlayerSelected]);
-						this.assistHomeDisplay = true;
+						this.assistDisplay = true;
 					} else {
 						await this.addPlay(team, GameActions.ShotMissed, this.homePlayersOnCourt[this.homePlayerSelected]);
-						this.reboundHomeDisplay = true;
+						this.reboundDisplay = true;
 					}
 				} else {
 					stat.fieldGoalsAttempted++;
@@ -613,8 +627,10 @@ export class GamecastComponent {
 						stat.threesMade++;
 						await this.updatePeriodTotal(team, 3);
 						await this.addPlay(team, GameActions.ThreeMade, this.homePlayersOnCourt[this.homePlayerSelected]);
+						this.assistDisplay = true;
 					} else {
 						await this.addPlay(team, GameActions.ThreeMissed, this.homePlayersOnCourt[this.homePlayerSelected]);
+						this.reboundDisplay = true;
 					}
 				}
 				await this.saveStat(stat);
@@ -688,7 +704,6 @@ export class GamecastComponent {
 				let stat = await this.getStat(player.playerId);
 				stat.steals++;
 				await this.saveStat(stat);
-				this.stealAwayDisplay = true;
 				this.addPlay(team, GameActions.Steal, player);
 			}
 		} else {
@@ -697,10 +712,10 @@ export class GamecastComponent {
 				let stat = await this.getStat(player.playerId);
 				stat.steals++;
 				await this.saveStat(stat);
-				this.stealHomeDisplay = true;
 				this.addPlay(team, GameActions.Steal, player);
 			}
 		}
+		this.stealDisplay = true;
 	}
 
 	async addAssist(team: 'home' | 'away') {
@@ -735,10 +750,10 @@ export class GamecastComponent {
 				stat.rebounds++;
 				if (offensive) {
 					stat.offensiveRebounds++;
-					this.addPlay(team, GameActions.OffRebound, player);
+					await this.addPlay(team, GameActions.OffRebound, player);
 				} else {
 					stat.defensiveRebounds++;
-					this.addPlay(team, GameActions.DefRebound, player);
+					await this.addPlay(team, GameActions.DefRebound, player);
 				}
 				await this.saveStat(stat);
 			}
@@ -749,10 +764,10 @@ export class GamecastComponent {
 				stat.rebounds++;
 				if (offensive) {
 					stat.offensiveRebounds++;
-					this.addPlay(team, GameActions.OffRebound, player);
+					await this.addPlay(team, GameActions.OffRebound, player);
 				} else {
 					stat.defensiveRebounds++;
-					this.addPlay(team, GameActions.DefRebound, player);
+					await this.addPlay(team, GameActions.DefRebound, player);
 				}
 				await this.saveStat(stat);
 			}
@@ -807,7 +822,7 @@ export class GamecastComponent {
 	}
 
 	public async updateGameCastSetting() {
-	  await this.crud.save(this.db, 'GameCastSettings', this.gameCastSettings!, { "game": `${this.gameId}` });
+	  await this.crud.save(this.db, 'GameCastSettings', this.gameCastSettings!, { "game": `'${this.gameId}'` });
 	}
 
 	public async updatePlay(play: Play) {

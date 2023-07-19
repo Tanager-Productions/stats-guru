@@ -2,17 +2,26 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HeaderComponent } from './header/header.component';
 import { IonicModule } from '@ionic/angular';
+import { AddPlayerComponent } from './add-player/add-player.component';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { EditPlayerComponent } from './edit-player/edit-player.component';
 
 @NgModule({
   declarations: [
-    HeaderComponent
+    HeaderComponent,
+    AddPlayerComponent,
+    EditPlayerComponent
   ],
   imports: [
     CommonModule,
-    IonicModule
+    IonicModule,
+		FormsModule,
+		ReactiveFormsModule
   ],
   exports: [
-    HeaderComponent
+    HeaderComponent,
+		AddPlayerComponent,
+		EditPlayerComponent
   ]
 })
 export class SharedModule { }

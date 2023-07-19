@@ -122,7 +122,7 @@ export class CrudService {
       stmt += `(${qMarks.toString()}),`;
     }
     stmt = stmt.slice(0, stmt.length-1);
-    const ret = await db.run(stmt, values, true);
+    const ret = await db.run(stmt+=';', values, true);
   }
 
   private async setNameForUpdate(names: string[]): Promise<string> {
@@ -138,7 +138,7 @@ export class CrudService {
     }
   }
 
-	private deleteKeys(model: any, table: Table) : any {
+	private deleteKeys(model: any, table: Table) {
 		if (table == 'Games') {
 			delete model.homeFinal;
 			delete model.awayFinal;

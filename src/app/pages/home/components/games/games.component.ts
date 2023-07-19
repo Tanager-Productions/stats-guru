@@ -16,7 +16,7 @@ import { SyncService } from 'src/app/services/sync/sync.service';
 export class GamesComponent implements OnInit {
   public games$?: Observable<Game[]>;
   public events$?: Observable<Event[]>;
-  public logos: {name:string, isMale:string, logo:string|null}[] = [];
+  public logos?: {name:string, isMale:string, logo:string|null}[];
   filterEventId:number = 0;
 
   constructor(
@@ -45,11 +45,7 @@ export class GamesComponent implements OnInit {
   }
 
   public getLogo(teamName:string, isMale:string) {
-    let item = this.logos.find(t => t.name == teamName && t.isMale == isMale);
-    if (item == undefined) {
-      console.log(teamName, isMale);
-      throw 'Team not in logos array!';
-    }
+    let item = this.logos?.find(t => t.name == teamName && t.isMale == isMale)!;
     if (item.logo == null) {
       return '../../../../assets/icon-black.png'
     } else {
