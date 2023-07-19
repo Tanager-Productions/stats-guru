@@ -780,6 +780,8 @@ export class GamecastComponent {
 		await this.addPoints(team, 2, true);
 		await this.addRebound(team, true);
 		await this.addPoints(team, 2, !made);
+		this.reboundDisplay = false;
+		this.assistDisplay = false;
 	}
 
 	async addRebound(team: 'home' | 'away', offensive: boolean) {
