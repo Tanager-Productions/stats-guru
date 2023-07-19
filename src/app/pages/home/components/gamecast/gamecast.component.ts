@@ -581,7 +581,7 @@ export class GamecastComponent {
 			action: action,
 			gameClock: this.currentGame!.clock
 		}
-		let existingPlay = (await this.crud.query(this.db, 'Plays', {"playId": `${play.playId}`}));
+		let existingPlay = (await this.crud.query(this.db, 'Plays', {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`}));
 		if (existingPlay.length == 1) {
 			play.syncState = SyncState.Modified;
 			await this.crud.save(this.db, 'Plays', play, {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`});
