@@ -13,7 +13,7 @@ export const version1: string[] = [
 
   `
     CREATE TABLE IF NOT EXISTS Players (
-      playerId INTEGER PRIMARY KEY AUTOINCREMENT,
+      playerId TEXT PRIMARY KEY,
       firstName TEXT NOT NULL,
       lastName TEXT NOT NULL,
       number INTEGER NOT NULL,
@@ -33,7 +33,7 @@ export const version1: string[] = [
 
   `
     CREATE TABLE IF NOT EXISTS Games (
-      gameId INTEGER PRIMARY KEY AUTOINCREMENT,
+      gameId TEXT PRIMARY KEY,
       homeTeam TEXT NOT NULL,
       awayTeam TEXT NOT NULL,
       gameDate TEXT NOT NULL,
@@ -55,7 +55,7 @@ export const version1: string[] = [
       awayFinal GENERATED ALWAYS AS ([awayPointsQ1]+[awayPointsQ2]+[awayPointsQ3]+[awayPointsQ4]+[awayPointsOT]),
       homeTeamTOL INTEGER NOT NULL,
       awayTeamTOL INTEGER NOT NULL,
-      period TEXT NULL,
+      period INTEGER NOT NULL,
       gameLink TEXT NULL,
       eventId INTEGER NULL,
       syncState INTEGER NOT NULL DEFAULT 0
@@ -65,13 +65,13 @@ export const version1: string[] = [
   `
     CREATE TABLE IF NOT EXISTS Plays (
       playId INTEGER NOT NULL,
-      gameId INTEGER NOT NULL,
+      gameId TEXT NOT NULL,
       turboStatsData TEXT NULL,
 			teamName TEXT NULL,
 			playerName TEXT NULL,
 			playerNumber INTEGER NULL,
 			action INTEGER NULL,
-			period TEXT NULL,
+			period INTEGER NULL,
 			gameClock TEXT NULL,
 			score TEXT NULL,
 			timeStamp TEXT NULL,
@@ -82,8 +82,8 @@ export const version1: string[] = [
 
   `
     CREATE TABLE IF NOT EXISTS Stats (
-      player INTEGER NOT NULL,
-      game INTEGER NOT NULL,
+      player TEXT NOT NULL,
+      game TEXT NOT NULL,
       minutes INTEGER NULL,
       assists INTEGER NULL,
       fieldGoalsMade INTEGER NULL,
@@ -144,7 +144,7 @@ export const version1: string[] = [
       periodsPerGame INTEGER NULL,
       minutesPerPeriod INTEGER NULL,
       minutesPerOvertime INTEGER NULL,
-			game INTEGER NOT NULL,
+			game TEXT NOT NULL,
 			resetTimeoutsEveryPeriod TEXT NULL,
 			homePartialTOL INTEGER NULL,
 			awayPartialTOL INTEGER NULL,

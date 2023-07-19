@@ -71,8 +71,8 @@ export class CrudService {
 										table: Table,
 										model: Model,
 										where?: {[key: string]: string}): Promise<void> {
-		let castedModel: any = model;
-		this.deleteKeys(model, table);
+		let castedModel: any = JSON.parse(JSON.stringify(model));
+		this.deleteKeys(castedModel, table);
     const isUpdate: boolean = where ? true : false;
     const keys: string[] = Object.keys(castedModel);
     let stmt: string = '';
@@ -101,7 +101,7 @@ export class CrudService {
       }
     }
     const ret = await db.run(stmt+=';', values, true);
-    if(ret.changes!.changes != 1) {
+    if (ret.changes!.changes != 1) {
       throw new Error(`save: insert changes != 1`);
     }
     return;
@@ -122,7 +122,7 @@ export class CrudService {
       stmt += `(${qMarks.toString()}),`;
     }
     stmt = stmt.slice(0, stmt.length-1);
-    const ret = await db.run(stmt, values, true);
+    const ret = await db.run(stmt+=';', values, true);
   }
 
   private async setNameForUpdate(names: string[]): Promise<string> {
@@ -138,15 +138,10 @@ export class CrudService {
     }
   }
 
-	private deleteKeys(model: any, table: Table) : any {
+	private deleteKeys(model: any, table: Table) {
 		if (table == 'Games') {
 			delete model.homeFinal;
 			delete model.awayFinal;
-			if (model.gameId == 0) {
-				delete model.gameId;
-			}
-		} else if (table == 'Players' && model.playerId == 0) {
-			delete model.playerId;
 		} else if (table == 'Stats') {
 			delete model.points;
 			delete model.rebounds;
@@ -164,6 +159,13 @@ export class CrudService {
       throw new Error("Query returned undefined");
     } else {
       return res.values;
+    }
+  }
+
+	public async rawExecute(db:SQLiteDBConnection, statement:string) {
+    let res = await db.execute(statement, true);
+    if (res.changes!.changes == 0) {
+      throw new Error(`save: insert changes == 0`);
     }
   }
 

@@ -1,0 +1,30 @@
+<ion-content color="dark" class="ion-padding">
+	<ion-input
+		[(ngModel)]="player.firstName"
+		labelPlacement="stacked"
+		label="First Name"
+		fill="outline"
+		[readonly]="!editPlayer"
+	></ion-input>
+	<ion-input
+		[(ngModel)]="player.lastName"
+		fill="outline"
+		labelPlacement="stacked"
+		label="Last Name"
+		[readonly]="!editPlayer"
+	></ion-input>
+	<ion-input
+		type="number"
+		[(ngModel)]="player.number"
+		fill="outline"
+		labelPlacement="stacked"
+		label="Number"
+		[readonly]="!editPlayer"
+	></ion-input>
+	<ion-button *ngIf="editPlayer" class="ion-float-right" color="light" fill="clear" (click)="savePlayer.emit(); editPlayer = false;">
+		<ion-icon size="large" slot="icon-only" name="checkmark"></ion-icon>
+	</ion-button>
+	<ion-button *ngIf="!editPlayer" class="ion-float-right" color="light" fill="clear" (click)="editPlayer = true;">
+		<ion-icon size="large" slot="icon-only" name="pencil"></ion-icon>
+	</ion-button>
+</ion-content>

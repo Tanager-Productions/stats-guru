@@ -68,7 +68,6 @@ export class ApiService {
   public async getAllPlays() {
     let options: HttpOptions = {
       url: `${this.serverUrl}/Stats/GetPlays`,
-      params: {"gameId": "0"},
       headers: {"X-ACCESS-TOKEN": this.getApiToken()}
     };
     return await CapacitorHttp.get(options);

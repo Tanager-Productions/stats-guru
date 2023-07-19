@@ -166,10 +166,10 @@ export class SyncService {
         delete stat.eff;
 				delete stat.rebounds;
       }
-      for (var i = 0; i < stats.length; i = i + 50) {
-        let end = i+50;
+      for (var i = 0; i < stats.length; i = i + 200) {
+        let end = i+200;
         if (end > stats.length) {
-          end = stats.length-1;
+          end = stats.length;
         }
         await this.crudService.bulkInsert(this.db!, "stats", stats.slice(i, end));
       }
@@ -182,10 +182,10 @@ export class SyncService {
     let response = await this.api.getAllPlays();
     if (response.status == 200) {
       let plays = response.data as ServerPlay[];
-      for (var i = 0; i < plays.length; i = i + 100) {
-        let end = i+100;
+      for (var i = 0; i < plays.length; i = i + 200) {
+        let end = i+200;
         if (end > plays.length) {
-          end = plays.length-1;
+          end = plays.length;
         }
         await this.crudService.bulkInsert(this.db!, "plays", plays.slice(i, end));
       }

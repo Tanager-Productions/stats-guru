@@ -1,5 +1,5 @@
 export interface Game {
-  gameId: number;
+  gameId: string;
   homeTeam: string;
   awayTeam: string;
   gameDate: string;
@@ -21,20 +21,14 @@ export interface Game {
   has4Quarters: string | null;
   homeFinal: number;
   awayFinal: number;
-  period: string | null;
+  period: number;
   gameLink: string | null;
   eventId: number | null;
   syncState: number;
-	homePartialTOL: number | null;
-	awayPartialTOL: number | null;
-	homeFullTOL: number | null;
-	awayFullTOL: number | null;
-	homeCurrentFouls: number | null;
-	awayCurrentFouls: number | null;
 }
 
 export interface ServerGame {
-  gameId: number;
+  gameId: string;
   homeTeam: string;
   awayTeam: string;
   gameDate: string;
@@ -56,7 +50,7 @@ export interface ServerGame {
   has4Quarters: boolean | null;
   homeFinal: number | null;
   awayFinal: number | null;
-  period: string | null;
+  period: number;
   gameLink: string | null;
   eventId: number | null;
 }

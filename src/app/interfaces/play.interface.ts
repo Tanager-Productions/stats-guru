@@ -2,13 +2,13 @@ import { GameActions } from "../pages/home/components/gamecast/gamecast.componen
 
 export interface Play {
   playId: number;
-	gameId: number;
+	gameId: string;
 	turboStatsData: string | null;
 	teamName: string | null;
 	playerName: string | null;
 	playerNumber: number | null;
 	action: GameActions;
-	period: string | null;
+	period: number | null;
 	gameClock: string | null;
 	score: string | null;
 	timeStamp: string | null;
@@ -17,13 +17,13 @@ export interface Play {
 
 export interface ServerPlay {
 	playId: number;
-	gameId: number;
+	gameId: string;
 	turboStatsData: string | null;
 	teamName: string | null;
 	playerName: string | null;
 	playerNumber: number | null;
 	action: GameActions;
-	period: string | null;
+	period: number | null;
 	gameClock: string | null;
 	score: string | null;
 	timeStamp: string | null;

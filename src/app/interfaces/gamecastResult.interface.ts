@@ -3,5 +3,6 @@ export interface GamecastResult {
 	error: string;
 	resetGame: boolean;
 	playersToReset: number[];
-	statsToReset: number[];
+	resetStats: boolean;
+	resetPlays: boolean;
 }

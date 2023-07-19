@@ -7,7 +7,7 @@ export interface GameCastSettings {
 		periodsPerGame: number | null;
 		minutesPerPeriod: number | null;
 		minutesPerOvertime: number | null;
-		game: number;
+		game: string;
 		resetTimeoutsEveryPeriod: string | null;
 		homePartialTOL: number | null;
 		awayPartialTOL: number | null;
