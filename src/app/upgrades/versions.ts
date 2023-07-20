@@ -1,18 +1,18 @@
 export const version1: string[] = [
   `
-    CREATE TABLE IF NOT EXISTS Teams (
+    CREATE TABLE IF NOT EXISTS teams (
       name TEXT NOT NULL,
-      isMale TEXT NOT NULL,
+      isMale INTEGER NOT NULL,
       city TEXT NOT NULL,
       state TEXT NOT NULL,
       logo TEXT NULL,
-      official TEXT NOT NULL,
+      official INTEGER NOT NULL,
       PRIMARY KEY (name, isMale)
     );
   `,
 
   `
-    CREATE TABLE IF NOT EXISTS Players (
+    CREATE TABLE IF NOT EXISTS players (
       playerId TEXT PRIMARY KEY,
       firstName TEXT NOT NULL,
       lastName TEXT NOT NULL,
@@ -20,7 +20,7 @@ export const version1: string[] = [
       position TEXT NOT NULL,
       picture TEXT NULL,
       team TEXT NOT NULL,
-      isMale TEXT NOT NULL,
+      isMale INTEGER NOT NULL,
       height INTEGER NULL,
       weight INTEGER NULL,
       age INTEGER NULL,
@@ -32,15 +32,15 @@ export const version1: string[] = [
   `,
 
   `
-    CREATE TABLE IF NOT EXISTS Games (
+    CREATE TABLE IF NOT EXISTS games (
       gameId TEXT PRIMARY KEY,
       homeTeam TEXT NOT NULL,
       awayTeam TEXT NOT NULL,
       gameDate TEXT NOT NULL,
       clock TEXT NOT NULL,
       complete TEXT NOT NULL,
-      isMale TEXT NULL,
-      has4Quarters TEXT NULL,
+      isMale INTEGER NOT NULL,
+      has4Quarters INTEGER NULL,
       homePointsQ1 INTEGER NOT NULL,
       awayPointsQ1 INTEGER NOT NULL,
       homePointsQ2 INTEGER NOT NULL,
@@ -63,7 +63,7 @@ export const version1: string[] = [
   `,
 
   `
-    CREATE TABLE IF NOT EXISTS Plays (
+    CREATE TABLE IF NOT EXISTS plays (
       playId INTEGER NOT NULL,
       gameId TEXT NOT NULL,
       turboStatsData TEXT NULL,
@@ -81,7 +81,7 @@ export const version1: string[] = [
   `,
 
   `
-    CREATE TABLE IF NOT EXISTS Stats (
+    CREATE TABLE IF NOT EXISTS stats (
       player TEXT NOT NULL,
       game TEXT NOT NULL,
       minutes INTEGER NULL,
@@ -111,7 +111,7 @@ export const version1: string[] = [
   `,
 
   `
-    CREATE TABLE IF NOT EXISTS Events (
+    CREATE TABLE IF NOT EXISTS events (
       eventId INTEGER PRIMARY KEY AUTOINCREMENT,
       startDate TEXT NULL,
       endDate TEXT NULL,
@@ -123,7 +123,7 @@ export const version1: string[] = [
   `,
 
   `
-    CREATE TABLE IF NOT EXISTS SyncHistory (
+    CREATE TABLE IF NOT EXISTS syncHistory (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       dateOccurred TEXT NOT NULL,
       playsSynced INTEGER NOT NULL,
@@ -135,7 +135,7 @@ export const version1: string[] = [
   `,
 
   `
-    CREATE TABLE IF NOT EXISTS GameCastSettings (
+    CREATE TABLE IF NOT EXISTS gameCastSettings (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       homePlayersOnCourt TEXT NULL,
       awayPlayersOnCourt TEXT NULL,
@@ -145,7 +145,7 @@ export const version1: string[] = [
       minutesPerPeriod INTEGER NULL,
       minutesPerOvertime INTEGER NULL,
 			game TEXT NOT NULL,
-			resetTimeoutsEveryPeriod TEXT NULL,
+			resetTimeoutsEveryPeriod INTEGER NULL,
 			homePartialTOL INTEGER NULL,
 			awayPartialTOL INTEGER NULL,
 			homeFullTOL INTEGER NULL,
