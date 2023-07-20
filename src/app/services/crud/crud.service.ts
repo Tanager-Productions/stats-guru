@@ -7,7 +7,7 @@ import { Play } from 'src/app/interfaces/play.interface';
 import { SyncHistory } from 'src/app/interfaces/syncHistory.interface';
 import { GameCastSettings } from 'src/app/interfaces/gameCastSetting.interface';
 
-export type Table = 'Games' | 'Plays' | 'Stats' | 'Players' | 'Events' | 'SyncHistory' | 'GameCastSettings' | 'Teams';
+export type Table = 'games' | 'plays' | 'stats' | 'players' | 'events' | 'syncHistory' | 'gameCastSettings' | 'teams';
 export type Model = Play | Player | Game | Stat | SyncHistory | GameCastSettings;
 export type Direction = 'desc' | 'asc';
 
@@ -139,16 +139,16 @@ export class CrudService {
   }
 
 	private deleteKeys(model: any, table: Table) {
-		if (table == 'Games') {
+		if (table == 'games') {
 			delete model.homeFinal;
 			delete model.awayFinal;
-		} else if (table == 'Stats') {
+		} else if (table == 'stats') {
 			delete model.points;
 			delete model.rebounds;
 			delete model.eff;
-		} else if (table == 'SyncHistory') {
+		} else if (table == 'syncHistory') {
 			delete model.id;
-		} else if (table == 'GameCastSettings') {
+		} else if (table == 'gameCastSettings') {
 			delete model.id;
 		}
 	}

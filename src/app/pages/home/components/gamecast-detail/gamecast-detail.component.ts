@@ -19,15 +19,15 @@ export class GamecastDetailComponent {
 
 	async ngOnInit() {
 		this.db = await this.sql.createConnection();
-		this.gamecastDetails = (await this.crud.rawQuery(this.db, `select * from GameCastSettings where game = '${this.gameId}'`))[0];
+		this.gamecastDetails = (await this.crud.rawQuery(this.db, `select * from gameCastSettings where game = '${this.gameId}'`))[0];
 	}
 
 	async save() {
-		await this.crud.save(this.db, 'GameCastSettings', this.gamecastDetails, {"id": `${this.gamecastDetails.id}`});
+		await this.crud.save(this.db, 'gameCastSettings', this.gamecastDetails, {"id": `${this.gamecastDetails.id}`});
 	}
 
 	setCheckbox($event:any) {
 		let val:boolean = $event.detail.checked;
-		this.gamecastDetails.resetTimeoutsEveryPeriod = val ? '1' : '0';
+		this.gamecastDetails.resetTimeoutsEveryPeriod = val ? 1 : 0;
 	}
 }

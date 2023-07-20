@@ -220,7 +220,7 @@ export class GamecastComponent {
 		} else {
 			this.awayTeamPlayers!.push(player);
 		}
-		await this.crud.save(this.db, 'Players', player)
+		await this.crud.save(this.db, 'players', player)
 	}
 
 	private async fetchData() {
@@ -237,7 +237,7 @@ export class GamecastComponent {
 				game: this.gameId,
 				homePlayersOnCourt: null,
 				awayPlayersOnCourt: null,
-				resetTimeoutsEveryPeriod: "1",
+				resetTimeoutsEveryPeriod: 1,
 				homePartialTOL: 0,
 				awayPartialTOL: 0,
 				homeFullTOL: 2,
@@ -245,7 +245,7 @@ export class GamecastComponent {
 				homeCurrentFouls: 0,
 				awayCurrentFouls: 0
 			}
-			await this.crud.save(this.db, 'GameCastSettings', gameCastSetting);
+			await this.crud.save(this.db, 'gameCastSettings', gameCastSetting);
 			this.gameCastSettings = (await this.crud.rawQuery(this.db, `SELECT * FROM GameCastSettings WHERE game = '${this.gameId}'`))[0];
 		} else {
 			this.gameCastSettings = res[0];
@@ -318,7 +318,7 @@ export class GamecastComponent {
 		if (!this.sync.online) {
 			player.syncState = SyncState.Modified;
 		}
-		await this.crud.save(this.db, "Players", player, {"playerId": `'${player.playerId}'`});
+		await this.crud.save(this.db, "players", player, {"playerId": `'${player.playerId}'`});
 		this.editPlayer = false;
 	}
 
@@ -359,15 +359,15 @@ export class GamecastComponent {
 
     this.clearNumberInput();
 
-		await this.crud.save(this.db, "Players", newTeamPlayer);
+		await this.crud.save(this.db, "players", newTeamPlayer);
   }
 
 	toggleGameComplete() {
-		if(this.currentGame!.complete == '1') {
-			this.currentGame!.complete = '0';
+		if(this.currentGame!.complete == 1) {
+			this.currentGame!.complete = 0;
 			this.updateGame();
 		} else {
-			this.currentGame!.complete = '1';
+			this.currentGame!.complete = 1;
 			this.updateGame();
 		}
 	}
@@ -490,7 +490,7 @@ export class GamecastComponent {
 				points: 0,
 				eff: 0
 			}
-			await this.crud.save(this.db, "Stats", newStat);
+			await this.crud.save(this.db, "stats", newStat);
 			this.stats = await this.crud.rawQuery(this.db, `
 				SELECT	*
 				FROM 		Stats
@@ -506,7 +506,7 @@ export class GamecastComponent {
 		if (!this.sync.online) {
 			stat.syncState == SyncState.Modified;
 		}
-		await this.crud.save(this.db, "Stats", stat, {"player": `'${stat.player}'`, "game": `'${this.gameId}'`});
+		await this.crud.save(this.db, "stats", stat, {"player": `'${stat.player}'`, "game": `'${this.gameId}'`});
 		stat = (await this.crud.rawQuery(this.db, `select * from Stats where player = '${stat.player}' and game = '${stat.game}'`))[0];
 	}
 
@@ -558,14 +558,14 @@ export class GamecastComponent {
 			gameClock: this.currentGame!.clock
 		}
 		if (this.sync.online) {
-			await this.crud.save(this.db, 'Plays', play);
+			await this.crud.save(this.db, 'plays', play);
 		} else {
-			let existingPlay = (await this.crud.query(this.db, 'Plays', {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`}));
+			let existingPlay = (await this.crud.query(this.db, 'plays', {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`}));
 			if (existingPlay.length == 1) {
 				play.syncState = SyncState.Modified;
-				await this.crud.save(this.db, 'Plays', play, {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`});
+				await this.crud.save(this.db, 'plays', play, {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`});
 			} else {
-				await this.crud.save(this.db, 'Plays', play);
+				await this.crud.save(this.db, 'plays', play);
 			}
 		}
 		this.plays?.unshift(play);
@@ -842,22 +842,22 @@ export class GamecastComponent {
 				this.currentGame!.syncState = state;
 			}
 		}
-		await this.crud.save(this.db, 'Games', this.currentGame!, { "gameId": `'${this.gameId}'` });
+		await this.crud.save(this.db, 'games', this.currentGame!, { "gameId": `'${this.gameId}'` });
 	}
 
 	public async updateGameCastSetting() {
-	  await this.crud.save(this.db, 'GameCastSettings', this.gameCastSettings!, { "game": `'${this.gameId}'` });
+	  await this.crud.save(this.db, 'gameCastSettings', this.gameCastSettings!, { "game": `'${this.gameId}'` });
 	}
 
 	public async removeLastPlay() {
 		let play = this.plays![0];
 		await this.undoAction(play);
 		if (this.sync.online) {
-			await this.crud.delete(this.db, 'Plays', {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`});
+			await this.crud.delete(this.db, 'plays', {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`});
 			this.plays!.splice(0, 1);
 		} else {
 			play.syncState = SyncState.Deleted;
-			await this.crud.save(this.db, 'Plays', play, { "playId": `${play.playId}`,"gameId": `'${this.gameId}'` });
+			await this.crud.save(this.db, 'plays', play, { "playId": `${play.playId}`,"gameId": `'${this.gameId}'` });
 			this.plays = this.plays!.filter(t => t.syncState != SyncState.Deleted);
 		}
 	}
@@ -1251,7 +1251,7 @@ export class GamecastComponent {
 		if (!this.sync.online) {
 			play.syncState = SyncState.Modified;
 		}
-		await this.crud.save(this.db, 'Plays', play, { "playId": `${play.playId}`,"gameId": `'${this.gameId}'` });
+		await this.crud.save(this.db, 'plays', play, { "playId": `${play.playId}`,"gameId": `'${this.gameId}'` });
 		await this.setPrevPlays();
 	}
 
@@ -1297,7 +1297,7 @@ export class GamecastComponent {
   }
 
 	resetTOs() {
-		if (this.gameCastSettings!.resetTimeoutsEveryPeriod == "1") {
+		if (this.gameCastSettings!.resetTimeoutsEveryPeriod == 1) {
 			this.gameCastSettings!.homeFullTOL = this.gameCastSettings!.fullTimeouts;
 			this.gameCastSettings!.awayFullTOL = this.gameCastSettings!.fullTimeouts;
 			this.gameCastSettings!.homePartialTOL = this.gameCastSettings!.partialTimeouts;

@@ -38,7 +38,7 @@ export const version1: string[] = [
       awayTeam TEXT NOT NULL,
       gameDate TEXT NOT NULL,
       clock TEXT NOT NULL,
-      complete TEXT NOT NULL,
+      complete INTEGER NOT NULL,
       isMale INTEGER NOT NULL,
       has4Quarters INTEGER NULL,
       homePointsQ1 INTEGER NOT NULL,

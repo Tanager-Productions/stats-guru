@@ -2,7 +2,7 @@
   <ion-toolbar color="primary">
     <ion-breadcrumbs *ngIf="currentGame">
       <ion-breadcrumb routerLink="/home/games">Games</ion-breadcrumb>
-      <ion-breadcrumb>Gamecast: {{ currentGame.homeTeam }} VS {{currentGame.awayTeam}} ({{currentGame.isMale! == '1' ? 'Mens' : 'Womens'}})</ion-breadcrumb>
+      <ion-breadcrumb>Gamecast: {{ currentGame.homeTeam }} VS {{currentGame.awayTeam}} ({{currentGame.isMale! == 1 ? 'Mens' : 'Womens'}})</ion-breadcrumb>
     </ion-breadcrumbs>
 	<ion-buttons slot="end">
 		<ion-button (click)="removeLastPlay()">
@@ -14,8 +14,8 @@
 		<ion-button id="detailModal">
 			<ion-icon slot="icon-only" name="settings"></ion-icon>
 		</ion-button>
-		<ion-button fill="solid" color="success" (click)='toggleGameComplete()' *ngIf="currentGame?.complete == '1'">Complete</ion-button>
-		<ion-button fill="solid" color="warning" (click)='toggleGameComplete()' *ngIf="currentGame?.complete == '0'">Live</ion-button>
+		<ion-button fill="solid" color="success" (click)='toggleGameComplete()' *ngIf="currentGame?.complete == 1">Complete</ion-button>
+		<ion-button fill="solid" color="warning" (click)='toggleGameComplete()' *ngIf="currentGame?.complete == 0">Live</ion-button>
 	</ion-buttons>
   </ion-toolbar>
 </ion-header>

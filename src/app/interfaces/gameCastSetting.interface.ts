@@ -8,7 +8,7 @@ export interface GameCastSettings {
 		minutesPerPeriod: number | null;
 		minutesPerOvertime: number | null;
 		game: string;
-		resetTimeoutsEveryPeriod: string | null;
+		resetTimeoutsEveryPeriod: number | null;
 		homePartialTOL: number | null;
 		awayPartialTOL: number | null;
 		homeFullTOL: number | null;

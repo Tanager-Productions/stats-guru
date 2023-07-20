@@ -50,10 +50,10 @@ export class SyncService {
 					version: currentDatabaseVersion,
 					mode: SyncMode.Full,
 					overwrite: null,
-					games: await this.crudService.query(this.db, "Games"),
-					players: await this.crudService.query(this.db, "Players"),
-					stats: await this.crudService.query(this.db, "Stats"),
-					plays: await this.crudService.query(this.db, "Plays")
+					games: await this.crudService.query(this.db, "games"),
+					players: await this.crudService.query(this.db, "players"),
+					stats: await this.crudService.query(this.db, "stats"),
+					plays: await this.crudService.query(this.db, "plays")
 				}
 				let httpResponse = await this.api.postSync(res);
 				if (httpResponse.status == 200) {
@@ -67,7 +67,7 @@ export class SyncService {
 						playsSynced: res.statsSynced ? 1 : 0,
 						errorMessages: JSON.stringify(res.errorMessages)
 					};
-					await this.crudService.save(this.db, 'SyncHistory', history);
+					await this.crudService.save(this.db, 'syncHistory', history);
 					await this.db.execute(` delete from plays;
 																	delete from stats;
 																	delete from games;
