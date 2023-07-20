@@ -46,7 +46,7 @@ export class CrudService {
   }
 
   public async delete(db:SQLiteDBConnection,
-											table:string,
+											table:Table,
 											where?: {[key: string]: string}) {
     let sqlcmd:string = `delete from ${table}`;
     if (where) {

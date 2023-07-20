@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { Event } from 'src/app/interfaces/event.interface';
 import { Game } from 'src/app/interfaces/game.interface';
+import { ApiService } from 'src/app/services/api/api.service';
 import { CommonService } from 'src/app/services/common/common.service';
 import { CrudService } from 'src/app/services/crud/crud.service';
 import { SqlService } from 'src/app/services/sql/sql.service';
@@ -22,11 +23,15 @@ export class GamesComponent implements OnInit {
   constructor(
     private common: CommonService,
     private router: Router,
-    sync:SyncService,
     private crud: CrudService,
-    private sql:SqlService
+    private sql:SqlService,
+    sync:SyncService
   ) {
-    sync.beginSync(true);
+		if (sync.online) {
+			sync.beginSync(true);
+		} else {
+			this.common.initializeService();
+		}
   }
 
   ngOnInit() {
