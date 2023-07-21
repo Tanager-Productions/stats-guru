@@ -12,37 +12,39 @@
     <ion-row>
       <ion-col size="1" size-lg="2"></ion-col>
       <ion-col size="10" size-lg="8">
-        <ion-input
-          fill="outline"
-          label="Home Team"
-          class="ion-margin-vertical"
-        ></ion-input>
-        <ion-input
-          fill="outline"
-          label="Away Team"
-          class="ion-margin-vertical"
-        ></ion-input>
-        <ion-input
+		<ion-item>
+			<ion-label position="floating">Gender</ion-label>
+			<ion-select interface="popover" (ionChange)="setGender(gender.value)" #gender>
+				<ion-select-option [value]="'1'">Male</ion-select-option>
+				<ion-select-option [value]="'0'">Female</ion-select-option>
+			</ion-select>
+		</ion-item>
+		<ion-item>
+			<ion-label position="floating">Home Team</ion-label>
+			<ion-select interface="popover" #homeTeam>
+				<ion-select-option *ngFor="let team of this.teams">{{team.name}}</ion-select-option>
+			</ion-select>
+		</ion-item>
+		<ion-item>
+			<ion-label fill="outline" class="ion-margin-vertical" position="floating">Away Team</ion-label>
+			<ion-select interface="popover" #awayTeam>
+				<ion-select-option *ngFor="let team of this.teams">{{team.name}}</ion-select-option>
+			</ion-select>
+		</ion-item>
+		<ion-item>
+			<ion-label fill="outline" class="ion-margin-vertical" position="floating">Event</ion-label>
+			<ion-select interface="popover" #event>
+				<ion-select-option [value]="null">None</ion-select-option>
+				<ion-select-option [value]="event.eventId" *ngFor="let event of this.events">{{event.title}}</ion-select-option>
+			</ion-select>
+		</ion-item>
+        <ion-input [(ngModel)]="date"
           fill="outline"
           label="Game Date"
           class="ion-margin-vertical"
+		  type ="datetime-local"
         ></ion-input>
-        <ion-input
-          fill="outline"
-          label="Game Time"
-          class="ion-margin-vertical"
-        ></ion-input>
-        <ion-input
-          fill="outline"
-          label="Event"
-          class="ion-margin-vertical"
-        ></ion-input>
-        <ion-input
-          fill="outline"
-          label="Gender"
-          class="ion-margin-vertical"
-        ></ion-input>
-        <ion-button class="ion-text-center">Save</ion-button>
+        <ion-button class="ion-text-center" (click)="addGame(homeTeam.value, awayTeam.value, gender.value, event.value)">Save</ion-button>
       </ion-col>
       <ion-col size="1" size-lg="2"></ion-col>
     </ion-row>
