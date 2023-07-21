@@ -3,8 +3,8 @@ export interface Team {
   city: string;
   state: string;
   logo: string | null;
-  isMale: string;
-  official: string;
+  isMale: number;
+  official: number;
 }
 
 export interface ServerTeam {

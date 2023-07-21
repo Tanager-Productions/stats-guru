@@ -13,12 +13,12 @@ export interface Game {
   awayPointsQ4: number;
   homePointsOT: number;
   awayPointsOT: number;
-  isMale: string | null;
-  complete: string;
+  isMale: number;
+  complete: number;
   clock: string;
   homeTeamTOL: number;
   awayTeamTOL: number;
-  has4Quarters: string | null;
+  has4Quarters: number | null;
   homeFinal: number;
   awayFinal: number;
   period: number;
@@ -42,7 +42,7 @@ export interface ServerGame {
   awayPointsQ4: number;
   homePointsOT: number | null;
   awayPointsOT: number | null;
-  isMale: boolean | null;
+  isMale: boolean;
   complete: boolean;
   clock: string;
   homeTeamTOL: number;

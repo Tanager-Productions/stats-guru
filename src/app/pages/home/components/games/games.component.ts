@@ -16,17 +16,21 @@ import { SyncService } from 'src/app/services/sync/sync.service';
 export class GamesComponent implements OnInit {
   public games$?: Observable<Game[]>;
   public events$?: Observable<Event[]>;
-  public logos?: {name:string, isMale:string, logo:string|null}[];
+  public logos?: {name:string, isMale:number, logo:string|null}[];
   filterEventId:number = 0;
 
   constructor(
     private common: CommonService,
     private router: Router,
-    sync:SyncService,
     private crud: CrudService,
-    private sql:SqlService
+    private sql:SqlService,
+    sync:SyncService
   ) {
-    sync.beginSync(true);
+		if (sync.online) {
+			sync.beginSync(true);
+		} else {
+			this.common.initializeService();
+		}
   }
 
   ngOnInit() {
@@ -34,7 +38,7 @@ export class GamesComponent implements OnInit {
       if (ready) {
         this.games$ = this.common.getGames();
         let db = await this.sql.createConnection();
-        this.logos = await this.crud.rawQuery(db, 'select Teams.name, Teams.isMale, Teams.logo from Teams;');
+        this.logos = await this.crud.rawQuery(db, 'select teams.name, teams.isMale, teams.logo from teams;');
       }
     });
     this.common.eventState().subscribe(ready => {
@@ -44,7 +48,7 @@ export class GamesComponent implements OnInit {
     });
   }
 
-  public getLogo(teamName:string, isMale:string) {
+  public getLogo(teamName:string, isMale:number) {
     let item = this.logos?.find(t => t.name == teamName && t.isMale == isMale)!;
     if (item.logo == null) {
       return '../../../../assets/icon-black.png'

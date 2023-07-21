@@ -13,7 +13,7 @@ export class AddPlayerComponent {
 	newPlayerLastName!: string;
 	@Input() team!: 'home' | 'away';
 	@Input() teamName!:string;
-	@Input() isMale!:string;
+	@Input() isMale!:number;
 	@Output() dismiss: EventEmitter<void> = new EventEmitter();
 	@Output() playerAdded: EventEmitter<Player> = new EventEmitter();
 	@Input() color!:string;

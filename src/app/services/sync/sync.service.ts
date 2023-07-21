@@ -37,54 +37,57 @@ export class SyncService {
   public timeRemaining?: number;
   public gameCastInProgress:boolean = false;
   public syncing:boolean = false;
+	public online:boolean = false;
 
   constructor(private api:ApiService, private sqlService:SqlService, private crudService:CrudService, private common:CommonService) { }
 
   public async beginSync(isInitial:boolean = false) {
-    this.db = await this.sqlService.createConnection();
-    this.syncing = true;
-    try {
-      let res: SyncDto = {
-        version: currentDatabaseVersion,
-        mode: SyncMode.Full,
-        overwrite: null,
-        games: await this.crudService.query(this.db, "Games"),
-        players: await this.crudService.query(this.db, "Players"),
-        stats: await this.crudService.query(this.db, "Stats"),
-        plays: await this.crudService.query(this.db, "Plays")
-      }
-      let httpResponse = await this.api.postSync(res);
-      if (httpResponse.status == 200) {
-        let res: SyncResult = httpResponse.data;
-        let history: SyncHistory = {
-					id: 0,
-          dateOccurred: new Date().toUTCString(),
-          statsSynced: res.statsSynced ? 1 : 0,
-          gamesSynced: res.statsSynced ? 1 : 0,
-          playersSynced: res.statsSynced ? 1 : 0,
-          playsSynced: res.statsSynced ? 1 : 0,
-          errorMessages: JSON.stringify(res.errorMessages)
-        };
-        await this.crudService.save(this.db, 'SyncHistory', history);
-        await this.db.execute(` delete from plays;
-                                delete from stats;
-                                delete from games;
-                                delete from players;
-                                delete from teams;
-                                delete from events;`, true);
-        await this.getData();
-      } else {
-        throw "Failed to post sync"
-      }
-    } catch (error) {
-      console.log(error);
-    }
-    if (isInitial) {
-      this.initialSyncComplete.next(true);
-      this.setTimer();
-    }
-    this.syncing = false;
-    this.common.initializeService();
+		if (!this.gameCastInProgress) {
+			this.db = await this.sqlService.createConnection();
+			this.syncing = true;
+			try {
+				let res: SyncDto = {
+					version: currentDatabaseVersion,
+					mode: SyncMode.Full,
+					overwrite: null,
+					games: await this.crudService.query(this.db, "games"),
+					players: await this.crudService.query(this.db, "players"),
+					stats: await this.crudService.query(this.db, "stats"),
+					plays: await this.crudService.query(this.db, "plays")
+				}
+				let httpResponse = await this.api.postSync(res);
+				if (httpResponse.status == 200) {
+					let res: SyncResult = httpResponse.data;
+					let history: SyncHistory = {
+						id: 0,
+						dateOccurred: new Date().toUTCString(),
+						statsSynced: res.statsSynced ? 1 : 0,
+						gamesSynced: res.statsSynced ? 1 : 0,
+						playersSynced: res.statsSynced ? 1 : 0,
+						playsSynced: res.statsSynced ? 1 : 0,
+						errorMessages: JSON.stringify(res.errorMessages)
+					};
+					await this.crudService.save(this.db, 'syncHistory', history);
+					await this.db.execute(` delete from plays;
+																	delete from stats;
+																	delete from games;
+																	delete from players;
+																	delete from teams;
+																	delete from events;`, true);
+					await this.getData();
+				} else {
+					throw "Failed to post sync"
+				}
+			} catch (error) {
+				console.log(error);
+			}
+			if (isInitial) {
+				this.initialSyncComplete.next(true);
+				this.setTimer();
+			}
+			this.syncing = false;
+			this.common.initializeService();
+		}
   }
 
   public syncComplete() {

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { JsonSQLite } from '@capacitor-community/sqlite';
 import { CapacitorHttp, HttpHeaders, HttpOptions, HttpResponse } from "@capacitor/core";
+import { GamecastDto } from 'src/app/interfaces/gamecastDto.interface';
 import { SyncDto } from 'src/app/interfaces/sync.interface';
 
 
@@ -113,5 +114,20 @@ export class ApiService {
     return await CapacitorHttp.get(options);
   }
 
+	public async GameCast(dto: GamecastDto) {
+    let options: HttpOptions = {
+      url: `${this.serverUrl}/StatsGuru/GameCast`,
+			data: dto,
+      headers: {"X-ACCESS-TOKEN": this.getApiToken(), "Content-Type": "application/json"}
+    };
+    return await CapacitorHttp.post(options);
+	}
+
+	public async Debug() {
+    let options: HttpOptions = {
+      url: `${this.serverUrl}/Debug`
+    };
+    return await CapacitorHttp.get(options);
+	}
 
 }

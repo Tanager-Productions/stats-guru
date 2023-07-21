@@ -3,6 +3,7 @@ import { ToastController } from '@ionic/angular';
 import { AuthService, Credentials } from '../../services/auth/auth.service';
 import { ApiService } from '../../services/api/api.service';
 import { Router } from '@angular/router';
+import { SyncService } from 'src/app/services/sync/sync.service';
 
 
 @Component({
@@ -19,38 +20,45 @@ export class LoginPage {
     private server: ApiService,
     private toastCtrl: ToastController,
     private authService: AuthService,
-    private router: Router
-  ) {
-    let user = this.authService.getUser();
-    if (user == null) {
-      this.checkingForKey = false;
-    } else {
-      let userId = user.userId.toString();
-      this.authService.getCredential(Credentials.Token, userId)
-        .then(async (res) => {
-          if (res != null) {
-            let httpResponse = await this.server.GetUser(res);
-            if (httpResponse.status == 200) {
-              this.authService.showPopover = true;
-              this.router.navigateByUrl('/home');
-            } else {
-              //token could have expired, so generate a new one
-              let apiKey = await this.authService.getCredential(Credentials.Key, userId);
-              if (apiKey != null) {
-                httpResponse = await this.server.GenerateToken(apiKey, userId);
-                if (httpResponse.status == 200) {
-                  let newToken = httpResponse.data;
-                  await this.authService.storeCredential(Credentials.Token, userId, newToken);
-                  this.authService.showPopover = true;
-                  this.router.navigateByUrl('/home');
-                }
-              }
-            }
-          }
-          this.checkingForKey = false;
-        });
+    private router: Router,
+		private sync: SyncService
+  ) {}
+
+	async ngOnInit() {
+		let user = this.authService.getUser();
+    if (user != null) {
+			let debugResponse = await this.server.Debug();
+			if (debugResponse.status == 200) {
+				this.sync.online = true;
+				let userId = user.userId;
+				let res = await this.authService.getCredential(Credentials.Token, userId);
+				if (res != null) {
+					let httpResponse = await this.server.GetUser(res);
+					if (httpResponse.status == 200) {
+						this.authService.showPopover = true;
+						this.router.navigateByUrl('/home');
+					} else {
+						//token could have expired, so generate a new one
+						let apiKey = await this.authService.getCredential(Credentials.Key, userId);
+						if (apiKey != null) {
+							httpResponse = await this.server.GenerateToken(apiKey, userId);
+							if (httpResponse.status == 200) {
+								let newToken = httpResponse.data;
+								await this.authService.storeCredential(Credentials.Token, userId, newToken);
+								this.authService.showPopover = true;
+								this.router.navigateByUrl('/home');
+							}
+						}
+					}
+				}
+				this.checkingForKey = false;
+			} else {
+				this.authService.showPopover = true;
+				this.router.navigateByUrl('/home');
+			}
     }
-  }
+		this.checkingForKey = false;
+	}
 
   open() {
     // @ts-ignore

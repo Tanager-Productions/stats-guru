@@ -6,7 +6,7 @@ export interface Player {
   position: string;
   team: string;
   picture: string | null;
-  isMale: string;
+  isMale: number;
 	height: number | null;
 	weight: number | null;
 	age: number | null;

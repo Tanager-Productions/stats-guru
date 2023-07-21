@@ -1,6 +1,6 @@
-import { Component, EventEmitter } from '@angular/core';
+import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { BehaviorSubject, Observable, Subscription, interval, map, throwError } from 'rxjs';
+import { Subscription, interval } from 'rxjs';
 import { Game } from 'src/app/interfaces/game.interface';
 import { Player } from 'src/app/interfaces/player.interface';
 import { CrudService } from 'src/app/services/crud/crud.service';
@@ -15,8 +15,8 @@ import { ApiService } from 'src/app/services/api/api.service';
 import { GamecastDto } from 'src/app/interfaces/gamecastDto.interface';
 import { currentDatabaseVersion } from 'src/app/upgrades/versions';
 import { SyncMode } from 'src/app/interfaces/sync.interface';
-import { GamecastResult } from 'src/app/interfaces/gamecastResult.interface';
-import { AuthService } from 'src/app/services/auth/auth.service';
+import { SyncResult } from 'src/app/interfaces/syncResult.interface';
+import { SyncService } from 'src/app/services/sync/sync.service';
 
 export enum GameActions {
 	OffRebound = 5,
@@ -112,6 +112,9 @@ export class GamecastComponent {
 	homeTeamPlusOrMinus = 0;
 	awayTeamPlusOrMinus = 0;
 
+	//gamecast
+	interval: any;
+
 	public teamStats: ColDef[] = [
 		{field: 'number', headerName: 'NUM', pinned: true, editable: false},
 		{field: 'firstName', headerName: 'First Name', editable: false},
@@ -140,59 +143,20 @@ export class GamecastComponent {
 		private crud: CrudService,
 		private sql: SqlService,
 		private api:ApiService,
-		private auth: AuthService) {}
+		private sync: SyncService) {}
 
   ngOnInit() {
+		this.sync.gameCastInProgress = true;
     this.route.params.subscribe((params: { [x: string]: string }) => {
       this.gameId = params['gameId'];
-			this.fetchData()
-				/*.then(async () => {
-					let ticket = (await this.api.GenerateTicket()).data;
-					this.socket = new WebSocket(`${this.socketUrl}/WebSocket/GameCast?ticket=${ticket}&userId=${this.auth.getUser()?.userId}`);
-					this.socket.onopen = () => this.send();
-					this.socket.onclose = () => console.log('Socket closed!');
-					this.socket.onmessage = async (mess) => {
-						let res:GamecastResult = JSON.parse(mess.data);
-						if (!res.result) console.error('Socket sync failed!', res.error);
-						if (res.resetGame) {
-							await this.updateGame(SyncState.Unchanged);
-						}
-						if (res.resetStats) {
-							await this.crud.rawExecute(this.db, `Update Stats set syncState = 0 where game = ${this.gameId}`);
-						}
-						if (res.resetPlays) {
-							await this.crud.rawExecute(this.db, `Update Plays set syncState = 0 where gameId = ${this.gameId}`);
-						}
-						for (let item of res.playersToReset) {
-							let player = this.homeTeamPlayers!.find(t => t.playerId == item);
-							if (player == undefined) {
-								player = this.awayTeamPlayers!.find(t => t.playerId == item);
-							}
-							player!.syncState = SyncState.Unchanged;
-							await this.crud.save(this.db, "Players", player!, {"playerId": `${item}`});
-						}
-						this.sending = false;
-						for (let promise of this.executionQueue) {
-							console.log('here');
-							await Promise.resolve(promise);
-						}
-						this.executionQueue = [];
-						if (this.socketNeedsClose) {
-							this.socket?.close();
-						} else {
-							setTimeout(() => {
-								if (this.socket && this.socket.readyState == WebSocket.OPEN) {
-									this.sending = true;
-									this.send();
-								}
-							}, 15000);
-						}
-					}
-				});*/
+			this.fetchData();
+			if (this.sync.online) {
+				this.interval = setInterval(() => this.send(), 15000);
+			}
     });
   }
 
-	/*private send() {
+	private async send() {
 		let players = this.homeTeamPlayers!.slice();
 		players.push(...this.awayTeamPlayers!);
 		let dto: GamecastDto = {
@@ -200,12 +164,17 @@ export class GamecastComponent {
 			version: currentDatabaseVersion,
 			overwrite: null,
 			mode: SyncMode.Full,
-			stats: this.stats!.filter(t => t.syncState == SyncState.Added || t.syncState == SyncState.Modified),
-			players: players.filter(t => t.syncState == SyncState.Added || t.syncState == SyncState.Modified),
-			plays: this.plays!.filter(t => t.syncState != SyncState.Unchanged)
+			stats: this.stats!,
+			players: players,
+			plays: this.plays!
 		}
-		this.socket!.send(JSON.stringify(dto));
-	}*/
+		let response = await this.api.GameCast(dto);
+		let result:SyncResult = response.data;
+		console.log(result);
+		if (result.errorMessages.length > 0) {
+			console.error("GameCast had errors!", result.errorMessages);
+		}
+	}
 
 	editingStopped(event: any) {
     let updatedStat: Stat = {
@@ -251,7 +220,7 @@ export class GamecastComponent {
 		} else {
 			this.awayTeamPlayers!.push(player);
 		}
-		await this.crud.save(this.db, 'Players', player)
+		await this.crud.save(this.db, 'players', player)
 	}
 
 	private async fetchData() {
@@ -268,7 +237,7 @@ export class GamecastComponent {
 				game: this.gameId,
 				homePlayersOnCourt: null,
 				awayPlayersOnCourt: null,
-				resetTimeoutsEveryPeriod: "1",
+				resetTimeoutsEveryPeriod: 1,
 				homePartialTOL: 0,
 				awayPartialTOL: 0,
 				homeFullTOL: 2,
@@ -276,7 +245,7 @@ export class GamecastComponent {
 				homeCurrentFouls: 0,
 				awayCurrentFouls: 0
 			}
-			await this.crud.save(this.db, 'GameCastSettings', gameCastSetting);
+			await this.crud.save(this.db, 'gameCastSettings', gameCastSetting);
 			this.gameCastSettings = (await this.crud.rawQuery(this.db, `SELECT * FROM GameCastSettings WHERE game = '${this.gameId}'`))[0];
 		} else {
 			this.gameCastSettings = res[0];
@@ -346,8 +315,10 @@ export class GamecastComponent {
 	}
 
 	async savePlayer(player: Player) {
-		player.syncState = SyncState.Modified;
-		await this.crud.save(this.db, "Players", player, {"playerId": `'${player.playerId}'`});
+		if (!this.sync.online) {
+			player.syncState = SyncState.Modified;
+		}
+		await this.crud.save(this.db, "players", player, {"playerId": `'${player.playerId}'`});
 		this.editPlayer = false;
 	}
 
@@ -371,7 +342,7 @@ export class GamecastComponent {
       team: team == 'home' ? this.currentGame!.homeTeam : this.currentGame!.awayTeam,
       picture: null,
       isMale: this.currentGame!.isMale!,
-      syncState: SyncState.Added,
+      syncState: this.sync.online ? SyncState.Unchanged : SyncState.Added,
 			height: null,
 			weight: null,
 			age: null,
@@ -388,15 +359,15 @@ export class GamecastComponent {
 
     this.clearNumberInput();
 
-		await this.crud.save(this.db, "Players", newTeamPlayer);
+		await this.crud.save(this.db, "players", newTeamPlayer);
   }
 
 	toggleGameComplete() {
-		if(this.currentGame!.complete == '1') {
-			this.currentGame!.complete = '0';
+		if(this.currentGame!.complete == 1) {
+			this.currentGame!.complete = 0;
 			this.updateGame();
 		} else {
-			this.currentGame!.complete = '1';
+			this.currentGame!.complete = 1;
 			this.updateGame();
 		}
 	}
@@ -515,11 +486,11 @@ export class GamecastComponent {
 				defensiveRebounds: 0,
 				blocks: 0,
 				turnovers: 0,
-				syncState: SyncState.Added,
+				syncState: this.sync.online ? SyncState.Unchanged : SyncState.Added,
 				points: 0,
 				eff: 0
 			}
-			await this.crud.save(this.db, "Stats", newStat);
+			await this.crud.save(this.db, "stats", newStat);
 			this.stats = await this.crud.rawQuery(this.db, `
 				SELECT	*
 				FROM 		Stats
@@ -532,7 +503,10 @@ export class GamecastComponent {
 	}
 
 	private async saveStat(stat:Stat) {
-		await this.crud.save(this.db, "Stats", stat, {"player": `'${stat.player}'`, "game": `'${this.gameId}'`});
+		if (!this.sync.online) {
+			stat.syncState == SyncState.Modified;
+		}
+		await this.crud.save(this.db, "stats", stat, {"player": `'${stat.player}'`, "game": `'${this.gameId}'`});
 		stat = (await this.crud.rawQuery(this.db, `select * from Stats where player = '${stat.player}' and game = '${stat.game}'`))[0];
 	}
 
@@ -573,7 +547,7 @@ export class GamecastComponent {
 			playId: this.plays!.length + 1,
 			gameId: this.gameId!,
 			turboStatsData: null,
-			syncState: SyncState.Added,
+			syncState: this.sync.online ? SyncState.Unchanged : SyncState.Added,
 			period: this.currentGame!.period,
 			playerName: player ? `${player.firstName} ${player.lastName}` : null,
 			playerNumber: player ? player.number : null,
@@ -583,12 +557,16 @@ export class GamecastComponent {
 			action: action,
 			gameClock: this.currentGame!.clock
 		}
-		let existingPlay = (await this.crud.query(this.db, 'Plays', {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`}));
-		if (existingPlay.length == 1) {
-			play.syncState = SyncState.Modified;
-			await this.crud.save(this.db, 'Plays', play, {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`});
+		if (this.sync.online) {
+			await this.crud.save(this.db, 'plays', play);
 		} else {
-			await this.crud.save(this.db, 'Plays', play);
+			let existingPlay = (await this.crud.query(this.db, 'plays', {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`}));
+			if (existingPlay.length == 1) {
+				play.syncState = SyncState.Modified;
+				await this.crud.save(this.db, 'plays', play, {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`});
+			} else {
+				await this.crud.save(this.db, 'plays', play);
+			}
 		}
 		this.plays?.unshift(play);
 	}
@@ -859,22 +837,29 @@ export class GamecastComponent {
 	}
 
 	public async updateGame(state: SyncState = SyncState.Modified) {
-		if (this.currentGame!.syncState != SyncState.Added) {
-			this.currentGame!.syncState = state;
+		if (!this.sync.online) {
+			if (this.currentGame!.syncState != SyncState.Added) {
+				this.currentGame!.syncState = state;
+			}
 		}
-		await this.crud.save(this.db, 'Games', this.currentGame!, { "gameId": `'${this.gameId}'` });
+		await this.crud.save(this.db, 'games', this.currentGame!, { "gameId": `'${this.gameId}'` });
 	}
 
 	public async updateGameCastSetting() {
-	  await this.crud.save(this.db, 'GameCastSettings', this.gameCastSettings!, { "game": `'${this.gameId}'` });
+	  await this.crud.save(this.db, 'gameCastSettings', this.gameCastSettings!, { "game": `'${this.gameId}'` });
 	}
 
 	public async removeLastPlay() {
 		let play = this.plays![0];
 		await this.undoAction(play);
-		play.syncState = SyncState.Deleted;
-		await this.crud.save(this.db, 'Plays', play, { "playId": `${play.playId}`,"gameId": `'${this.gameId}'` });
-		this.plays = this.plays!.filter(t => t.syncState != SyncState.Deleted);
+		if (this.sync.online) {
+			await this.crud.delete(this.db, 'plays', {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`});
+			this.plays!.splice(0, 1);
+		} else {
+			play.syncState = SyncState.Deleted;
+			await this.crud.save(this.db, 'plays', play, { "playId": `${play.playId}`,"gameId": `'${this.gameId}'` });
+			this.plays = this.plays!.filter(t => t.syncState != SyncState.Deleted);
+		}
 	}
 
 	public async undoAction(play:Play) {
@@ -1262,9 +1247,11 @@ export class GamecastComponent {
 		}
 		await this.undoAction(prevPlay);
 		await this.redoAction(play);
-		play.syncState = SyncState.Modified;
 		play.score = `${this.currentGame!.homeFinal} - ${this.currentGame!.awayFinal}`;
-		await this.crud.save(this.db, 'Plays', play, { "playId": `${play.playId}`,"gameId": `'${this.gameId}'` });
+		if (!this.sync.online) {
+			play.syncState = SyncState.Modified;
+		}
+		await this.crud.save(this.db, 'plays', play, { "playId": `${play.playId}`,"gameId": `'${this.gameId}'` });
 		await this.setPrevPlays();
 	}
 
@@ -1310,7 +1297,7 @@ export class GamecastComponent {
   }
 
 	resetTOs() {
-		if (this.gameCastSettings!.resetTimeoutsEveryPeriod == "1") {
+		if (this.gameCastSettings!.resetTimeoutsEveryPeriod == 1) {
 			this.gameCastSettings!.homeFullTOL = this.gameCastSettings!.fullTimeouts;
 			this.gameCastSettings!.awayFullTOL = this.gameCastSettings!.fullTimeouts;
 			this.gameCastSettings!.homePartialTOL = this.gameCastSettings!.partialTimeouts;
@@ -1350,8 +1337,11 @@ export class GamecastComponent {
     this.currentGame!.clock = `${minutes < 10 ? '0' + minutes : minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
   }
 
-  ngOnDestroy() {
-    this.stopTimer();
+  async ngOnDestroy() {
+    await this.stopTimer();
+		clearInterval(this.interval);
+		await this.send();
+		this.sync.gameCastInProgress = false;
   }
 
 }
