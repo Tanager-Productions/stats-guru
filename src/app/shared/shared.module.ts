@@ -5,6 +5,7 @@ import { IonicModule } from '@ionic/angular';
 import { AddPlayerComponent } from './add-player/add-player.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { EditPlayerComponent } from './edit-player/edit-player.component';
+import { AgGridModule } from 'ag-grid-angular';
 
 @NgModule({
   declarations: [
@@ -13,6 +14,7 @@ import { EditPlayerComponent } from './edit-player/edit-player.component';
     EditPlayerComponent
   ],
   imports: [
+		AgGridModule,
     CommonModule,
     IonicModule,
 		FormsModule,

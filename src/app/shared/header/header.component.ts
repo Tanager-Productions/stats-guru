@@ -7,6 +7,7 @@ import { AuthService } from 'src/app/services/auth/auth.service';
 import { CrudService } from 'src/app/services/crud/crud.service';
 import { SqlService } from 'src/app/services/sql/sql.service';
 import { SyncService } from 'src/app/services/sync/sync.service';
+import { ColDef } from 'ag-grid-community';
 
 @Component({
   selector: 'app-header',
@@ -20,9 +21,20 @@ export class HeaderComponent implements OnInit {
   public modalOpen:boolean = false;
   public syncHistory?: SyncHistory[];
 
+	//Sync information:
+	public syncData: ColDef [] = [
+		{field: 'dateOccurred', headerName: 'Date Occurred', width: 200,  pinned: true, cellRenderer: (data: any) => {
+			return data.value ? (new Date(data.value)).toLocaleString('en-GB', { timeZone: 'UTC' }) : '';}},
+		{field: 'playsSynced', headerName: 'Plays Synced', cellRenderer: (data: any) => { return (Boolean(data.value))}},
+		{field: 'playersSynced', headerName: 'Players Synced', cellRenderer: (data: any) => { return (Boolean(data.value))}},
+		{field: 'gamesSynced', headerName: 'Games Synced', cellRenderer: (data: any) => { return (Boolean(data.value))}},
+		{field: 'statsSynced', headerName: 'Stats Synced', cellRenderer: (data: any) => { return (Boolean(data.value))}},
+		{field: 'errorMessages', headerName: 'Error Messages', cellRenderer: (data: any) => { return data.value === "[]" ? "N/A" : data.value}}
+	]
+
   constructor(
     private router: Router,
-    auth:AuthService,
+    auth: AuthService,
     public sync:SyncService,
     private sql:SqlService,
     private crud:CrudService

@@ -59,9 +59,13 @@
 <ion-modal [backdropDismiss]="false" [isOpen]="modalOpen">
   <ng-template>
     <ion-header>
-      <ion-toolbar>
+      <ion-toolbar color="medium">
         <ion-title>Sync</ion-title>
         <ion-buttons slot="end">
+			<p style="margin-right: 10px">{{ sync.timeRemaining | date:'mm:ss' }}</p>
+			<ion-button (click)="startSync()">
+				<ion-icon slot="icon-only" name="sync-sharp"></ion-icon>
+			</ion-button>
           <ion-button (click)="modalOpen = false">
             <ion-icon slot="icon-only" name="close"></ion-icon>
           </ion-button>
@@ -69,21 +73,18 @@
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
-      <h4>Sync Timer:</h4>
-      <p>
-        {{ sync.timeRemaining | date:'mm:ss' }}
-      </p>
-      <h4>Sync Button</h4>
-      <ion-button expand="block" (click)="startSync()">SYNC NOW</ion-button>
-      <div *ngIf="syncHistory">
-        <ion-card *ngFor="let item of syncHistory">
-          <ion-card-content>
-            <ion-label>
-              <h1>{{item.dateOccurred | date: 'medium'}}</h1>
-            </ion-label>
-          </ion-card-content>
-        </ion-card>
-      </div>
+	<ion-content [scrollY]="false">
+		<ag-grid-angular
+			class="ag-theme-alpine"
+			style="width: 100%; height: 100%;"
+			[columnDefs]="syncData"
+			[defaultColDef]="{sortable: true, filter: true, editable: false}"
+			[rowData]="syncHistory"
+			[rowSelection]="'single'"
+			[pagination]="true"
+			[suppressCellFocus]="true">
+		</ag-grid-angular>
+	</ion-content>
     </ion-content>
   </ng-template>
 </ion-modal>
