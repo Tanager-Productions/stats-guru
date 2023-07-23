@@ -11,8 +11,7 @@ import { AuthService } from './services/auth/auth.service';
 export class AppComponent {
   constructor(platform: Platform, sqlite:SqlService, public auth:AuthService) {
     platform.ready().then(async () => {
-      await sqlite.initializePlugin();
-      await sqlite.upgradeDatabase();
+      await sqlite.init();
     });
   }
 }

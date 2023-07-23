@@ -6,12 +6,14 @@ import { AddPlayerComponent } from './add-player/add-player.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { EditPlayerComponent } from './edit-player/edit-player.component';
 import { AgGridModule } from 'ag-grid-angular';
+import { GamecastDetailComponent } from './gamecast-detail/gamecast-detail.component';
 
 @NgModule({
   declarations: [
     HeaderComponent,
     AddPlayerComponent,
-    EditPlayerComponent
+    EditPlayerComponent,
+		GamecastDetailComponent
   ],
   imports: [
 		AgGridModule,
@@ -23,7 +25,8 @@ import { AgGridModule } from 'ag-grid-angular';
   exports: [
     HeaderComponent,
 		AddPlayerComponent,
-		EditPlayerComponent
+		EditPlayerComponent,
+		GamecastDetailComponent
   ]
 })
 export class SharedModule { }

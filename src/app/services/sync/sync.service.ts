@@ -3,8 +3,7 @@ import { ApiService } from '../api/api.service';
 import { SqlService } from '../sql/sql.service';
 import { CrudService } from '../crud/crud.service';
 import { SyncDto, SyncMode } from 'src/app/interfaces/sync.interface';
-import { currentDatabaseVersion } from 'src/app/upgrades/versions';
-import { SQLiteDBConnection } from '@capacitor-community/sqlite';
+import { currentDatabaseVersion, databaseName } from 'src/app/upgrades/versions';
 import { SyncResult } from 'src/app/interfaces/syncResult.interface';
 import { BehaviorSubject, Observable, Subscription, finalize, interval, map, repeat, takeWhile } from 'rxjs';
 import { SyncHistory } from 'src/app/interfaces/syncHistory.interface';
@@ -20,7 +19,6 @@ import { CommonService } from '../common/common.service';
   providedIn: 'root'
 })
 export class SyncService {
-  private db?:SQLiteDBConnection;
   private seconds = 600; //10 minutes
   private timeRemaining$: Observable<number> = interval(1000).pipe(
     map(n => (this.seconds - n) * 1000),
@@ -43,17 +41,16 @@ export class SyncService {
 
   public async beginSync(isInitial:boolean = false) {
 		if (!this.gameCastInProgress) {
-			this.db = await this.sqlService.createConnection();
 			this.syncing = true;
 			try {
 				let res: SyncDto = {
 					version: currentDatabaseVersion,
 					mode: SyncMode.Full,
 					overwrite: null,
-					games: await this.crudService.query(this.db, "games"),
-					players: await this.crudService.query(this.db, "players"),
-					stats: await this.crudService.query(this.db, "stats"),
-					plays: await this.crudService.query(this.db, "plays")
+					games: await this.crudService.query("games"),
+					players: await this.crudService.query("players"),
+					stats: await this.crudService.query("stats"),
+					plays: await this.crudService.query("plays")
 				}
 				let httpResponse = await this.api.postSync(res);
 				if (httpResponse.status == 200) {
@@ -67,13 +64,13 @@ export class SyncService {
 						playsSynced: res.statsSynced ? 1 : 0,
 						errorMessages: JSON.stringify(res.errorMessages)
 					};
-					await this.crudService.save(this.db, 'syncHistory', history);
-					await this.db.execute(` delete from plays;
-																	delete from stats;
-																	delete from games;
-																	delete from players;
-																	delete from teams;
-																	delete from events;`, true);
+					await this.crudService.save('syncHistory', history);
+					await this.sqlService.db.execute(`delete from plays;
+																						delete from stats;
+																						delete from games;
+																						delete from players;
+																						delete from teams;
+																						delete from events;`);
 					await this.getData();
 				} else {
 					throw "Failed to post sync"
@@ -118,7 +115,7 @@ export class SyncService {
         delete game.homeFinal;
         delete game.awayFinal;
       }
-      await this.crudService.bulkInsert(this.db!, "games", games);
+      await this.crudService.bulkInsert("games", games);
     } else {
       throw new Error(`Failed to fetch games from server: ${response.data}`);
     }
@@ -129,7 +126,7 @@ export class SyncService {
     if (response.status == 200) {
       let events = response.data as ServerEvent[];
       if (events.length > 0)
-        await this.crudService.bulkInsert(this.db!, "events", events);
+        await this.crudService.bulkInsert("events", events);
     } else {
       throw new Error(`Failed to fetch games from server: ${response.data}`);
     }
@@ -143,7 +140,7 @@ export class SyncService {
 				delete player.socialMedias;
 			}
       if (players.length > 0)
-        await this.crudService.bulkInsert(this.db!, "players", players);
+        await this.crudService.bulkInsert("players", players);
     } else {
       throw new Error(`Failed to fetch games from server: ${response.data}`);
     }
@@ -154,7 +151,7 @@ export class SyncService {
     if (response.status == 200) {
       let teams = response.data as ServerTeam[];
       if (teams.length > 0)
-        await this.crudService.bulkInsert(this.db!, "teams", teams);
+        await this.crudService.bulkInsert("teams", teams);
     } else {
       throw new Error(`Failed to fetch games from server: ${response.data}`);
     }
@@ -174,7 +171,7 @@ export class SyncService {
         if (end > stats.length) {
           end = stats.length;
         }
-        await this.crudService.bulkInsert(this.db!, "stats", stats.slice(i, end));
+        await this.crudService.bulkInsert("stats", stats.slice(i, end));
       }
     } else {
       throw new Error(`Failed to fetch games from server: ${response.data}`);
@@ -190,7 +187,7 @@ export class SyncService {
         if (end > plays.length) {
           end = plays.length;
         }
-        await this.crudService.bulkInsert(this.db!, "plays", plays.slice(i, end));
+        await this.crudService.bulkInsert("plays", plays.slice(i, end));
       }
     } else {
       throw new Error(`Failed to fetch games from server: ${response.data}`);

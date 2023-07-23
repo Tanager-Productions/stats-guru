@@ -157,7 +157,7 @@ export const version1: string[] = [
 ];
 
 export const currentDatabaseVersion = 1;
-export const databaseName = "tgs";
+export const databaseName = "sqlite:statsguru.db";
 export const upgrades = {
   database: databaseName,
   upgrade: [

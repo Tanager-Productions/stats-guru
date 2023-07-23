@@ -1,4 +1,4 @@
-<ion-header *ngIf="isWin" mode="ios" class="ion-no-border">
+<ion-header data-tauri-drag-region *ngIf="isWin" mode="ios" class="ion-no-border">
     <ion-toolbar class="drag" color="tertiary">
       <ion-buttons slot="start" *ngIf="showPopover">
         <ion-button class="no-drag" id="click-trigger">
@@ -24,7 +24,7 @@
     <ng-container [ngTemplateOutlet]="template"></ng-container>
 </ion-header>
 
-<ion-header mode="ios" *ngIf="!isWin" class="drag">
+<ion-header data-tauri-drag-region mode="ios" *ngIf="!isWin" class="drag">
   <ion-toolbar color="tertiary">
     <ion-buttons slot="end" *ngIf="showPopover">
       <ion-button class="syncing" *ngIf="sync.syncing">
@@ -48,7 +48,7 @@
             <h2>{{user?.email}}</h2>
           </ion-label>
         </ion-list-header>
-        <ion-item button="true" (click)="navigateToDBM()" detail="false">DBM</ion-item>
+        <ion-item button="true" href="https://dbm.thegrindsession.com" target="_blank" detail="false">DBM</ion-item>
         <ion-item button="true" (click)="modalOpen = true" detail="false">Sync</ion-item>
         <ion-item button="true" detail="false" (click)="navigateToLogin()">Log Out</ion-item>
       </ion-list>
