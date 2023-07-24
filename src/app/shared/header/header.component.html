@@ -1,11 +1,11 @@
-<ion-header data-tauri-drag-region *ngIf="isWin" mode="ios" class="ion-no-border">
-    <ion-toolbar class="drag" color="tertiary">
+<ion-header *ngIf="isWin" mode="ios" class="ion-no-border">
+    <ion-toolbar data-tauri-drag-region class="drag" color="tertiary">
       <ion-buttons slot="start" *ngIf="showPopover">
         <ion-button class="no-drag" id="click-trigger">
           <ion-icon slot="icon-only" name="person-circle"></ion-icon>
         </ion-button>
       </ion-buttons>
-      <ion-title class="no-select">Stats Guru</ion-title>
+      <ion-title data-tauri-drag-region class="no-select">Stats Guru</ion-title>
       <ion-buttons slot="end" class="no-drag">
         <ion-button class="syncing" *ngIf="sync.syncing">
           <ion-icon slot="icon-only" name="sync"></ion-icon>
@@ -24,8 +24,8 @@
     <ng-container [ngTemplateOutlet]="template"></ng-container>
 </ion-header>
 
-<ion-header data-tauri-drag-region mode="ios" *ngIf="!isWin" class="drag">
-  <ion-toolbar color="tertiary">
+<ion-header mode="ios" *ngIf="!isWin" class="drag">
+  <ion-toolbar data-tauri-drag-region color="tertiary">
     <ion-buttons slot="end" *ngIf="showPopover">
       <ion-button class="syncing" *ngIf="sync.syncing">
         <ion-icon slot="icon-only" name="sync"></ion-icon>
@@ -34,7 +34,7 @@
         <ion-icon slot="icon-only" name="person-circle"></ion-icon>
       </ion-button>
     </ion-buttons>
-    <ion-title class="no-select">Stats Guru</ion-title>
+    <ion-title data-tauri-drag-region class="no-select">Stats Guru</ion-title>
   </ion-toolbar>
   <ng-container [ngTemplateOutlet]="template"></ng-container>
 </ion-header>
