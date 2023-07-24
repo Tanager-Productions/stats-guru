@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
-import { SQLiteDBConnection } from '@capacitor-community/sqlite';
 import { Player } from 'src/app/interfaces/player.interface';
 import { Game } from 'src/app/interfaces/game.interface';
 import { Stat } from 'src/app/interfaces/stat.interface';
 import { Play } from 'src/app/interfaces/play.interface';
 import { SyncHistory } from 'src/app/interfaces/syncHistory.interface';
 import { GameCastSettings } from 'src/app/interfaces/gameCastSetting.interface';
+import { SqlService } from '../sql/sql.service';
 
 export type Table = 'games' | 'plays' | 'stats' | 'players' | 'events' | 'syncHistory' | 'gameCastSettings' | 'teams';
 export type Model = Play | Player | Game | Stat | SyncHistory | GameCastSettings;
@@ -15,14 +15,9 @@ export type Direction = 'desc' | 'asc';
   providedIn: 'root'
 })
 export class CrudService {
+	constructor(private sql:SqlService) {}
 
-  constructor() { }
-
-  public async query(db:SQLiteDBConnection,
-										table:Table,
-										where?: {[key: string]: string},
-										orderByColumn?:string,
-										orderDirection:Direction = 'asc') {
+  public async query(table:Table, where?: {[key: string]: string}, orderByColumn?:string, orderDirection:Direction = 'asc') {
     let sqlcmd:string = `select * from ${table}`;
     if (where) {
       sqlcmd += " where ";
@@ -37,17 +32,10 @@ export class CrudService {
     if (orderByColumn) {
       sqlcmd += ` order by ${orderByColumn} ${orderDirection}`;
     }
-    let res = await db.query(sqlcmd);
-    if (res.values == undefined) {
-      throw new Error("Query returned undefined");
-    } else {
-      return res.values;
-    }
+    return await this.sql.db.select<any[]>(sqlcmd);
   }
 
-  public async delete(db:SQLiteDBConnection,
-											table:Table,
-											where?: {[key: string]: string}) {
+  public async delete(table:Table, where?: {[key: string]: string}) {
     let sqlcmd:string = `delete from ${table}`;
     if (where) {
       sqlcmd += " where ";
@@ -59,18 +47,10 @@ export class CrudService {
         }
       }
     }
-    let res = await db.run(sqlcmd+=';', undefined, true);
-    if (res.changes == undefined || res.changes.changes == undefined) {
-      throw new Error("Execution returned undefined");
-    } else {
-      return res.changes.changes;
-    }
+    return await this.sql.db.execute(sqlcmd+=';');
   }
 
-  public async save(db:SQLiteDBConnection,
-										table: Table,
-										model: Model,
-										where?: {[key: string]: string}): Promise<void> {
+  public async save(table: Table, model: Model, where?: {[key: string]: string}) {
 		let castedModel: any = JSON.parse(JSON.stringify(model));
 		this.deleteKeys(castedModel, table);
     const isUpdate: boolean = where ? true : false;
@@ -82,16 +62,14 @@ export class CrudService {
     }
     if(!isUpdate) {
       const qMarks: string[] = [];
+			let count = 1;
       for (const key of keys) {
-        qMarks.push('?');
+        qMarks.push(`$${count}`);
+				count++;
       }
       stmt = `INSERT INTO ${table} (${keys.toString()}) VALUES (${qMarks.toString()})`;
     } else {
-			const setString: string = await this.setNameForUpdate(keys);
-      if (setString.length === 0) {
-        throw new Error(`save: update no SET`);
-      }
-      stmt = `UPDATE ${table} SET ${setString} where `;
+      stmt = `UPDATE ${table} SET ${this.setNameForUpdate(keys)} where `;
       let keys2:string[] = Object.keys(where!);
       for (let key in where) {
         stmt += `${key} = ${where[key]}`;
@@ -100,35 +78,38 @@ export class CrudService {
         }
       }
     }
-    const ret = await db.run(stmt+=';', values, true);
-    if (ret.changes!.changes != 1) {
-      throw new Error(`save: insert changes != 1`);
-    }
-    return;
+    return await this.sql.db.execute(stmt+=';', values);
   }
 
-  public async bulkInsert(db:SQLiteDBConnection, table: string, model: any) {
+  public async bulkInsert(table: string, model: any[]) {
     const keys: string[] = Object.keys(model[0]);
     let stmt:string = `INSERT INTO ${table} (${keys.toString()}) VALUES `;
     let values: any[] = [];
+		let count = 1;
     for (let item of model) {
       for (const key of keys) {
+				if (typeof item[key] == 'boolean') {
+					item[key] = item[key] ? 1 : 0;
+				}
         values.push(item[key]);
       }
       const qMarks: string[] = [];
       for (const key of keys) {
-        qMarks.push('?');
+        qMarks.push(`$${count}`);
+				count++;
       }
       stmt += `(${qMarks.toString()}),`;
     }
     stmt = stmt.slice(0, stmt.length-1);
-    const ret = await db.run(stmt+=';', values, true);
+    return await this.sql.db.execute(stmt+=';', values);
   }
 
-  private async setNameForUpdate(names: string[]): Promise<string> {
+  private setNameForUpdate(names: string[]) {
     let retString = '';
+		let count = 1;
     for (const name of names) {
-      retString += `${name} = ? ,`;
+      retString += `${name} = $${count} ,`;
+			count++;
     }
     if (retString.length > 1) {
       retString = retString.slice(0, -1);
@@ -153,20 +134,14 @@ export class CrudService {
 		}
 	}
 
-  public async rawQuery(db:SQLiteDBConnection, query:string) {
-    let res = await db.query(query);
-    if (res.values == undefined) {
-      throw new Error("Query returned undefined");
-    } else {
-      return res.values;
-    }
+  public async rawQuery(query:string) {
+    return await this.sql.db.select<any[]>(query);
   }
 
-	public async rawExecute(db:SQLiteDBConnection, statement:string) {
-    let res = await db.execute(statement, true);
-    if (res.changes!.changes == 0) {
-      throw new Error(`save: insert changes == 0`);
-    }
+	public async rawExecute(statement:string) {
+		if (!statement.endsWith(';')) {
+			statement += ';';
+		}
+    return await this.sql.db.execute(statement);
   }
-
 }

@@ -23,22 +23,25 @@ export class GamesComponent implements OnInit {
     private common: CommonService,
     private router: Router,
     private crud: CrudService,
-    private sql:SqlService,
+    sql:SqlService,
     sync:SyncService
   ) {
-		if (sync.online) {
-			sync.beginSync(true);
-		} else {
-			this.common.initializeService();
-		}
+		sql.isReady().subscribe(ready => {
+			if (ready) {
+				if (sync.online) {
+					sync.beginSync(true);
+				} else {
+					this.common.initializeService();
+				}
+			}
+		});
   }
 
   ngOnInit() {
     this.common.gameState().subscribe(async ready => {
       if (ready) {
         this.games$ = this.common.getGames();
-        let db = await this.sql.createConnection();
-        this.logos = await this.crud.rawQuery(db, 'select teams.name, teams.isMale, teams.logo from teams;');
+        this.logos = await this.crud.rawQuery('select teams.name, teams.isMale, teams.logo from teams;');
       }
     });
     this.common.eventState().subscribe(ready => {
@@ -64,6 +67,4 @@ export class GamesComponent implements OnInit {
   navigateToGamecast(gameId: string) {
     this.router.navigateByUrl(`/gamecast/${gameId}`);
   }
-
-
 }

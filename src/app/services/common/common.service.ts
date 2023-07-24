@@ -7,7 +7,6 @@ import { Team } from 'src/app/interfaces/team.interface';
 import { Stat } from 'src/app/interfaces/stat.interface';
 import { CrudService } from '../crud/crud.service';
 import { SqlService } from '../sql/sql.service';
-import { SQLiteDBConnection } from '@capacitor-community/sqlite';
 import { Event } from 'src/app/interfaces/event.interface';
 
 @Injectable({
@@ -30,14 +29,13 @@ export class CommonService {
   constructor(private crud: CrudService, private sql:SqlService) { }
 
   public async initializeService() {
-    let db = await this.sql.createConnection();
     await Promise.all([
-      this.fetchPlayers(db),
-      this.fetchGames(db),
-      this.fetchPlays(db),
-      this.fetchStats(db),
-      this.fetchTeams(db),
-      this.fetchEvents(db)
+      this.fetchPlayers(),
+      this.fetchGames(),
+      this.fetchPlays(),
+      this.fetchStats(),
+      this.fetchTeams(),
+      this.fetchEvents()
     ]);
   }
 
@@ -45,8 +43,8 @@ export class CommonService {
     return this.isGamesReady.asObservable();
   }
 
-  public async fetchGames(db: SQLiteDBConnection) {
-    let games: Game[] = await this.crud.query(db, "games", undefined, "gameDate", 'desc');
+  public async fetchGames() {
+    let games: Game[] = await this.crud.query("games", undefined, "gameDate", 'desc');
     this.gamesSubject.next(games);
     this.isGamesReady.next(true);
   }
@@ -59,8 +57,8 @@ export class CommonService {
     return this.isEventsReady.asObservable();
   }
 
-  public async fetchEvents(db: SQLiteDBConnection) {
-    let events: Event[] = await this.crud.query(db, "events", undefined, "title", "asc");
+  public async fetchEvents() {
+    let events: Event[] = await this.crud.query("events", undefined, "title", "asc");
     this.eventsSubject.next(events);
     this.isEventsReady.next(true);
   }
@@ -73,8 +71,8 @@ export class CommonService {
     return this.isPlayersReady.asObservable();
   }
 
-  public async fetchPlayers(db: SQLiteDBConnection) {
-    let players: Player[] = await this.crud.query(db, "players");
+  public async fetchPlayers() {
+    let players: Player[] = await this.crud.query("players");
     this.playersSubject.next(players);
     this.isPlayersReady.next(true);
   }
@@ -87,8 +85,8 @@ export class CommonService {
     return this.isPlaysReady.asObservable();
   }
 
-  public async fetchPlays(db: SQLiteDBConnection) {
-    let plays: Play[] = await this.crud.query(db, "plays");
+  public async fetchPlays() {
+    let plays: Play[] = await this.crud.query("plays");
     this.playsSubject.next(plays);
     this.isPlaysReady.next(true);
   }
@@ -101,8 +99,8 @@ export class CommonService {
     return this.isTeamsReady.asObservable();
   }
 
-  public async fetchTeams(db: SQLiteDBConnection) {
-    let teams: Team[] = await this.crud.query(db, "teams");
+  public async fetchTeams() {
+    let teams: Team[] = await this.crud.query("teams");
     this.teamsSubject.next(teams);
     this.isTeamsReady.next(true);
   }
@@ -115,8 +113,8 @@ export class CommonService {
     return this.isStatsReady.asObservable();
   }
 
-  public async fetchStats(db: SQLiteDBConnection) {
-    let stats: Stat[] = await this.crud.query(db, "stats");
+  public async fetchStats() {
+    let stats: Stat[] = await this.crud.query("stats");
     this.statsSubject.next(stats);
     this.isStatsReady.next(true);
   }

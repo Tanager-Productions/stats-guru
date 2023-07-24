@@ -31,7 +31,7 @@ export class LoginPage {
 			if (debugResponse.status == 200) {
 				this.sync.online = true;
 				let userId = user.userId;
-				let res = await this.authService.getCredential(Credentials.Token, userId);
+				let res = this.authService.getCredential(Credentials.Token);
 				if (res != null) {
 					let httpResponse = await this.server.GetUser(res);
 					if (httpResponse.status == 200) {
@@ -39,12 +39,12 @@ export class LoginPage {
 						this.router.navigateByUrl('/home');
 					} else {
 						//token could have expired, so generate a new one
-						let apiKey = await this.authService.getCredential(Credentials.Key, userId);
+						let apiKey = this.authService.getCredential(Credentials.Key);
 						if (apiKey != null) {
 							httpResponse = await this.server.GenerateToken(apiKey, userId);
 							if (httpResponse.status == 200) {
 								let newToken = httpResponse.data;
-								await this.authService.storeCredential(Credentials.Token, userId, newToken);
+								this.authService.storeCredential(Credentials.Token, newToken);
 								this.authService.showPopover = true;
 								this.router.navigateByUrl('/home');
 							}
@@ -60,11 +60,6 @@ export class LoginPage {
 		this.checkingForKey = false;
 	}
 
-  open() {
-    // @ts-ignore
-    window.StatsGuru.openExternal("https://dbm.thegrindsession.com");
-  }
-
   async register() {
     this.loading = true;
     let split = this.key.split(':');
@@ -72,10 +67,10 @@ export class LoginPage {
     let apiKey = split[1];
     let res = await this.server.VerifyApiKey(apiKey, adminId);
     if (res.status == 200) {
-      await this.authService.storeCredential(Credentials.Key, adminId, apiKey);
+      this.authService.storeCredential(Credentials.Key, apiKey);
       res = await this.server.GenerateToken(apiKey, adminId);
       let token = res.data;
-      await this.authService.storeCredential(Credentials.Token, adminId, token);
+      this.authService.storeCredential(Credentials.Token, token);
       res = await this.server.GetUser(token)
       this.authService.storeUser(res.data);
       this.authService.showPopover = true;

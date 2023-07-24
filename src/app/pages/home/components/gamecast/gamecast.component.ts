@@ -8,7 +8,6 @@ import { SqlService } from 'src/app/services/sql/sql.service';
 import { SyncState } from 'src/app/interfaces/syncState.enum';
 import { Stat } from 'src/app/interfaces/stat.interface';
 import { Play } from 'src/app/interfaces/play.interface';
-import { SQLiteDBConnection } from '@capacitor-community/sqlite';
 import { ColDef, GridApi } from 'ag-grid-community';
 import { GameCastSettings } from 'src/app/interfaces/gameCastSetting.interface';
 import { ApiService } from 'src/app/services/api/api.service';
@@ -67,7 +66,6 @@ type StatsRow =  {
   styleUrls: ['./gamecast.component.scss'],
 })
 export class GamecastComponent {
-	db!:SQLiteDBConnection;
   gameId!: string;
   currentGame?: Game;
 	homeTeamPlayers?: Player[];
@@ -90,6 +88,7 @@ export class GamecastComponent {
 	editPlayer: boolean = false;
 	statsTab: 'home' | 'away' = 'home';
 	gameCastSettings?: GameCastSettings;
+	initSub?:Subscription;
 	gameActions = GameActions;
 	actions: {key:number, value:string}[] = Object.entries(GameActions)
 																						.reverse()
@@ -146,14 +145,18 @@ export class GamecastComponent {
 		private sync: SyncService) {}
 
   ngOnInit() {
-		this.sync.gameCastInProgress = true;
-    this.route.params.subscribe((params: { [x: string]: string }) => {
-      this.gameId = params['gameId'];
-			this.fetchData();
-			if (this.sync.online) {
-				this.interval = setInterval(() => this.send(), 15000);
+		this.initSub = this.sql.isReady().subscribe(ready => {
+			if (ready) {
+				this.sync.gameCastInProgress = true;
+				this.route.params.subscribe((params: { [x: string]: string }) => {
+					this.gameId = params['gameId'];
+					this.fetchData();
+					if (this.sync.online) {
+						this.interval = setInterval(() => this.send(), 15000);
+					}
+				});
 			}
-    });
+		});
   }
 
 	private async send() {
@@ -205,7 +208,7 @@ export class GamecastComponent {
   }
 
 	async setPrevPlays() {
-		this.prevPlays = await this.crud.rawQuery(this.db, `
+		this.prevPlays = await this.crud.rawQuery(`
 			SELECT 		*
 			FROM 			Plays
 			WHERE 		gameId = '${this.gameId}'
@@ -220,12 +223,11 @@ export class GamecastComponent {
 		} else {
 			this.awayTeamPlayers!.push(player);
 		}
-		await this.crud.save(this.db, 'players', player)
+		await this.crud.save('players', player)
 	}
 
 	private async fetchData() {
-		this.db = await this.sql.createConnection();
-		let res = await this.crud.rawQuery(this.db, `SELECT * FROM GameCastSettings WHERE game = '${this.gameId}'`);
+		let res = await this.crud.rawQuery(`SELECT * FROM GameCastSettings WHERE game = '${this.gameId}'`);
 		if (res.length == 0) {
 			let gameCastSetting: GameCastSettings = {
 				id: 0,
@@ -245,36 +247,36 @@ export class GamecastComponent {
 				homeCurrentFouls: 0,
 				awayCurrentFouls: 0
 			}
-			await this.crud.save(this.db, 'gameCastSettings', gameCastSetting);
-			this.gameCastSettings = (await this.crud.rawQuery(this.db, `SELECT * FROM GameCastSettings WHERE game = '${this.gameId}'`))[0];
+			await this.crud.save('gameCastSettings', gameCastSetting);
+			this.gameCastSettings = (await this.crud.rawQuery(`SELECT * FROM GameCastSettings WHERE game = '${this.gameId}'`))[0];
 		} else {
 			this.gameCastSettings = res[0];
 		}
-		this.currentGame = (await this.crud.rawQuery(this.db, `
+		this.currentGame = (await this.crud.rawQuery(`
 			SELECT 	*
 			FROM 		Games
 			WHERE 	gameId = '${this.gameId}'
 		`))[0];
-    this.homeTeamPlayers = await this.crud.rawQuery(this.db, `
+    this.homeTeamPlayers = await this.crud.rawQuery(`
 			SELECT 		*
 			FROM 			Players
 			WHERE 		team = '${this.currentGame?.homeTeam}'
 			AND 			isMale = ${this.currentGame?.isMale}
 			ORDER BY 	number ASC;
 		`);
-    this.awayTeamPlayers = await this.crud.rawQuery(this.db, `
+    this.awayTeamPlayers = await this.crud.rawQuery(`
 			SELECT 		*
 			FROM 			Players
 			WHERE 		team = '${this.currentGame?.awayTeam}'
 			AND 			isMale = ${this.currentGame?.isMale}
 			ORDER BY 	number ASC;
 		`);
-		this.stats = await this.crud.rawQuery(this.db, `
+		this.stats = await this.crud.rawQuery(`
 			SELECT	*
 			FROM 		Stats
 			WHERE 	game = '${this.gameId}';
 		`);
-		this.plays = await this.crud.rawQuery(this.db, `
+		this.plays = await this.crud.rawQuery(`
 			SELECT 		*
 			FROM 			Plays
 			WHERE 		gameId = '${this.gameId}'
@@ -290,7 +292,7 @@ export class GamecastComponent {
 	}
 
 	async loadBoxScore() {
-		this.homeTeamStats = await this.crud.rawQuery(this.db, `
+		this.homeTeamStats = await this.crud.rawQuery(`
 			SELECT			Players.number, Players.firstName, Players.lastName, Stats.player, Stats.minutes, Stats.rebounds, Stats.defensiveRebounds,
 									Stats.offensiveRebounds, Stats.fieldGoalsMade, Stats.fieldGoalsAttempted, Stats.blocks, Stats.steals, Stats.threesMade,
 									Stats.threesAttempted, Stats.freethrowsMade, Stats.freethrowsAttempted, Stats.points, Stats.turnovers,
@@ -301,7 +303,7 @@ export class GamecastComponent {
 			AND					Stats.game = '${this.gameId}'
 			ORDER BY 		Players.number;
 		`);
-		this.awayTeamStats = await this.crud.rawQuery(this.db, `
+		this.awayTeamStats = await this.crud.rawQuery(`
 			SELECT		Players.number, Players.firstName, Players.lastName, Stats.player, Stats.minutes, Stats.rebounds, Stats.defensiveRebounds,
 								Stats.offensiveRebounds, Stats.fieldGoalsMade, Stats.fieldGoalsAttempted, Stats.blocks, Stats.steals, Stats.threesMade,
 								Stats.threesAttempted, Stats.freethrowsMade, Stats.freethrowsAttempted, Stats.points, Stats.turnovers,
@@ -318,7 +320,7 @@ export class GamecastComponent {
 		if (!this.sync.online) {
 			player.syncState = SyncState.Modified;
 		}
-		await this.crud.save(this.db, "players", player, {"playerId": `'${player.playerId}'`});
+		await this.crud.save("players", player, {"playerId": `'${player.playerId}'`});
 		this.editPlayer = false;
 	}
 
@@ -359,7 +361,7 @@ export class GamecastComponent {
 
     this.clearNumberInput();
 
-		await this.crud.save(this.db, "players", newTeamPlayer);
+		await this.crud.save("players", newTeamPlayer);
   }
 
 	toggleGameComplete() {
@@ -490,8 +492,8 @@ export class GamecastComponent {
 				points: 0,
 				eff: 0
 			}
-			await this.crud.save(this.db, "stats", newStat);
-			this.stats = await this.crud.rawQuery(this.db, `
+			await this.crud.save("stats", newStat);
+			this.stats = await this.crud.rawQuery(`
 				SELECT	*
 				FROM 		Stats
 				WHERE 	game = '${this.gameId}';
@@ -506,8 +508,8 @@ export class GamecastComponent {
 		if (!this.sync.online) {
 			stat.syncState == SyncState.Modified;
 		}
-		await this.crud.save(this.db, "stats", stat, {"player": `'${stat.player}'`, "game": `'${this.gameId}'`});
-		stat = (await this.crud.rawQuery(this.db, `select * from Stats where player = '${stat.player}' and game = '${stat.game}'`))[0];
+		await this.crud.save("stats", stat, {"player": `'${stat.player}'`, "game": `'${this.gameId}'`});
+		stat = (await this.crud.rawQuery(`select * from Stats where player = '${stat.player}' and game = '${stat.game}'`))[0];
 	}
 
 	private async updatePeriodTotal(team: 'home' | 'away', points:number) {
@@ -558,14 +560,14 @@ export class GamecastComponent {
 			gameClock: this.currentGame!.clock
 		}
 		if (this.sync.online) {
-			await this.crud.save(this.db, 'plays', play);
+			await this.crud.save('plays', play);
 		} else {
-			let existingPlay = (await this.crud.query(this.db, 'plays', {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`}));
+			let existingPlay = (await this.crud.query('plays', {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`}));
 			if (existingPlay.length == 1) {
 				play.syncState = SyncState.Modified;
-				await this.crud.save(this.db, 'plays', play, {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`});
+				await this.crud.save('plays', play, {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`});
 			} else {
-				await this.crud.save(this.db, 'plays', play);
+				await this.crud.save('plays', play);
 			}
 		}
 		this.plays?.unshift(play);
@@ -842,22 +844,22 @@ export class GamecastComponent {
 				this.currentGame!.syncState = state;
 			}
 		}
-		await this.crud.save(this.db, 'games', this.currentGame!, { "gameId": `'${this.gameId}'` });
+		await this.crud.save('games', this.currentGame!, { "gameId": `'${this.gameId}'` });
 	}
 
 	public async updateGameCastSetting() {
-	  await this.crud.save(this.db, 'gameCastSettings', this.gameCastSettings!, { "game": `'${this.gameId}'` });
+	  await this.crud.save('gameCastSettings', this.gameCastSettings!, { "game": `'${this.gameId}'` });
 	}
 
 	public async removeLastPlay() {
 		let play = this.plays![0];
 		await this.undoAction(play);
 		if (this.sync.online) {
-			await this.crud.delete(this.db, 'plays', {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`});
+			await this.crud.delete('plays', {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`});
 			this.plays!.splice(0, 1);
 		} else {
 			play.syncState = SyncState.Deleted;
-			await this.crud.save(this.db, 'plays', play, { "playId": `${play.playId}`,"gameId": `'${this.gameId}'` });
+			await this.crud.save('plays', play, { "playId": `${play.playId}`,"gameId": `'${this.gameId}'` });
 			this.plays = this.plays!.filter(t => t.syncState != SyncState.Deleted);
 		}
 	}
@@ -1251,7 +1253,7 @@ export class GamecastComponent {
 		if (!this.sync.online) {
 			play.syncState = SyncState.Modified;
 		}
-		await this.crud.save(this.db, 'plays', play, { "playId": `${play.playId}`,"gameId": `'${this.gameId}'` });
+		await this.crud.save('plays', play, { "playId": `${play.playId}`,"gameId": `'${this.gameId}'` });
 		await this.setPrevPlays();
 	}
 
@@ -1296,13 +1298,13 @@ export class GamecastComponent {
     });
   }
 
-	resetTOs() {
+	async resetTOs() {
 		if (this.gameCastSettings!.resetTimeoutsEveryPeriod == 1) {
 			this.gameCastSettings!.homeFullTOL = this.gameCastSettings!.fullTimeouts;
 			this.gameCastSettings!.awayFullTOL = this.gameCastSettings!.fullTimeouts;
 			this.gameCastSettings!.homePartialTOL = this.gameCastSettings!.partialTimeouts;
 			this.gameCastSettings!.awayPartialTOL = this.gameCastSettings!.partialTimeouts;
-			this.updateGameCastSetting();
+			await this.updateGameCastSetting();
 		}
 	}
 
@@ -1331,6 +1333,11 @@ export class GamecastComponent {
 		}
   }
 
+	async changePeriod() {
+		await this.updateGame();
+		await this.resetTOs();
+	}
+
   updateTimerDisplay() {
     const minutes = Math.floor(this.timerDuration / 60);
     const seconds = this.timerDuration % 60;
@@ -1338,6 +1345,7 @@ export class GamecastComponent {
   }
 
   async ngOnDestroy() {
+		this.initSub?.unsubscribe();
     await this.stopTimer();
 		clearInterval(this.interval);
 		await this.send();

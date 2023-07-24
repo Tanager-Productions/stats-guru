@@ -12,14 +12,12 @@ export enum Credentials {
 export class AuthService {
   public showPopover:boolean = false;
 
-  async storeCredential(key:Credentials, account:string, value:string) {
-    // @ts-ignore
-    await window.StatsGuru.setPassword(key, account, value);
+  storeCredential(key:Credentials, value:string) {
+    localStorage.setItem(key, value);
   }
 
-  async getCredential(key:Credentials, account:string): Promise<string | null> {
-    // @ts-ignore
-    return await window.StatsGuru.getPassword(key, account);
+  getCredential(key:Credentials): string | null {
+    return localStorage.getItem(key);
   }
 
   storeUser(user: AccountDto) {

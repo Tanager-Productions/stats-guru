@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { JsonSQLite } from '@capacitor-community/sqlite';
 import { CapacitorHttp, HttpHeaders, HttpOptions, HttpResponse } from "@capacitor/core";
 import { GamecastDto } from 'src/app/interfaces/gamecastDto.interface';
 import { SyncDto } from 'src/app/interfaces/sync.interface';

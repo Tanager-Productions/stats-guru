@@ -1,11 +1,11 @@
 <ion-header *ngIf="isWin" mode="ios" class="ion-no-border">
-    <ion-toolbar class="drag" color="tertiary">
+    <ion-toolbar data-tauri-drag-region class="drag" color="tertiary">
       <ion-buttons slot="start" *ngIf="showPopover">
         <ion-button class="no-drag" id="click-trigger">
           <ion-icon slot="icon-only" name="person-circle"></ion-icon>
         </ion-button>
       </ion-buttons>
-      <ion-title class="no-select">Stats Guru</ion-title>
+      <ion-title data-tauri-drag-region class="no-select">Stats Guru</ion-title>
       <ion-buttons slot="end" class="no-drag">
         <ion-button class="syncing" *ngIf="sync.syncing">
           <ion-icon slot="icon-only" name="sync"></ion-icon>
@@ -25,7 +25,7 @@
 </ion-header>
 
 <ion-header mode="ios" *ngIf="!isWin" class="drag">
-  <ion-toolbar color="tertiary">
+  <ion-toolbar data-tauri-drag-region color="tertiary">
     <ion-buttons slot="end" *ngIf="showPopover">
       <ion-button class="syncing" *ngIf="sync.syncing">
         <ion-icon slot="icon-only" name="sync"></ion-icon>
@@ -34,7 +34,7 @@
         <ion-icon slot="icon-only" name="person-circle"></ion-icon>
       </ion-button>
     </ion-buttons>
-    <ion-title class="no-select">Stats Guru</ion-title>
+    <ion-title data-tauri-drag-region class="no-select">Stats Guru</ion-title>
   </ion-toolbar>
   <ng-container [ngTemplateOutlet]="template"></ng-container>
 </ion-header>
@@ -48,7 +48,7 @@
             <h2>{{user?.email}}</h2>
           </ion-label>
         </ion-list-header>
-        <ion-item button="true" (click)="navigateToDBM()" detail="false">DBM</ion-item>
+        <ion-item button="true" href="https://dbm.thegrindsession.com" target="_blank" detail="false">DBM</ion-item>
         <ion-item button="true" (click)="modalOpen = true" detail="false">Sync</ion-item>
         <ion-item button="true" detail="false" (click)="navigateToLogin()">Log Out</ion-item>
       </ion-list>
