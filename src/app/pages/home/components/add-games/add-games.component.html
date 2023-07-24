@@ -12,39 +12,30 @@
     <ion-row>
       <ion-col size="1" size-lg="2"></ion-col>
       <ion-col size="10" size-lg="8">
-		<ion-item>
-			<ion-label position="floating">Gender</ion-label>
-			<ion-select interface="popover" (ionChange)="setGender(gender.value)" #gender>
-				<ion-select-option [value]="'1'">Male</ion-select-option>
-				<ion-select-option [value]="'0'">Female</ion-select-option>
-			</ion-select>
-		</ion-item>
-		<ion-item>
-			<ion-label position="floating">Home Team</ion-label>
-			<ion-select interface="popover" #homeTeam>
-				<ion-select-option *ngFor="let team of this.teams">{{team.name}}</ion-select-option>
-			</ion-select>
-		</ion-item>
-		<ion-item>
-			<ion-label fill="outline" class="ion-margin-vertical" position="floating">Away Team</ion-label>
-			<ion-select interface="popover" #awayTeam>
-				<ion-select-option *ngFor="let team of this.teams">{{team.name}}</ion-select-option>
-			</ion-select>
-		</ion-item>
-		<ion-item>
-			<ion-label fill="outline" class="ion-margin-vertical" position="floating">Event</ion-label>
-			<ion-select interface="popover" #event>
-				<ion-select-option [value]="null">None</ion-select-option>
-				<ion-select-option [value]="event.eventId" *ngFor="let event of this.events">{{event.title}}</ion-select-option>
-			</ion-select>
-		</ion-item>
-        <ion-input [(ngModel)]="date"
-          fill="outline"
-          label="Game Date"
-          class="ion-margin-vertical"
-		  type ="datetime-local"
-        ></ion-input>
-        <ion-button class="ion-text-center" (click)="addGame(homeTeam.value, awayTeam.value, gender.value, event.value)">Save</ion-button>
+		<ion-select class="ion-margin-vertical" label="Gender" labelPlacement="floating" fill="outline" interface="popover" [(ngModel)]="isMale">
+			<ion-select-option [value]="1">Male</ion-select-option>
+			<ion-select-option [value]="0">Female</ion-select-option>
+		</ion-select>
+		<ion-select class="ion-margin-vertical" label="Home Team" fill="outline" labelPlacement="floating" interface="popover" [(ngModel)]="homeTeam">
+			<ion-select-option *ngFor="let team of teams" [hidden]="team.isMale != isMale">{{team.name}}</ion-select-option>
+		</ion-select>
+		<ion-select class="ion-margin-vertical" label="Away Team" labelPlacement="floating" fill="outline" interface="popover" [(ngModel)]="awayTeam">
+			<ion-select-option *ngFor="let team of teams" [hidden]="team.isMale != isMale">{{team.name}}</ion-select-option>
+		</ion-select>
+		<ion-select class="ion-margin-vertical" label="Event" labelPlacement="floating" fill="outline" interface="popover" [(ngModel)]="event">
+			<ion-select-option [value]="null">None</ion-select-option>
+			<ion-select-option [value]="event.eventId" *ngFor="let event of events">{{event.title}}</ion-select-option>
+		</ion-select>
+		<ion-input
+			class="ion-margin-vertical"
+			(ionChange)="updateDate($event)"
+			fill="outline"
+			label="Game Date"
+			labelPlacement="floating"
+			type="datetime-local"
+			[value]="date"
+		></ion-input>
+        <ion-button expand="block" (click)="addGame()">Save</ion-button>
       </ion-col>
       <ion-col size="1" size-lg="2"></ion-col>
     </ion-row>

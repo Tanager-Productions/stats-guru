@@ -13,51 +13,35 @@ import { Router } from '@angular/router';
   styleUrls: ['./add-games.component.scss']
 })
 export class AddGamesComponent {
-	game!: Game;
-	games?: Game[];
 	teams?: Team[];
 	events?: Event[];
-	isMale?: string;
-	date?: any;
+	isMale: number = 1;
+	date: string = new Date().toJSON();
+	homeTeam:string = '';
+	awayTeam:string = '';
+	event:number | null = null;
 
-  constructor(private crud: CrudService, private sql: SqlService, private router: Router) {}
+  constructor(private crud: CrudService, private router: Router) {}
 
-	ngOnInit() {
-		this.fetchData();
-	}
-
-	private async fetchData() {
-    this.teams = await this.crud.rawQuery(`
-			SELECT 		*
-			FROM 			Teams
-			WHERE 		isMale = ${this.isMale}
-			ORDER BY 	name ASC;
-		`);
-
-    this.events = await this.crud.rawQuery(`
-			SELECT 		*
-			FROM 			Events
-			ORDER BY 	eventId ASC;
-		`);
-	}
-
-	setGender(gender: string) {
-		this.isMale = gender;
-		this.fetchData();
+	async ngOnInit() {
+    this.teams = await this.crud.query('teams');
+    this.events = await this.crud.query('events');
 	}
 
   navigateToGames() {
     this.router.navigateByUrl('/games');
   }
 
-	async addGame(homeTeam: any, awayTeam: any, gender: any, event: any) {
-		var date  = new Date(this.date);
-		var stringToSaveToDatabase = date.toJSON();
+	updateDate(event:any) {
+		this.date = new Date(event.detail.value).toJSON();
+	}
+
+	async addGame() {
 		let game: Game = {
 			gameId: crypto.randomUUID(),
-			homeTeam: homeTeam,
-			awayTeam: awayTeam,
-			gameDate: stringToSaveToDatabase,
+			homeTeam: this.homeTeam,
+			awayTeam: this.awayTeam,
+			gameDate: this.date,
 			homePointsQ1: 0,
 			awayPointsQ1: 0,
 			homePointsQ2: 0,
@@ -68,7 +52,7 @@ export class AddGamesComponent {
 			awayPointsQ4: 0,
 			homePointsOT: 0,
 			awayPointsOT: 0,
-			isMale: gender,
+			isMale: this.isMale,
 			clock: '00:00',
 			homeTeamTOL: 0,
 			awayTeamTOL:0,
@@ -77,7 +61,7 @@ export class AddGamesComponent {
 			awayFinal: 0,
 			period: 0,
 			gameLink: null,
-			eventId: event,
+			eventId: this.event,
 			syncState: SyncState.Added,
 			complete: 1
 		}
