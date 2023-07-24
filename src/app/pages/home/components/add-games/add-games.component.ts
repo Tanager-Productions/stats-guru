@@ -4,10 +4,8 @@ import { Team } from 'src/app/interfaces/team.interface';
 import { Event } from 'src/app/interfaces/event.interface'
 import { CrudService } from 'src/app/services/crud/crud.service';
 import { SqlService } from 'src/app/services/sql/sql.service';
-import { SQLiteDBConnection } from '@capacitor-community/sqlite';
 import { SyncState } from 'src/app/interfaces/syncState.enum';
 import { Router } from '@angular/router';
-import { Time } from '@angular/common';
 
 @Component({
   selector: 'app-add-games',
@@ -15,7 +13,6 @@ import { Time } from '@angular/common';
   styleUrls: ['./add-games.component.scss']
 })
 export class AddGamesComponent {
-	db!:SQLiteDBConnection;
 	game!: Game;
 	games?: Game[];
 	teams?: Team[];
@@ -30,15 +27,14 @@ export class AddGamesComponent {
 	}
 
 	private async fetchData() {
-		this.db = await this.sql.createConnection();
-    this.teams = await this.crud.rawQuery(this.db, `
+    this.teams = await this.crud.rawQuery(`
 			SELECT 		*
 			FROM 			Teams
 			WHERE 		isMale = ${this.isMale}
 			ORDER BY 	name ASC;
 		`);
 
-    this.events = await this.crud.rawQuery(this.db, `
+    this.events = await this.crud.rawQuery(`
 			SELECT 		*
 			FROM 			Events
 			ORDER BY 	eventId ASC;
@@ -76,16 +72,16 @@ export class AddGamesComponent {
 			clock: '00:00',
 			homeTeamTOL: 0,
 			awayTeamTOL:0,
-			has4Quarters: '0',
+			has4Quarters: 0,
 			homeFinal: 0,
 			awayFinal: 0,
 			period: 0,
 			gameLink: null,
 			eventId: event,
 			syncState: SyncState.Added,
-			complete:'1'
+			complete: 1
 		}
-		await this.crud.save(this.db, 'Games', game);
+		await this.crud.save('games', game);
 		this.navigateToGames();
 	}
 }
