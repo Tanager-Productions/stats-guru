@@ -2,6 +2,7 @@
 	<ion-toolbar [color]="color">
 		<ion-title>Add Player</ion-title>
 		<ion-buttons slot="end">
+			<ion-button (click)="addToTeam()" [disabled]="!newPlayerNumber">Submit</ion-button>
 			<ion-button (click)="dismiss.emit()">
 				<ion-icon slot="icon-only" name="close"></ion-icon>
 			</ion-button>
@@ -32,7 +33,6 @@
 					labelPlacement="stacked"
 					fill="outline"
 				></ion-input>
-				<ion-button expand="block" [color]="color" (click)="addToTeam()" [disabled]="!newPlayerNumber">Submit</ion-button>
 			</ion-col>
 			<ion-col size="1"></ion-col>
 		</ion-row>
