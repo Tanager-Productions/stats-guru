@@ -220,10 +220,26 @@ export class GamecastComponent {
 	async addPlayer(player:Player) {
 		if (this.addHomePlayer) {
 			this.homeTeamPlayers!.push(player);
+			this.homeTeamPlayers?.sort((a, b) => {
+				if (a.number == b.number)
+					return 0;
+				else if (a.number < b.number)
+					return -1;
+				else
+					return 1;
+			});
 		} else {
 			this.awayTeamPlayers!.push(player);
+			this.awayTeamPlayers?.sort((a, b) => {
+				if (a.number == b.number)
+					return 0;
+				else if (a.number < b.number)
+					return -1;
+				else
+					return 1;
+			});
 		}
-		await this.crud.save('players', player)
+		await this.crud.save('players', player);
 	}
 
 	private async fetchData() {
@@ -264,6 +280,26 @@ export class GamecastComponent {
 			AND 			isMale = ${this.currentGame?.isMale}
 			ORDER BY 	number ASC;
 		`);
+		if (this.homeTeamPlayers.find(t => t.firstName == 'team' && t.lastName == 'team') == undefined) {
+			this.addHomePlayer = true;
+			await this.addPlayer({
+				playerId: crypto.randomUUID(),
+				picture: null,
+				firstName: 'team',
+				lastName: 'team',
+				isMale: this.currentGame!.isMale,
+				team: this.currentGame!.homeTeam,
+				socialMediaString: null,
+				weight: null,
+				age: null,
+				number: -1,
+				position: 'F',
+				height: null,
+				homeState: null,
+				homeTown: null,
+				syncState: SyncState.Unchanged
+			});
+		}
     this.awayTeamPlayers = await this.crud.rawQuery(`
 			SELECT 		*
 			FROM 			Players
@@ -271,6 +307,26 @@ export class GamecastComponent {
 			AND 			isMale = ${this.currentGame?.isMale}
 			ORDER BY 	number ASC;
 		`);
+		if (this.awayTeamPlayers.find(t => t.firstName == 'team' && t.lastName == 'team') == undefined) {
+			this.addHomePlayer = false;
+			await this.addPlayer({
+				playerId: crypto.randomUUID(),
+				picture: null,
+				firstName: 'team',
+				lastName: 'team',
+				isMale: this.currentGame!.isMale,
+				team: this.currentGame!.awayTeam,
+				socialMediaString: null,
+				weight: null,
+				age: null,
+				number: -1,
+				position: 'F',
+				height: null,
+				homeState: null,
+				homeTown: null,
+				syncState: SyncState.Unchanged
+			});
+		}
 		this.stats = await this.crud.rawQuery(`
 			SELECT	*
 			FROM 		Stats
@@ -321,6 +377,25 @@ export class GamecastComponent {
 			player.syncState = SyncState.Modified;
 		}
 		await this.crud.save("players", player, {"playerId": `'${player.playerId}'`});
+		if (player.team == this.currentGame!.homeTeam) {
+			this.homeTeamPlayers?.sort((a, b) => {
+				if (a.number == b.number)
+					return 0;
+				else if (a.number < b.number)
+					return -1;
+				else
+					return 1;
+			});
+		} else {
+			this.awayTeamPlayers?.sort((a, b) => {
+				if (a.number == b.number)
+					return 0;
+				else if (a.number < b.number)
+					return -1;
+				else
+					return 1;
+			});
+		}
 		this.editPlayer = false;
 	}
 
