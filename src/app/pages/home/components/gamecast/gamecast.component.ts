@@ -261,7 +261,9 @@ export class GamecastComponent {
 				homeFullTOL: 2,
 				awayFullTOL: 2,
 				homeCurrentFouls: 0,
-				awayCurrentFouls: 0
+				awayCurrentFouls: 0,
+				hiddenPlayers: null,
+				homeHasPossession: 1
 			}
 			await this.crud.save('gameCastSettings', gameCastSetting);
 			this.gameCastSettings = (await this.crud.rawQuery(`SELECT * FROM GameCastSettings WHERE game = '${this.gameId}'`))[0];
@@ -341,10 +343,37 @@ export class GamecastComponent {
 		`);
 		if (this.gameCastSettings!.homePlayersOnCourt != null) {
 			this.homePlayersOnCourt = this.homeTeamPlayers?.filter(t => this.gameCastSettings!.homePlayersOnCourt!.split(',').includes(t.playerId.toString()))!;
+			if (this.homePlayersOnCourt.find(t => t.firstName == 'team' && t.lastName == 'team') == undefined) {
+				this.homePlayersOnCourt.push(this.homeTeamPlayers.find(t => t.firstName == 'team' && t.lastName == 'team')!);
+				this.gameCastSettings!.homePlayersOnCourt = this.homePlayersOnCourt.toString();
+				await this.updateGameCastSetting();
+			}
+		} else {
+			this.homePlayersOnCourt.push(this.homeTeamPlayers.find(t => t.firstName == 'team' && t.lastName == 'team')!);
+			this.gameCastSettings!.homePlayersOnCourt = this.homePlayersOnCourt.toString();
+			await this.updateGameCastSetting();
 		}
 		if (this.gameCastSettings!.awayPlayersOnCourt != null) {
 			this.awayPlayersOnCourt = this.awayTeamPlayers?.filter(t => this.gameCastSettings!.awayPlayersOnCourt!.split(',').includes(t.playerId.toString()))!;
+			if (this.awayPlayersOnCourt.find(t => t.firstName == 'team' && t.lastName == 'team') == undefined) {
+				this.awayPlayersOnCourt.push(this.awayTeamPlayers.find(t => t.firstName == 'team' && t.lastName == 'team')!);
+				this.gameCastSettings!.awayPlayersOnCourt = this.awayPlayersOnCourt.toString();
+				await this.updateGameCastSetting();
+			}
+		} else {
+			this.awayPlayersOnCourt.push(this.awayTeamPlayers.find(t => t.firstName == 'team' && t.lastName == 'team')!);
+			this.gameCastSettings!.awayPlayersOnCourt = this.awayPlayersOnCourt.toString();
+			await this.updateGameCastSetting();
 		}
+	}
+
+	async switchPossession() {
+		if (this.gameCastSettings!.homeHasPossession == 1) {
+			this.gameCastSettings!.homeHasPossession = 0;
+		} else {
+			this.gameCastSettings!.homeHasPossession = 1;
+		}
+		await this.updateGameCastSetting();
 	}
 
 	async loadBoxScore() {
@@ -451,12 +480,12 @@ export class GamecastComponent {
 
 	addToCourt(team: 'home' | 'away', player: Player) {
 		if (team == 'home') {
-			if (this.homePlayersOnCourt.length < 5) {
+			if (this.homePlayersOnCourt.length < 6) {
 				this.homePlayersOnCourt.push(player);
 				this.gameCastSettings!.homePlayersOnCourt = this.homePlayersOnCourt.map(t => t.playerId).toString();
 			}
 		} else {
-			if (this.awayPlayersOnCourt.length < 5) {
+			if (this.awayPlayersOnCourt.length < 6) {
 				this.awayPlayersOnCourt.push(player);
 				this.gameCastSettings!.awayPlayersOnCourt = this.awayPlayersOnCourt.map(t => t.playerId).toString();
 			}

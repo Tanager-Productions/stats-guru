@@ -156,11 +156,17 @@ export const version1: string[] = [
   `
 ];
 
-export const currentDatabaseVersion = 1;
+export const version2: string[] = [
+	`ALTER TABLE gameCastSettings ADD COLUMN homeHasPossession INTEGER NULL;`,
+	`ALTER TABLE gameCastSettings ADD COLUMN hiddenPlayers TEXT NULL;`
+];
+
+export const currentDatabaseVersion = 2;
 export const databaseName = "sqlite:statsguru.db";
 export const upgrades = {
   database: databaseName,
   upgrade: [
-    { toVersion: 1, statements: version1 }
+    { toVersion: 1, statements: version1 },
+		{ toVersion: 2, statements: version2 }
   ]
 };

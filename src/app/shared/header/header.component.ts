@@ -8,7 +8,7 @@ import { SqlService } from 'src/app/services/sql/sql.service';
 import { SyncService } from 'src/app/services/sync/sync.service';
 import { ColDef } from 'ag-grid-community';
 import { appWindow } from '@tauri-apps/api/window'
-import { os } from '@tauri-apps/api';
+import { os, window } from '@tauri-apps/api';
 
 @Component({
   selector: 'app-header',
@@ -41,7 +41,12 @@ export class HeaderComponent implements OnInit {
     private crud:CrudService
   ) {
     this.user = auth.getUser();
-    os.platform().then(plat => this.isWin = plat == 'win32');
+    os.platform().then(plat => {
+			this.isWin = plat == 'win32';
+			if (this.isWin) {
+				window.appWindow.setDecorations(false);
+			}
+		});
   }
 
   ngOnInit() {

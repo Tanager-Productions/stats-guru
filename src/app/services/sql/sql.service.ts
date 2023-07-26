@@ -19,7 +19,11 @@ export class SqlService {
 		for (let item of upgrades.upgrade) {
 			console.log(`Running version ${item.toVersion} upgrades`);
 			for (let stmt of item.statements) {
-				await this.db.execute(stmt);
+				try {
+					await this.db.execute(stmt);
+				} catch (error) {
+					console.error(error);
+				}
 			}
 		}
 		this.initialized.next(true);

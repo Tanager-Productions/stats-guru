@@ -15,4 +15,6 @@ export interface GameCastSettings {
 		awayFullTOL: number | null;
 		homeCurrentFouls: number | null;
 		awayCurrentFouls: number | null;
+		hiddenPlayers: string | null;
+		homeHasPossession: number | null;
 }
