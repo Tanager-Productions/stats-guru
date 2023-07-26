@@ -1,6 +1,6 @@
 <ion-header *ngIf="color">
 	<ion-toolbar [color]="color">
-		<ion-title>Edit Points for {{teamName}}</ion-title>
+		<ion-title>Edit Points</ion-title>
 		<ion-buttons slot="end">
 			<ion-button (click)="submitPoints()" [disabled]="!firstPeriodPoints && !secondPeriodPoints && !thirdPeriodPoints && !fourthPeriodPoints && !overtimePoints">Submit</ion-button>
 			<ion-button (click)="dismiss.emit()">
