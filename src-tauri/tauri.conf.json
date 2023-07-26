@@ -29,7 +29,8 @@
         "minimize": true,
         "unmaximize": true,
         "unminimize": true,
-        "startDragging": true
+        "startDragging": true,
+				"setDecorations": true
       },
 			"os": {
 				"all": true
