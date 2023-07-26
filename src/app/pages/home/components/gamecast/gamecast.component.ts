@@ -100,6 +100,8 @@ export class GamecastComponent {
 	awayStatGridApi!: GridApi<StatsRow>;
 	addHomePlayer:boolean = true;
 	showAddPlayer:boolean = false;
+	showPeriodTotal: boolean = false;
+	editHomePeriod: boolean = true;
 
 	//Displaying Auto-Complete Options:
 	reboundDisplay: boolean = false;

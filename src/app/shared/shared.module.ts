@@ -7,13 +7,15 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { EditPlayerComponent } from './edit-player/edit-player.component';
 import { AgGridModule } from 'ag-grid-angular';
 import { GamecastDetailComponent } from './gamecast-detail/gamecast-detail.component';
+import { EditPeriodTotalComponent } from './edit-period-total/edit-period-total.component';
 
 @NgModule({
   declarations: [
     HeaderComponent,
     AddPlayerComponent,
     EditPlayerComponent,
-		GamecastDetailComponent
+		GamecastDetailComponent,
+  	EditPeriodTotalComponent
   ],
   imports: [
 		AgGridModule,
@@ -26,7 +28,8 @@ import { GamecastDetailComponent } from './gamecast-detail/gamecast-detail.compo
     HeaderComponent,
 		AddPlayerComponent,
 		EditPlayerComponent,
-		GamecastDetailComponent
+		GamecastDetailComponent,
+		EditPeriodTotalComponent
   ]
 })
 export class SharedModule { }

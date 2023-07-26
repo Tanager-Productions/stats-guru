@@ -1,0 +1,56 @@
+<ion-header *ngIf="color">
+	<ion-toolbar [color]="color">
+		<ion-title>Edit Points for {{teamName}}</ion-title>
+		<ion-buttons slot="end">
+			<ion-button (click)="submitPoints()" [disabled]="!firstPeriodPoints && !secondPeriodPoints && !thirdPeriodPoints && !fourthPeriodPoints && !overtimePoints">Submit</ion-button>
+			<ion-button (click)="dismiss.emit()">
+				<ion-icon slot="icon-only" name="close"></ion-icon>
+			</ion-button>
+		</ion-buttons>
+	</ion-toolbar>
+</ion-header>
+<ion-content *ngIf="color" class="ion-padding" color="light">
+	<ion-grid>
+		<ion-row>
+			<ion-col size="1"></ion-col>
+			<ion-col size="10">
+				<ion-input
+					[(ngModel)]="firstPeriodPoints"
+					type="number"
+					label="1st Period"
+					labelPlacement="stacked"
+					fill="outline"
+				></ion-input>
+				<ion-input
+					[(ngModel)]="secondPeriodPoints"
+					type="number"
+					label="2nd Period"
+					labelPlacement="stacked"
+					fill="outline"
+				></ion-input>
+				<ion-input
+					[(ngModel)]="thirdPeriodPoints"
+					type="number"
+					label="3rd Period"
+					labelPlacement="stacked"
+					fill="outline"
+				></ion-input>
+				<ion-input
+					[(ngModel)]="fourthPeriodPoints"
+					type="number"
+					label="4th Period"
+					labelPlacement="stacked"
+					fill="outline"
+				></ion-input>
+				<ion-input
+					[(ngModel)]="overtimePoints"
+					type="number"
+					label="Overtime"
+					labelPlacement="stacked"
+					fill="outline"
+				></ion-input>
+			</ion-col>
+			<ion-col size="1"></ion-col>
+		</ion-row>
+	</ion-grid>
+</ion-content>
