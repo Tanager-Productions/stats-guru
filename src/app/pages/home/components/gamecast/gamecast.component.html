@@ -24,7 +24,7 @@
 	<ion-grid style="height: 100%; width: 100%">
 		<ion-row>
 			<ion-col class="ion-no-padding ion-text-center" size="1">
-				<div *ngFor="let player of homeTeamPlayers; let i = index">
+				<div *ngFor="let player of homeTeamPlayers; let i = index" [hidden]="hiddenPlayerIds.includes(player.playerId)">
 					<ion-button
 						*ngIf="player.number != -1;"
 						[fill]="this.homePlayersOnCourt.includes(player) ? 'outline' : 'clear'"
@@ -433,7 +433,7 @@
 				</ion-grid>
 			</ion-col>
 			<ion-col class="ion-no-padding ion-text-center" size="1">
-				<div *ngFor="let player of awayTeamPlayers; let i = index">
+				<div *ngFor="let player of awayTeamPlayers; let i = index" [hidden]="hiddenPlayerIds.includes(player.playerId)">
 					<ion-button
 						*ngIf="player.number != -1;"
 						[fill]="this.awayPlayersOnCourt.includes(player) ? 'outline' : 'clear'"
@@ -599,18 +599,21 @@
 			</ion-content>
 		</ng-template>
 	</ion-modal>
-	<ion-modal class="add-player-modal" [isOpen]="showAddPlayer" [backdropDismiss]="false">
+	<ion-modal [isOpen]="showAddPlayer" [backdropDismiss]="false">
 		<ng-template>
-			<ion-content [scrollY]="false">
-				<app-add-player
-					[team]="addHomePlayer ? 'home' : 'away'"
-					[teamName]="addHomePlayer ? currentGame.homeTeam : currentGame.awayTeam"
-					[isMale]="currentGame.isMale!"
-					(playerAdded)="addPlayer($event)"
-					(dismiss)="showAddPlayer = false"
-					[color]="addHomePlayer ? 'primary' : 'danger'"
-				></app-add-player>
-			</ion-content>
+			<app-add-player
+				style="height: 100%;"
+				[team]="addHomePlayer ? 'home' : 'away'"
+				[teamName]="addHomePlayer ? currentGame.homeTeam : currentGame.awayTeam"
+				[isMale]="currentGame.isMale!"
+				[players]="addHomePlayer ? homeTeamPlayers : awayTeamPlayers"
+				[settings]="gameCastSettings!"
+				(playerAdded)="addPlayer($event)"
+				(playerHidden)="hidePlayer($event)"
+				(playerUnhidden)="unhidePlayer($event)"
+				(dismiss)="showAddPlayer = false"
+				[color]="addHomePlayer ? 'primary' : 'danger'"
+			></app-add-player>
 		</ng-template>
 	</ion-modal>
 	<ion-modal class="edit-points-modal" [isOpen]="showPeriodTotal" [backdropDismiss]="false">

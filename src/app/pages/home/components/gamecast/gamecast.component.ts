@@ -74,6 +74,7 @@ export class GamecastComponent {
 	awayTeamStats!: StatsRow[];
 	homePlayersOnCourt: Player[] = [];
 	awayPlayersOnCourt: Player[] = [];
+	hiddenPlayerIds: string[] = [];
 	stats?: Stat[];
 	plays?: Play[];
 	prevPlays?: Play[];
@@ -344,6 +345,9 @@ export class GamecastComponent {
 			AND				syncState != 3
 			ORDER BY	playId DESC
 		`);
+		if (this.gameCastSettings!.hiddenPlayers != null && this.gameCastSettings!.hiddenPlayers != "") {
+			this.hiddenPlayerIds = this.gameCastSettings!.hiddenPlayers.split(',');
+		}
 		if (this.gameCastSettings!.homePlayersOnCourt != null) {
 			this.homePlayersOnCourt = this.homeTeamPlayers?.filter(t => this.gameCastSettings!.homePlayersOnCourt!.split(',').includes(t.playerId.toString()))!;
 			if (this.homePlayersOnCourt.find(t => t.firstName == 'team' && t.lastName == 'team') == undefined) {
@@ -368,6 +372,19 @@ export class GamecastComponent {
 			this.gameCastSettings!.awayPlayersOnCourt = this.awayPlayersOnCourt.toString();
 			await this.updateGameCastSetting();
 		}
+	}
+
+	async hidePlayer($event:Player) {
+		this.hiddenPlayerIds.push($event.playerId);
+		this.gameCastSettings!.hiddenPlayers = this.hiddenPlayerIds.toString();
+		await this.updateGameCastSetting();
+	}
+
+	async unhidePlayer($event:Player) {
+		let index = this.hiddenPlayerIds.findIndex(t => t == $event.playerId);
+		this.hiddenPlayerIds.splice(index, 1);
+		this.gameCastSettings!.hiddenPlayers = this.hiddenPlayerIds.toString();
+		await this.updateGameCastSetting();
 	}
 
 	async switchPossession() {
