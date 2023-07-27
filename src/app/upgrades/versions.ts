@@ -21,7 +21,7 @@ export const version1: string[] = [
       picture TEXT NULL,
       team TEXT NOT NULL,
       isMale INTEGER NOT NULL,
-      height INTEGER NULL,
+      height TEXT NULL,
       weight INTEGER NULL,
       age INTEGER NULL,
       homeTown TEXT NULL,
