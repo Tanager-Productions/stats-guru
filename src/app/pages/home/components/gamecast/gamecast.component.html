@@ -243,7 +243,7 @@
 															<h1>Assist?</h1>
 														</ion-label>
 														<ion-button size="large" (click)="this.assistDisplay = false" fill="clear">
-															<ion-icon size="large" slot="icon-only" name="close"></ion-icon>
+															<ion-icon color="medium" size="large" slot="icon-only" name="close"></ion-icon>
 														</ion-button>
 													</ion-item>
 													<ion-item color="light" *ngIf="foulDisplay" lines="none">
@@ -260,7 +260,7 @@
 															<h1>Turnover?</h1>
 														</ion-label>
 														<ion-button size="large" (click)="this.stealDisplay = false" fill="clear">
-															<ion-icon size="large" slot="icon-only" name="close"></ion-icon>
+															<ion-icon color="medium" size="large" slot="icon-only" name="close"></ion-icon>
 														</ion-button>
 													</ion-item>
 													<ion-item color="light" *ngIf="reboundDisplay" lines="none">
@@ -268,7 +268,15 @@
 															<h1>Rebound?</h1>
 														</ion-label>
 														<ion-button (click)="this.reboundDisplay = false" size="large" fill="clear">
-															<ion-icon size="large" slot="icon-only" name="close"></ion-icon>
+															<ion-icon color="medium" size="large" slot="icon-only" name="close"></ion-icon>
+														</ion-button>
+													</ion-item>
+													<ion-item color="light" *ngIf="missedDisplay" lines="none">
+														<ion-label>
+															<h1>Missed?</h1>
+														</ion-label>
+														<ion-button (click)="this.missedDisplay = false" size="large" fill="clear">
+															<ion-icon color="medium" size="large" slot="icon-only" name="close"></ion-icon>
 														</ion-button>
 													</ion-item>
 												</ion-col>

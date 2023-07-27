@@ -108,6 +108,7 @@ export class GamecastComponent {
 	stealDisplay: boolean = false;
 	assistDisplay: boolean = false;
 	foulDisplay: boolean = false;
+	missedDisplay: boolean = false;
 
 	//plusOrMinus
 	homeTeamPlusOrMinus = 0;
@@ -527,6 +528,16 @@ export class GamecastComponent {
 		} else if (this.assistDisplay) {
 			this.addAssist(team);
 			this.assistDisplay = false;
+		} else if (this.missedDisplay) {
+			if (team = 'away') {
+				this.addPlay('home', GameActions.ShotMissed, this.homePlayersOnCourt[this.homePlayerSelected]);
+				this.missedDisplay = false;
+				this.reboundDisplay = true;
+			} else if (team = 'home') {
+				this.addPlay ('away', GameActions.ShotMissed, this.awayPlayersOnCourt[this.awayPlayerSelected]);
+				this.missedDisplay = false;
+				this.reboundDisplay = true;
+			}
 		}
 	}
 
@@ -912,6 +923,7 @@ export class GamecastComponent {
 				stat.blocks++;
 				await this.saveStat(stat);
 				this.addPlay(team, GameActions.Block, player);
+				this.missedDisplay = true;
 			}
 		} else {
 			if (this.homePlayerSelected != -1) {
@@ -920,6 +932,7 @@ export class GamecastComponent {
 				stat.blocks++;
 				await this.saveStat(stat);
 				this.addPlay(team, GameActions.Block, player);
+				this.missedDisplay = true;
 			}
 		}
 	}
