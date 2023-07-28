@@ -8,7 +8,7 @@ export interface Player {
   picture: string | null;
   isMale: number;
 	height: number | null;
-	weight: number | null;
+	weight: string | null;
 	age: number | null;
 	homeTown: string | null;
 	homeState: string | null;
@@ -25,7 +25,7 @@ export interface ServerPlayer {
 	team: string;
 	picture: string | null;
 	isMale: boolean;
-	height: number | null;
+	height: string | null;
 	weight: number | null;
 	age: number | null;
 	homeTown: string | null;
