@@ -546,11 +546,11 @@ export class GamecastComponent {
 			this.addAssist(team);
 			this.assistDisplay = false;
 		} else if (this.missedDisplay) {
-			if (team = 'away') {
+			if (team == 'home') {
 				this.addPlay('home', GameActions.ShotMissed, this.homePlayersOnCourt[this.homePlayerSelected]);
 				this.missedDisplay = false;
 				this.reboundDisplay = true;
-			} else if (team = 'home') {
+			} else if (team == 'away') {
 				this.addPlay ('away', GameActions.ShotMissed, this.awayPlayersOnCourt[this.awayPlayerSelected]);
 				this.missedDisplay = false;
 				this.reboundDisplay = true;
