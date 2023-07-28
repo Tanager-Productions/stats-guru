@@ -8,8 +8,8 @@ import { SyncDto } from 'src/app/interfaces/sync.interface';
   providedIn: 'root'
 })
 export class ApiService {
-  public serverUrl:string = "http://localhost:57812";
-  //public serverUrl:string = "https://api.thegrindsession.com";
+  //public serverUrl:string = "http://localhost:57812";
+  public serverUrl:string = "https://api.thegrindsession.com";
 
   constructor() { }
 
