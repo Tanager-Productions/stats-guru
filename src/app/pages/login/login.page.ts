@@ -27,32 +27,37 @@ export class LoginPage {
 	async ngOnInit() {
 		let user = this.authService.getUser();
     if (user != null) {
-			let debugResponse = await this.server.Debug();
-			if (debugResponse.status == 200) {
-				this.sync.online = true;
-				let userId = user.userId;
-				let res = this.authService.getCredential(Credentials.Token);
-				if (res != null) {
-					let httpResponse = await this.server.GetUser(res);
-					if (httpResponse.status == 200) {
-						this.authService.showPopover = true;
-						this.router.navigateByUrl('/home');
-					} else {
-						//token could have expired, so generate a new one
-						let apiKey = this.authService.getCredential(Credentials.Key);
-						if (apiKey != null) {
-							httpResponse = await this.server.GenerateToken(apiKey, userId);
-							if (httpResponse.status == 200) {
-								let newToken = httpResponse.data;
-								this.authService.storeCredential(Credentials.Token, newToken);
-								this.authService.showPopover = true;
-								this.router.navigateByUrl('/home');
+			try {
+				let debugResponse = await this.server.Debug();
+				if (debugResponse.status == 200) {
+					this.sync.online = true;
+					let userId = user.userId;
+					let res = this.authService.getCredential(Credentials.Token);
+					if (res != null) {
+						let httpResponse = await this.server.GetUser(res);
+						if (httpResponse.status == 200) {
+							this.authService.showPopover = true;
+							this.router.navigateByUrl('/home');
+						} else {
+							//token could have expired, so generate a new one
+							let apiKey = this.authService.getCredential(Credentials.Key);
+							if (apiKey != null) {
+								httpResponse = await this.server.GenerateToken(apiKey, userId);
+								if (httpResponse.status == 200) {
+									let newToken = httpResponse.data;
+									this.authService.storeCredential(Credentials.Token, newToken);
+									this.authService.showPopover = true;
+									this.router.navigateByUrl('/home');
+								}
 							}
 						}
 					}
+					this.checkingForKey = false;
+				} else {
+					this.authService.showPopover = true;
+					this.router.navigateByUrl('/home');
 				}
-				this.checkingForKey = false;
-			} else {
+			} catch {
 				this.authService.showPopover = true;
 				this.router.navigateByUrl('/home');
 			}
