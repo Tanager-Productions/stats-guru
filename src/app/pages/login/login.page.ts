@@ -75,8 +75,6 @@ export class LoginPage {
       this.authService.storeUser(res.data);
       this.authService.showPopover = true;
       this.router.navigateByUrl('/home');
-    } else if (res.status == 400) {
-      (await this.toastCtrl.create({message: 'Invalid Key', color: 'danger', duration: 2500})).present();
     } else {
       (await this.toastCtrl.create({message: res.data, color: 'danger', duration: 2500})).present();
     }
