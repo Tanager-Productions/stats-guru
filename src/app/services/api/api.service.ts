@@ -2,14 +2,14 @@ import { Injectable } from '@angular/core';
 import { CapacitorHttp, HttpHeaders, HttpOptions, HttpResponse } from "@capacitor/core";
 import { GamecastDto } from 'src/app/interfaces/gamecastDto.interface';
 import { SyncDto } from 'src/app/interfaces/sync.interface';
+import { environment } from 'src/environments/environment';
 
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
-  //public serverUrl:string = "http://localhost:57812";
-  public serverUrl:string = "https://api.thegrindsession.com";
+  public serverUrl:string = environment.serverUrl;
 
   constructor() { }
 
