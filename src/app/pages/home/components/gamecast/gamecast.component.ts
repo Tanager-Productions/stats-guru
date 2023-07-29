@@ -32,9 +32,7 @@ export enum GameActions {
 	FreeThrowMissed = 60,
 	FreeThrowMade = 65,
 	FullTO = 70,
-	PartialTO = 75,
-	Passback = 80,
-	FailedPassback = 85
+	PartialTO = 75
 }
 
 type StatsRow =  {
@@ -829,8 +827,6 @@ export class GamecastComponent {
 			} else if (!partial && this.gameCastSettings!.awayFullTOL != null && this.gameCastSettings!.awayFullTOL > 0) {
 				this.gameCastSettings!.awayFullTOL--;
 			}
-			await this.updateGame();
-			await this.updateGameCastSetting();
 		} else {
 			if (this.currentGame!.homeTeamTOL > 0) {
 				this.currentGame!.homeTeamTOL--;
@@ -840,9 +836,10 @@ export class GamecastComponent {
 			} else if (!partial && this.gameCastSettings!.homeFullTOL != null && this.gameCastSettings!.homeFullTOL > 0) {
 				this.gameCastSettings!.homeFullTOL--;
 			}
-			await this.updateGame();
-			await this.updateGameCastSetting();
 		}
+		await this.updateGame();
+		await this.updateGameCastSetting();
+		await this.addPlay(team, partial ? GameActions.PartialTO : GameActions.FullTO);
   }
 
 	async addSteal(team: 'home' | 'away') {
