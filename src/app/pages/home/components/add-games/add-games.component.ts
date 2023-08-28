@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import { Game } from 'src/app/interfaces/game.interface';
 import { Team } from 'src/app/interfaces/team.interface';
 import { Event } from 'src/app/interfaces/event.interface'
-import { CrudService } from 'src/app/services/crud/crud.service';
 import { SqlService } from 'src/app/services/sql/sql.service';
 import { SyncState } from 'src/app/interfaces/syncState.enum';
 import { Router } from '@angular/router';
@@ -21,7 +20,7 @@ export class AddGamesComponent {
 	awayTeam:string = '';
 	event:number | null = null;
 
-  constructor(private crud: CrudService, private router: Router) {}
+  constructor(private crud: SqlService, private router: Router) {}
 
 	async ngOnInit() {
     this.teams = await this.crud.query('teams');

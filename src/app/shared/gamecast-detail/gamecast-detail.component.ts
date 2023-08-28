@@ -1,6 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { GameCastSettings } from 'src/app/interfaces/gameCastSetting.interface';
-import { CrudService } from 'src/app/services/crud/crud.service';
 import { SqlService } from 'src/app/services/sql/sql.service';
 
 @Component({
@@ -13,7 +12,7 @@ export class GamecastDetailComponent {
 	@Output() dismiss: EventEmitter<void> = new EventEmitter();
 	gamecastDetails!:GameCastSettings;
 
-	constructor(private crud: CrudService, private sql: SqlService) {}
+	constructor(private crud: SqlService) {}
 
 	async ngOnInit() {
 		this.gamecastDetails = (await this.crud.rawQuery(`select * from gameCastSettings where game = '${this.gameId}'`))[0];

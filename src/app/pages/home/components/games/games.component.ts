@@ -4,7 +4,6 @@ import { Observable } from 'rxjs';
 import { Event } from 'src/app/interfaces/event.interface';
 import { Game } from 'src/app/interfaces/game.interface';
 import { CommonService } from 'src/app/services/common/common.service';
-import { CrudService } from 'src/app/services/crud/crud.service';
 import { SqlService } from 'src/app/services/sql/sql.service';
 import { SyncService } from 'src/app/services/sync/sync.service';
 
@@ -22,11 +21,10 @@ export class GamesComponent implements OnInit {
   constructor(
     private common: CommonService,
     private router: Router,
-    private crud: CrudService,
-    sql:SqlService,
+    private sql:SqlService,
     sync:SyncService
   ) {
-		sql.isReady().subscribe(ready => {
+		this.sql.isReady().subscribe(ready => {
 			if (ready) {
 				if (sync.online) {
 					sync.beginSync(true);
@@ -41,7 +39,7 @@ export class GamesComponent implements OnInit {
     this.common.gameState().subscribe(async ready => {
       if (ready) {
         this.games$ = this.common.getGames();
-        this.logos = await this.crud.rawQuery('select teams.name, teams.isMale, teams.logo from teams;');
+        this.logos = await this.sql.rawQuery('select teams.name, teams.isMale, teams.logo from teams;');
       }
     });
     this.common.eventState().subscribe(ready => {

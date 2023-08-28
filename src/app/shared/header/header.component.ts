@@ -3,7 +3,6 @@ import { Router } from '@angular/router';
 import { SyncHistory } from 'src/app/interfaces/syncHistory.interface';
 import { AccountDto } from 'src/app/interfaces/accountDto.interface';
 import { AuthService } from 'src/app/services/auth/auth.service';
-import { CrudService } from 'src/app/services/crud/crud.service';
 import { SqlService } from 'src/app/services/sql/sql.service';
 import { SyncService } from 'src/app/services/sync/sync.service';
 import { ColDef } from 'ag-grid-community';
@@ -37,8 +36,7 @@ export class HeaderComponent implements OnInit {
     private router: Router,
     auth: AuthService,
     public sync:SyncService,
-    private sql:SqlService,
-    private crud:CrudService
+    private crud:SqlService
   ) {
     this.user = auth.getUser();
     os.platform().then(plat => {

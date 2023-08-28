@@ -3,7 +3,6 @@ import { ActivatedRoute } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
 import { Game } from 'src/app/interfaces/game.interface';
 import { Player } from 'src/app/interfaces/player.interface';
-import { CrudService } from 'src/app/services/crud/crud.service';
 import { SqlService } from 'src/app/services/sql/sql.service';
 import { SyncState } from 'src/app/interfaces/syncState.enum';
 import { Stat } from 'src/app/interfaces/stat.interface';
@@ -141,7 +140,6 @@ export class GamecastComponent {
 
   constructor(
 		private route: ActivatedRoute,
-		private crud: CrudService,
 		private sql: SqlService,
 		private api:ApiService,
 		private sync: SyncService) {}
@@ -210,7 +208,7 @@ export class GamecastComponent {
   }
 
 	async setPrevPlays() {
-		this.prevPlays = await this.crud.rawQuery(`
+		this.prevPlays = await this.sql.rawQuery(`
 			SELECT 		*
 			FROM 			Plays
 			WHERE 		gameId = '${this.gameId}'
@@ -241,11 +239,11 @@ export class GamecastComponent {
 					return 1;
 			});
 		}
-		await this.crud.save('players', player);
+		await this.sql.save('players', player);
 	}
 
 	private async fetchData() {
-		let res = await this.crud.rawQuery(`SELECT * FROM GameCastSettings WHERE game = '${this.gameId}'`);
+		let res = await this.sql.rawQuery(`SELECT * FROM GameCastSettings WHERE game = '${this.gameId}'`);
 		if (res.length == 0) {
 			let gameCastSetting: GameCastSettings = {
 				id: 0,
@@ -267,17 +265,17 @@ export class GamecastComponent {
 				hiddenPlayers: null,
 				homeHasPossession: 1
 			}
-			await this.crud.save('gameCastSettings', gameCastSetting);
-			this.gameCastSettings = (await this.crud.rawQuery(`SELECT * FROM GameCastSettings WHERE game = '${this.gameId}'`))[0];
+			await this.sql.save('gameCastSettings', gameCastSetting);
+			this.gameCastSettings = (await this.sql.rawQuery(`SELECT * FROM GameCastSettings WHERE game = '${this.gameId}'`))[0];
 		} else {
 			this.gameCastSettings = res[0];
 		}
-		this.currentGame = (await this.crud.rawQuery(`
+		this.currentGame = (await this.sql.rawQuery(`
 			SELECT 	*
 			FROM 		Games
 			WHERE 	gameId = '${this.gameId}'
 		`))[0];
-    this.homeTeamPlayers = await this.crud.rawQuery(`
+    this.homeTeamPlayers = await this.sql.rawQuery(`
 			SELECT 		*
 			FROM 			Players
 			WHERE 		team = '${this.currentGame?.homeTeam}'
@@ -304,7 +302,7 @@ export class GamecastComponent {
 				syncState: SyncState.Unchanged
 			});
 		}
-    this.awayTeamPlayers = await this.crud.rawQuery(`
+    this.awayTeamPlayers = await this.sql.rawQuery(`
 			SELECT 		*
 			FROM 			Players
 			WHERE 		team = '${this.currentGame?.awayTeam}'
@@ -331,12 +329,12 @@ export class GamecastComponent {
 				syncState: SyncState.Unchanged
 			});
 		}
-		this.stats = await this.crud.rawQuery(`
+		this.stats = await this.sql.rawQuery(`
 			SELECT	*
 			FROM 		Stats
 			WHERE 	game = '${this.gameId}';
 		`);
-		this.plays = await this.crud.rawQuery(`
+		this.plays = await this.sql.rawQuery(`
 			SELECT 		*
 			FROM 			Plays
 			WHERE 		gameId = '${this.gameId}'
@@ -395,7 +393,7 @@ export class GamecastComponent {
 	}
 
 	async loadBoxScore() {
-		this.homeTeamStats = await this.crud.rawQuery(`
+		this.homeTeamStats = await this.sql.rawQuery(`
 			SELECT			Players.number, Players.firstName, Players.lastName, Stats.player, Stats.minutes, Stats.rebounds, Stats.defensiveRebounds,
 									Stats.offensiveRebounds, Stats.fieldGoalsMade, Stats.fieldGoalsAttempted, Stats.blocks, Stats.steals, Stats.threesMade,
 									Stats.threesAttempted, Stats.freethrowsMade, Stats.freethrowsAttempted, Stats.points, Stats.turnovers,
@@ -406,7 +404,7 @@ export class GamecastComponent {
 			AND					Stats.game = '${this.gameId}'
 			ORDER BY 		Players.number;
 		`);
-		this.awayTeamStats = await this.crud.rawQuery(`
+		this.awayTeamStats = await this.sql.rawQuery(`
 			SELECT		Players.number, Players.firstName, Players.lastName, Stats.player, Stats.minutes, Stats.rebounds, Stats.defensiveRebounds,
 								Stats.offensiveRebounds, Stats.fieldGoalsMade, Stats.fieldGoalsAttempted, Stats.blocks, Stats.steals, Stats.threesMade,
 								Stats.threesAttempted, Stats.freethrowsMade, Stats.freethrowsAttempted, Stats.points, Stats.turnovers,
@@ -423,7 +421,7 @@ export class GamecastComponent {
 		if (!this.sync.online) {
 			player.syncState = SyncState.Modified;
 		}
-		await this.crud.save("players", player, {"playerId": `'${player.playerId}'`});
+		await this.sql.save("players", player, {"playerId": `'${player.playerId}'`});
 		if (player.team == this.currentGame!.homeTeam) {
 			this.homeTeamPlayers?.sort((a, b) => {
 				if (a.number == b.number)
@@ -483,7 +481,7 @@ export class GamecastComponent {
 
     this.clearNumberInput();
 
-		await this.crud.save("players", newTeamPlayer);
+		await this.sql.save("players", newTeamPlayer);
   }
 
 	toggleGameComplete() {
@@ -618,8 +616,8 @@ export class GamecastComponent {
 				points: 0,
 				eff: 0
 			}
-			await this.crud.save("stats", newStat);
-			this.stats = await this.crud.rawQuery(`
+			await this.sql.save("stats", newStat);
+			this.stats = await this.sql.rawQuery(`
 				SELECT	*
 				FROM 		Stats
 				WHERE 	game = '${this.gameId}';
@@ -634,8 +632,8 @@ export class GamecastComponent {
 		if (!this.sync.online) {
 			stat.syncState == SyncState.Modified;
 		}
-		await this.crud.save("stats", stat, {"player": `'${stat.player}'`, "game": `'${this.gameId}'`});
-		stat = (await this.crud.rawQuery(`select * from Stats where player = '${stat.player}' and game = '${stat.game}'`))[0];
+		await this.sql.save("stats", stat, {"player": `'${stat.player}'`, "game": `'${this.gameId}'`});
+		stat = (await this.sql.rawQuery(`select * from Stats where player = '${stat.player}' and game = '${stat.game}'`))[0];
 	}
 
 	private async updatePeriodTotal(team: 'home' | 'away', points:number) {
@@ -686,14 +684,14 @@ export class GamecastComponent {
 			gameClock: this.currentGame!.clock
 		}
 		if (this.sync.online) {
-			await this.crud.save('plays', play);
+			await this.sql.save('plays', play);
 		} else {
-			let existingPlay = (await this.crud.query('plays', {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`}));
+			let existingPlay = (await this.sql.query('plays', {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`}));
 			if (existingPlay.length == 1) {
 				play.syncState = SyncState.Modified;
-				await this.crud.save('plays', play, {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`});
+				await this.sql.save('plays', play, {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`});
 			} else {
-				await this.crud.save('plays', play);
+				await this.sql.save('plays', play);
 			}
 		}
 		this.plays?.unshift(play);
@@ -971,22 +969,22 @@ export class GamecastComponent {
 				this.currentGame!.syncState = state;
 			}
 		}
-		await this.crud.save('games', this.currentGame!, { "gameId": `'${this.gameId}'` });
+		await this.sql.save('games', this.currentGame!, { "gameId": `'${this.gameId}'` });
 	}
 
 	public async updateGameCastSetting() {
-	  await this.crud.save('gameCastSettings', this.gameCastSettings!, { "game": `'${this.gameId}'` });
+	  await this.sql.save('gameCastSettings', this.gameCastSettings!, { "game": `'${this.gameId}'` });
 	}
 
 	public async removeLastPlay() {
 		let play = this.plays![0];
 		await this.undoAction(play);
 		if (this.sync.online) {
-			await this.crud.delete('plays', {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`});
+			await this.sql.delete('plays', {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`});
 			this.plays!.splice(0, 1);
 		} else {
 			play.syncState = SyncState.Deleted;
-			await this.crud.save('plays', play, { "playId": `${play.playId}`,"gameId": `'${this.gameId}'` });
+			await this.sql.save('plays', play, { "playId": `${play.playId}`,"gameId": `'${this.gameId}'` });
 			this.plays = this.plays!.filter(t => t.syncState != SyncState.Deleted);
 		}
 	}
@@ -1380,7 +1378,7 @@ export class GamecastComponent {
 		if (!this.sync.online) {
 			play.syncState = SyncState.Modified;
 		}
-		await this.crud.save('plays', play, { "playId": `${play.playId}`,"gameId": `'${this.gameId}'` });
+		await this.sql.save('plays', play, { "playId": `${play.playId}`,"gameId": `'${this.gameId}'` });
 		await this.setPrevPlays();
 	}
 

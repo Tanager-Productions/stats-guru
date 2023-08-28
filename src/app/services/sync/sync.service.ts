@@ -1,17 +1,13 @@
 import { Injectable } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import { SqlService } from '../sql/sql.service';
-import { CrudService } from '../crud/crud.service';
 import { SyncDto, SyncMode } from 'src/app/interfaces/sync.interface';
 import { currentDatabaseVersion, databaseName } from 'src/app/upgrades/versions';
 import { SyncResult } from 'src/app/interfaces/syncResult.interface';
 import { BehaviorSubject, Observable, Subscription, finalize, interval, map, repeat, takeWhile } from 'rxjs';
 import { SyncHistory } from 'src/app/interfaces/syncHistory.interface';
-import { ServerGame } from 'src/app/interfaces/game.interface';
 import { ServerEvent } from 'src/app/interfaces/event.interface';
 import { ServerPlay } from 'src/app/interfaces/play.interface';
-import { ServerPlayer } from 'src/app/interfaces/player.interface';
-import { ServerStat } from 'src/app/interfaces/stat.interface';
 import { ServerTeam } from 'src/app/interfaces/team.interface';
 import { CommonService } from '../common/common.service';
 
@@ -37,7 +33,7 @@ export class SyncService {
   public syncing:boolean = false;
 	public online:boolean = false;
 
-  constructor(private api:ApiService, private sqlService:SqlService, private crudService:CrudService, private common:CommonService) { }
+  constructor(private api:ApiService, private sqlService:SqlService, private common:CommonService) { }
 
   public async beginSync(isInitial:boolean = false) {
 		if (!this.gameCastInProgress) {
@@ -47,10 +43,10 @@ export class SyncService {
 					version: currentDatabaseVersion,
 					mode: SyncMode.Full,
 					overwrite: null,
-					games: await this.crudService.query("games"),
-					players: await this.crudService.query("players"),
-					stats: await this.crudService.query("stats"),
-					plays: await this.crudService.query("plays")
+					games: await this.sqlService.query("games"),
+					players: await this.sqlService.query("players"),
+					stats: await this.sqlService.query("stats"),
+					plays: await this.sqlService.query("plays")
 				}
 				let httpResponse = await this.api.postSync(res);
 				if (httpResponse.status == 200) {
@@ -64,8 +60,8 @@ export class SyncService {
 						playsSynced: res.statsSynced ? 1 : 0,
 						errorMessages: JSON.stringify(res.errorMessages)
 					};
-					await this.crudService.save('syncHistory', history);
-					await this.sqlService.db.execute(`delete from plays;
+					await this.sqlService.save('syncHistory', history);
+					await this.sqlService.rawExecute(`delete from plays;
 																						delete from stats;
 																						delete from games;
 																						delete from players;
@@ -115,7 +111,7 @@ export class SyncService {
         delete game.homeFinal;
         delete game.awayFinal;
       }
-      await this.crudService.bulkInsert("games", games);
+      await this.sqlService.bulkInsert("games", games);
     } else {
       throw new Error(`Failed to fetch games from server: ${response.data}`);
     }
@@ -126,7 +122,7 @@ export class SyncService {
     if (response.status == 200) {
       let events = response.data as ServerEvent[];
       if (events.length > 0)
-        await this.crudService.bulkInsert("events", events);
+        await this.sqlService.bulkInsert("events", events);
     } else {
       throw new Error(`Failed to fetch games from server: ${response.data}`);
     }
@@ -140,7 +136,7 @@ export class SyncService {
 				delete player.socialMedias;
 			}
       if (players.length > 0)
-        await this.crudService.bulkInsert("players", players);
+        await this.sqlService.bulkInsert("players", players);
     } else {
       throw new Error(`Failed to fetch games from server: ${response.data}`);
     }
@@ -151,7 +147,7 @@ export class SyncService {
     if (response.status == 200) {
       let teams = response.data as ServerTeam[];
       if (teams.length > 0)
-        await this.crudService.bulkInsert("teams", teams);
+        await this.sqlService.bulkInsert("teams", teams);
     } else {
       throw new Error(`Failed to fetch games from server: ${response.data}`);
     }
@@ -171,7 +167,7 @@ export class SyncService {
         if (end > stats.length) {
           end = stats.length;
         }
-        await this.crudService.bulkInsert("stats", stats.slice(i, end));
+        await this.sqlService.bulkInsert("stats", stats.slice(i, end));
       }
     } else {
       throw new Error(`Failed to fetch games from server: ${response.data}`);
@@ -187,7 +183,7 @@ export class SyncService {
         if (end > plays.length) {
           end = plays.length;
         }
-        await this.crudService.bulkInsert("plays", plays.slice(i, end));
+        await this.sqlService.bulkInsert("plays", plays.slice(i, end));
       }
     } else {
       throw new Error(`Failed to fetch games from server: ${response.data}`);

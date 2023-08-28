@@ -5,7 +5,6 @@ import { Player } from 'src/app/interfaces/player.interface';
 import { Play } from 'src/app/interfaces/play.interface';
 import { Team } from 'src/app/interfaces/team.interface';
 import { Stat } from 'src/app/interfaces/stat.interface';
-import { CrudService } from '../crud/crud.service';
 import { SqlService } from '../sql/sql.service';
 import { Event } from 'src/app/interfaces/event.interface';
 
@@ -26,7 +25,7 @@ export class CommonService {
   private statsSubject: BehaviorSubject<Stat[]> = new BehaviorSubject<Stat[]>([]);
   private isStatsReady: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
-  constructor(private crud: CrudService, private sql:SqlService) { }
+  constructor(private sql:SqlService) { }
 
   public async initializeService() {
     await Promise.all([
@@ -44,7 +43,7 @@ export class CommonService {
   }
 
   public async fetchGames() {
-    let games: Game[] = await this.crud.query("games", undefined, "gameDate", 'desc');
+    let games: Game[] = await this.sql.query("games", undefined, "gameDate", 'desc');
     this.gamesSubject.next(games);
     this.isGamesReady.next(true);
   }
@@ -58,7 +57,7 @@ export class CommonService {
   }
 
   public async fetchEvents() {
-    let events: Event[] = await this.crud.query("events", undefined, "title", "asc");
+    let events: Event[] = await this.sql.query("events", undefined, "title", "asc");
     this.eventsSubject.next(events);
     this.isEventsReady.next(true);
   }
@@ -72,7 +71,7 @@ export class CommonService {
   }
 
   public async fetchPlayers() {
-    let players: Player[] = await this.crud.query("players");
+    let players: Player[] = await this.sql.query("players");
     this.playersSubject.next(players);
     this.isPlayersReady.next(true);
   }
@@ -86,7 +85,7 @@ export class CommonService {
   }
 
   public async fetchPlays() {
-    let plays: Play[] = await this.crud.query("plays");
+    let plays: Play[] = await this.sql.query("plays");
     this.playsSubject.next(plays);
     this.isPlaysReady.next(true);
   }
@@ -100,7 +99,7 @@ export class CommonService {
   }
 
   public async fetchTeams() {
-    let teams: Team[] = await this.crud.query("teams");
+    let teams: Team[] = await this.sql.query("teams");
     this.teamsSubject.next(teams);
     this.isTeamsReady.next(true);
   }
@@ -114,7 +113,7 @@ export class CommonService {
   }
 
   public async fetchStats() {
-    let stats: Stat[] = await this.crud.query("stats");
+    let stats: Stat[] = await this.sql.query("stats");
     this.statsSubject.next(stats);
     this.isStatsReady.next(true);
   }
