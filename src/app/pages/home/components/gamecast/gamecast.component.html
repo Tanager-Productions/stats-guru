@@ -14,6 +14,63 @@
 		<ion-button id="detailModal">
 			<ion-icon slot="icon-only" name="settings"></ion-icon>
 		</ion-button>
+		<ion-button id="color-trigger">
+			<ion-icon slot="icon-only" name="brush"></ion-icon>
+		</ion-button>
+		<ion-popover (didDismiss)="isHomeTeam == null" [showBackdrop]="false" trigger="color-trigger" triggerAction="click">
+			<ng-template>
+				<ion-content>
+				<ion-list class="ion-padding">
+					<ion-radio-group>
+						<ion-row style="justify-content: space-evenly;">
+							<ion-radio (click)="isHomeTeam = true" value="home" labelPlacement="end">Home</ion-radio>
+							<ion-radio (click)="isHomeTeam = false" value="away" labelPlacement="end">Away</ion-radio>
+						</ion-row>
+					</ion-radio-group>
+					<ion-content>
+						<ion-row style="justify-content: space-evenly;">
+							<ion-button (click)="changeColor('blue')" id="blue" color="blue" fill="clear">
+								<ion-icon slot="icon-only" name="basketball" color="blue"></ion-icon>
+							</ion-button>
+							<ion-button (click)="changeColor('pink')" color="pink" id="pink" fill="clear">
+								<ion-icon slot="icon-only" name="basketball" color="pink"></ion-icon>
+							</ion-button>
+							<ion-button (click)="changeColor('purple')" color="purple" id="purple" fill="clear">
+								<ion-icon slot="icon-only" name="basketball" color="purple"></ion-icon>
+							</ion-button>
+							<ion-button (click)="changeColor('orange')" color="orange" id="orange" fill="clear">
+								<ion-icon slot="icon-only" name="basketball" color="orange"></ion-icon>
+							</ion-button>
+							<ion-button (click)="changeColor('grey')" color="grey" id="grey" fill="clear">
+								<ion-icon slot="icon-only" name="basketball" color="grey"></ion-icon>
+							</ion-button>
+							<ion-button (click)="changeColor('navy')" color="navy" id="navy" fill="clear">
+								<ion-icon slot="icon-only" name="basketball" color="navy"></ion-icon>
+							</ion-button>
+							<ion-button (click)="changeColor('coral')" color="coral" id="coral" fill="clear">
+								<ion-icon slot="icon-only" name="basketball" color="coral"></ion-icon>
+							</ion-button>
+							<ion-button (click)="changeColor('lilac')" color="lilac" id="lilac" fill="clear">
+								<ion-icon slot="icon-only" name="basketball" color="lilac"></ion-icon>
+							</ion-button>
+							<ion-button (click)="changeColor('green')" color="green" id="green" fill="clear">
+								<ion-icon slot="icon-only" name="basketball" color="green"></ion-icon>
+							</ion-button>
+							<ion-button (click)="changeColor('red')" color="red" id="red" fill="clear">
+								<ion-icon slot="icon-only" name="basketball" color="red"></ion-icon>
+							</ion-button>
+							<ion-button (click)="changeColor('gold')" color="gold" id="gold" fill="clear">
+								<ion-icon slot="icon-only" name="basketball" color="gold"></ion-icon>
+							</ion-button>
+							<ion-button (click)="changeColor('teal')" color="teal" id="teal" fill="clear">
+								<ion-icon slot="icon-only" name="basketball" color="teal"></ion-icon>
+							</ion-button>
+						</ion-row>
+					</ion-content>
+				</ion-list>
+				</ion-content>
+			</ng-template>
+		</ion-popover>
 		<ion-button fill="solid" color="success" (click)='toggleGameComplete()' *ngIf="currentGame?.complete == 1">Complete</ion-button>
 		<ion-button fill="solid" color="warning" (click)='toggleGameComplete()' *ngIf="currentGame?.complete == 0">Live</ion-button>
 	</ion-buttons>
@@ -29,13 +86,13 @@
 						*ngIf="player.number != -1;"
 						[fill]="this.homePlayersOnCourt.includes(player) ? 'outline' : 'clear'"
 						id="context-menu-trigger{{i}}"
-						color="primary"
+						color="{{homeColor}}"
 						(click)="addToCourt('home', player)">
 						{{player.number}}
 					</ion-button>
 					<ion-popover *ngIf="player.number != -1;" trigger="context-menu-trigger{{i}}" [showBackdrop]="false" triggerAction="context-menu">
 						<ng-template>
-							<app-edit-player [player]="player" (savePlayer)="savePlayer(player)"></app-edit-player>
+							<app-edit-player color="{{homeColor}}" [player]="player" (savePlayer)="savePlayer(player)"></app-edit-player>
 						</ng-template>
 					</ion-popover>
 				</div>
@@ -47,7 +104,7 @@
 							<ion-grid>
 								<ion-row>
 									<ion-col>
-										<ion-grid style="border-radius: 5px; background-color: #d8d0fe; width: 100%; padding: 5px;">
+										<ion-grid style="background-color: #eaeaea; border-radius: 5px; width: 100%; padding: 5px;">
 											<ion-row>
 												<ng-container *ngFor="let player of homePlayersOnCourt; let i = index">
 													<ion-col id="context-menu-trigger-homeCourt{{i}}">
@@ -55,7 +112,7 @@
 															*ngIf="player.number != -1"
 															style="border-radius: 50px; --padding-start: 0px; --padding-end: 0px;"
 															[ngClass]="{'selectedButton':homePlayerSelected == i}"
-															color="primary"
+															color="{{homeColor}}"
 															fill="clear"
 															shape="round"
 															expand="block"
@@ -67,7 +124,7 @@
 															*ngIf="player.number == -1"
 															style="border-radius: 50px; --padding-start: 0px; --padding-end: 0px;"
 															[ngClass]="{'selectedButton':homePlayerSelected == i}"
-															color="primary"
+															color="{{homeColor}}"
 															fill="clear"
 															shape="round"
 															expand="block"
@@ -80,16 +137,17 @@
 										</ion-grid>
 										<ion-card>
 											<ion-card-header>
-												<ion-card-title color="primary" class="ion-text-center">
+												<ion-card-title color="{{homeColor}}" class="ion-text-center">
 													{{ currentGame.homeTeam }}
 												</ion-card-title>
 												<ion-label class="ion-margin-top ion-text-center">
-													<ion-button (click)="showPeriodTotal = true; editHomePeriod = true" fill="clear" color="primary" class="team-score digital-number">{{ currentGame.homeFinal }}</ion-button>
+													<ion-button (click)="showPeriodTotal = true; editHomePeriod = true" fill="clear" color="{{homeColor}}" class="team-score digital-number">{{ currentGame.homeFinal }}</ion-button>
 													<div class="home-font">
 														<div class="input-div">
 															<div class="input">
-																<ion-label class="input-label" for="homeCurrentFouls">Fouls:</ion-label>
+																<ion-label class="input-label" for="homeCurrentFouls" color="{{homeColor}}">Fouls:</ion-label>
 																<ion-input class="input-box"
+																			color="{{homeColor}}"
 																			type="number"
 																			id ="homeCurrentFouls"
 																			(ionChange)="updateGameCastSetting()"
@@ -98,8 +156,9 @@
 																</ion-input>
 															</div>
 															<div class="input">
-																<ion-label class="input-label" for="homePartialTOL">Partial TO:</ion-label>
+																<ion-label class="input-label" for="homePartialTOL" color="{{homeColor}}">Partial TO:</ion-label>
 																<ion-input class="input-box"
+																			color="{{homeColor}}"
 																			type="number"
 																			id ="homePartialTOL"
 																			(ionChange)="updateGameCastSetting()"
@@ -108,8 +167,9 @@
 																</ion-input>
 															</div>
 															<div class="input">
-																<ion-label class="input-label" for="homeFullTOL">Full TO:</ion-label>
+																<ion-label class="input-label" color="{{homeColor}}" for="homeFullTOL">Full TO:</ion-label>
 																<ion-input class="input-box"
+																			[color]="homeColor"
 																			type="number"
 																			id ="homeFullTOL"
 																			(ionChange)="updateGameCastSetting()"
@@ -124,55 +184,55 @@
 											<ion-grid>
 												<ion-row>
 													<ion-col>
-														<ion-button expand="block" color="primary" (click)="addPoints('home', 1)">+1</ion-button>
+														<ion-button expand="block" color="{{homeColor}}" (click)="addPoints('home', 1)">+1</ion-button>
 													</ion-col>
 													<ion-col>
-														<ion-button expand="block" color="primary" (click)="addPoints('home', 2)">+2</ion-button>
+														<ion-button expand="block" color="{{homeColor}}" (click)="addPoints('home', 2)">+2</ion-button>
 													</ion-col>
 													<ion-col>
-														<ion-button expand="block" color="primary" (click)="addPoints('home', 3)">+3</ion-button>
-													</ion-col>
-												</ion-row>
-												<ion-row>
-													<ion-col>
-														<ion-button expand="block" color="primary" (click)="addPoints('home', 1, true)">1</ion-button>
-													</ion-col>
-													<ion-col>
-														<ion-button expand="block" color="primary" (click)="addPoints('home', 3, true)">3</ion-button>
-													</ion-col>
-													<ion-col>
-														<ion-button expand="block" color="primary" (click)="addPoints('home', 2, true)">MISS</ion-button>
+														<ion-button expand="block" color="{{homeColor}}" (click)="addPoints('home', 3)">+3</ion-button>
 													</ion-col>
 												</ion-row>
 												<ion-row>
 													<ion-col>
-														<ion-button expand="block" color="primary" (click)="addFoul('home')">FOUL</ion-button>
+														<ion-button expand="block" color="{{homeColor}}" (click)="addPoints('home', 1, true)">1</ion-button>
 													</ion-col>
 													<ion-col>
-														<ion-button expand="block" color="primary" (click)="addSteal('home')">STL</ion-button>
+														<ion-button expand="block" color="{{homeColor}}" (click)="addPoints('home', 3, true)">3</ion-button>
 													</ion-col>
 													<ion-col>
-														<ion-button expand="block" color="primary" (click)="addTurnover('home')">TO</ion-button>
+														<ion-button expand="block" color="{{homeColor}}" (click)="addPoints('home', 2, true)">MISS</ion-button>
 													</ion-col>
 												</ion-row>
 												<ion-row>
 													<ion-col>
-														<ion-button fill="clear" expand="block" size="small" color="primary" (click)="addAssist('home')">AST</ion-button>
+														<ion-button expand="block" color="{{homeColor}}" (click)="addFoul('home')">FOUL</ion-button>
 													</ion-col>
 													<ion-col>
-														<ion-button fill="clear" expand="block" size="small" color="primary" (click)="addPassback('home', true)">PB+</ion-button>
+														<ion-button expand="block" color="{{homeColor}}" (click)="addSteal('home')">STL</ion-button>
 													</ion-col>
 													<ion-col>
-														<ion-button fill="clear" expand="block" size="small" color="primary" (click)="addPassback('home', false)">PB-</ion-button>
+														<ion-button expand="block" color="{{homeColor}}" (click)="addTurnover('home')">TO</ion-button>
+													</ion-col>
+												</ion-row>
+												<ion-row>
+													<ion-col>
+														<ion-button fill="clear" expand="block" size="small" color="{{homeColor}}" (click)="addAssist('home')">AST</ion-button>
 													</ion-col>
 													<ion-col>
-														<ion-button fill="clear" expand="block" size="small" color="primary" (click)="addBlock('home')">BLK</ion-button>
+														<ion-button fill="clear" expand="block" size="small" color="{{homeColor}}" (click)="addPassback('home', true)">PB+</ion-button>
 													</ion-col>
 													<ion-col>
-														<ion-button fill="clear" expand="block" size="small" color="primary" (click)="addRebound('home', true)">OR</ion-button>
+														<ion-button fill="clear" expand="block" size="small" color="{{homeColor}}" (click)="addPassback('home', false)">PB-</ion-button>
 													</ion-col>
 													<ion-col>
-														<ion-button fill="clear" expand="block" size="small" color="primary" (click)="addRebound('home', false)">DR</ion-button>
+														<ion-button fill="clear" expand="block" size="small" color="{{homeColor}}" (click)="addBlock('home')">BLK</ion-button>
+													</ion-col>
+													<ion-col>
+														<ion-button fill="clear" expand="block" size="small" color="{{homeColor}}" (click)="addRebound('home', true)">OR</ion-button>
+													</ion-col>
+													<ion-col>
+														<ion-button fill="clear" expand="block" size="small" color="{{homeColor}}" (click)="addRebound('home', false)">DR</ion-button>
 													</ion-col>
 												</ion-row>
 											</ion-grid>
@@ -182,9 +242,9 @@
 										<ion-grid style="height: 100%;" class="ion-no-padding">
 											<ion-row class="ion-align-items-center">
 												<ion-col size="3">
-													<ion-button fill="clear" expand="block" color="primary" (click)="addTimeout('home', true)">T30</ion-button>
-													<ion-button fill="clear" expand="block" color="primary" (click)="addTimeout('home', false)">T60</ion-button>
-													<ion-button (click)="addHomePlayer = true; showAddPlayer = true" fill="clear" expand="block" color="primary">
+													<ion-button fill="clear" expand="block" color="{{homeColor}}" (click)="addTimeout('home', true)">T30</ion-button>
+													<ion-button fill="clear" expand="block" color="{{homeColor}}" (click)="addTimeout('home', false)">T60</ion-button>
+													<ion-button (click)="addHomePlayer = true; showAddPlayer = true" fill="clear" expand="block" color="{{homeColor}}">
 														<ion-icon size="large" slot="icon-only" name="add-circle-sharp"></ion-icon>
 													</ion-button>
 												</ion-col>
@@ -206,9 +266,9 @@
 													></ion-input>
 												</ion-col>
 												<ion-col size="3">
-													<ion-button fill="clear" expand="block" color="danger" (click)="addTimeout('away', true)">T30</ion-button>
-													<ion-button fill="clear" expand="block" color="danger" (click)="addTimeout('away', false)">T60</ion-button>
-													<ion-button (click)="addHomePlayer = false; showAddPlayer = true" fill="clear" expand="block" color="danger">
+													<ion-button fill="clear" expand="block" color="{{awayColor}}" (click)="addTimeout('away', true)">T30</ion-button>
+													<ion-button fill="clear" expand="block" color="{{awayColor}}" (click)="addTimeout('away', false)">T60</ion-button>
+													<ion-button (click)="addHomePlayer = false; showAddPlayer = true" fill="clear" expand="block" color="{{awayColor}}">
 														<ion-icon size="large" slot="icon-only" name="add-circle-sharp"></ion-icon>
 													</ion-button>
 												</ion-col>
@@ -285,7 +345,7 @@
 										</ion-grid>
 									</ion-col>
 									<ion-col>
-										<ion-grid style="border-radius: 5px; background-color: #fec3c3; width: 100%; padding: 5px;">
+										<ion-grid style="border-radius: 5px; background-color: #eaeaea; width: 100%; padding: 5px;">
 											<ion-row>
 												<ng-container *ngFor="let player of awayPlayersOnCourt; let i = index">
 													<ion-col id="context-menu-trigger-awayCourt{{i}}">
@@ -293,7 +353,7 @@
 															*ngIf="player.number != -1"
 															style="border-radius: 50px; --padding-start: 0px; --padding-end: 0px;"
 															[ngClass]="{'selectedButton':awayPlayerSelected == i}"
-															color="danger" fill="clear"
+															color="{{awayColor}}" fill="clear"
 															shape="round"
 															expand="block"
 															(tap)="selectPlayer('away', i)"
@@ -304,7 +364,7 @@
 															*ngIf="player.number == -1"
 															style="border-radius: 50px; --padding-start: 0px; --padding-end: 0px;"
 															[ngClass]="{'selectedButton':awayPlayerSelected == i}"
-															color="danger" fill="clear"
+															color="{{awayColor}}" fill="clear"
 															shape="round"
 															expand="block"
 															(tap)="selectPlayer('away', i)">
@@ -316,16 +376,17 @@
 										</ion-grid>
 										<ion-card>
 											<ion-card-header>
-												<ion-card-title color="danger" class="ion-text-center ion-no-padding">
+												<ion-card-title color="{{awayColor}}" class="ion-text-center ion-no-padding">
 													{{ currentGame.awayTeam }}
 												</ion-card-title>
 												<ion-label class="ion-margin-top ion-text-center">
-													<ion-button (click)="showPeriodTotal = true; editHomePeriod = false" fill="clear" color="danger" class="team-score digital-number">{{ currentGame.awayFinal }}</ion-button>
+													<ion-button (click)="showPeriodTotal = true; editHomePeriod = false" fill="clear" color="{{awayColor}}" class="team-score digital-number">{{ currentGame.awayFinal }}</ion-button>
 													<div class="away-font">
 														<div class="input-div">
 															<div class="input">
-																<ion-label class="input-label" for="awayCurrentFouls">Fouls:</ion-label>
+																<ion-label color="{{awayColor}}" class="input-label" for="awayCurrentFouls">Fouls:</ion-label>
 																<ion-input class="input-box"
+																			color="{{awayColor}}"
 																			type="number"
 																			id ="awayCurrentFouls"
 																			(ionChange)="updateGameCastSetting()"
@@ -334,8 +395,9 @@
 																</ion-input>
 															</div>
 															<div class="input">
-																<ion-label class="input-label" for="awayPartialTOL">Partial TO:</ion-label>
+																<ion-label color="{{awayColor}}" class="input-label" for="awayPartialTOL">Partial TO:</ion-label>
 																<ion-input class="input-box"
+																			[color]="awayColor"
 																			type="number"
 																			id ="awayPartialTOL"
 																			(ionChange)="updateGameCastSetting()"
@@ -344,8 +406,9 @@
 																</ion-input>
 															</div>
 															<div class="input">
-																<ion-label class="input-label" for="awayFullTOL">Full TO:</ion-label>
+																<ion-label color="{{awayColor}}" class="input-label" for="awayFullTOL">Full TO:</ion-label>
 																<ion-input class="input-box"
+																			color="{{awayColor}}"
 																			type="number"
 																			id ="awayFullTOL"
 																			(ionChange)="updateGameCastSetting()"
@@ -360,55 +423,55 @@
 											<ion-grid>
 												<ion-row>
 													<ion-col>
-														<ion-button expand="block" color="danger" (click)="addPoints('away', 1)">+1</ion-button>
+														<ion-button expand="block" color="{{awayColor}}" (click)="addPoints('away', 1)">+1</ion-button>
 													</ion-col>
 													<ion-col>
-														<ion-button expand="block" color="danger" (click)="addPoints('away', 2)">+2</ion-button>
+														<ion-button expand="block" color="{{awayColor}}" (click)="addPoints('away', 2)">+2</ion-button>
 													</ion-col>
 													<ion-col>
-														<ion-button expand="block" color="danger" (click)="addPoints('away', 3)">+3</ion-button>
-													</ion-col>
-												</ion-row>
-												<ion-row>
-													<ion-col>
-														<ion-button expand="block" color="danger" (click)="addPoints('away', 1, true)">1</ion-button>
-													</ion-col>
-													<ion-col>
-														<ion-button expand="block" color="danger" (click)="addPoints('away', 3, true)">3</ion-button>
-													</ion-col>
-													<ion-col>
-														<ion-button expand="block" color="danger" (click)="addPoints('away', 2, true)">MISS</ion-button>
+														<ion-button expand="block" color="{{awayColor}}" (click)="addPoints('away', 3)">+3</ion-button>
 													</ion-col>
 												</ion-row>
 												<ion-row>
 													<ion-col>
-														<ion-button expand="block" color="danger" (click)="addFoul('away')">FOUL</ion-button>
+														<ion-button expand="block" color="{{awayColor}}" (click)="addPoints('away', 1, true)">1</ion-button>
 													</ion-col>
 													<ion-col>
-														<ion-button expand="block" color="danger" (click)="addSteal('away')">STL</ion-button>
+														<ion-button expand="block" color="{{awayColor}}" (click)="addPoints('away', 3, true)">3</ion-button>
 													</ion-col>
 													<ion-col>
-														<ion-button expand="block" color="danger" (click)="addTurnover('away')">TO</ion-button>
+														<ion-button expand="block" color="{{awayColor}}" (click)="addPoints('away', 2, true)">MISS</ion-button>
 													</ion-col>
 												</ion-row>
 												<ion-row>
 													<ion-col>
-														<ion-button fill="clear" expand="block" size="small" color="danger" (click)="addAssist('away')">AST</ion-button>
+														<ion-button expand="block" color="{{awayColor}}" (click)="addFoul('away')">FOUL</ion-button>
 													</ion-col>
 													<ion-col>
-														<ion-button fill="clear" expand="block" size="small" color="danger" (click)="addPassback('away', true)">PB+</ion-button>
+														<ion-button expand="block" color="{{awayColor}}" (click)="addSteal('away')">STL</ion-button>
 													</ion-col>
 													<ion-col>
-														<ion-button fill="clear" expand="block" size="small" color="danger" (click)="addPassback('away', false)">PB-</ion-button>
+														<ion-button expand="block" color="{{awayColor}}" (click)="addTurnover('away')">TO</ion-button>
+													</ion-col>
+												</ion-row>
+												<ion-row>
+													<ion-col>
+														<ion-button fill="clear" expand="block" size="small" color="{{awayColor}}" (click)="addAssist('away')">AST</ion-button>
 													</ion-col>
 													<ion-col>
-														<ion-button fill="clear" expand="block" size="small" color="danger" (click)="addBlock('away')">BLK</ion-button>
+														<ion-button fill="clear" expand="block" size="small" color="{{awayColor}}" (click)="addPassback('away', true)">PB+</ion-button>
 													</ion-col>
 													<ion-col>
-														<ion-button fill="clear" expand="block" size="small" color="danger" (click)="addRebound('away', true)">OR</ion-button>
+														<ion-button fill="clear" expand="block" size="small" color="{{awayColor}}" (click)="addPassback('away', false)">PB-</ion-button>
 													</ion-col>
 													<ion-col>
-														<ion-button fill="clear" expand="block" size="small" color="danger" (click)="addRebound('away', false)">DR</ion-button>
+														<ion-button fill="clear" expand="block" size="small" color="{{awayColor}}" (click)="addBlock('away')">BLK</ion-button>
+													</ion-col>
+													<ion-col>
+														<ion-button fill="clear" expand="block" size="small" color="{{awayColor}}" (click)="addRebound('away', true)">OR</ion-button>
+													</ion-col>
+													<ion-col>
+														<ion-button fill="clear" expand="block" size="small" color="{{awayColor}}" (click)="addRebound('away', false)">DR</ion-button>
 													</ion-col>
 												</ion-row>
 											</ion-grid>
@@ -437,14 +500,14 @@
 					<ion-button
 						*ngIf="player.number != -1;"
 						[fill]="this.awayPlayersOnCourt.includes(player) ? 'outline' : 'clear'"
-						color="danger"
+						color="{{awayColor}}"
 						id="context-menu-trigger-away{{i}}"
 						(click)="addToCourt('away', player)">
 						{{player.number}}
 					</ion-button>
 					<ion-popover *ngIf="player.number != -1;" trigger="context-menu-trigger-away{{i}}" [showBackdrop]="false" triggerAction="context-menu">
 						<ng-template>
-							<app-edit-player [player]="player" (savePlayer)="savePlayer(player)"></app-edit-player>
+							<app-edit-player color="{{awayColor}}" [player]="player" (savePlayer)="savePlayer(player)"></app-edit-player>
 						</ng-template>
 					</ion-popover>
 				</div>
@@ -561,10 +624,10 @@
 				<ion-toolbar>
 					<ion-segment color="medium" mode="md" [(ngModel)]="statsTab">
 						<ion-segment-button value="home">
-							<ion-label color="primary">{{currentGame.homeTeam}}</ion-label>
+							<ion-label color="{{homeColor}}">{{currentGame.homeTeam}}</ion-label>
 						</ion-segment-button>
 						<ion-segment-button value="away">
-							<ion-label color="danger">{{currentGame.awayTeam}}</ion-label>
+							<ion-label color="{{awayColor}}">{{currentGame.awayTeam}}</ion-label>
 						</ion-segment-button>
 					</ion-segment>
 				</ion-toolbar>
@@ -612,7 +675,7 @@
 				(playerHidden)="hidePlayer($event)"
 				(playerUnhidden)="unhidePlayer($event)"
 				(dismiss)="showAddPlayer = false"
-				[color]="addHomePlayer ? 'primary' : 'danger'"
+				[color]="addHomePlayer ? '{{homeColor}}' : '{{awayColor}}'"
 			></app-add-player>
 		</ng-template>
 	</ion-modal>

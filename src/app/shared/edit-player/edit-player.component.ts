@@ -8,6 +8,7 @@ import { Player } from 'src/app/interfaces/player.interface';
 })
 export class EditPlayerComponent {
 	@Input() player!:Player;
+	@Input() color!:string;
 	editPlayer:boolean = false;
 	@Output() savePlayer: EventEmitter<void> = new EventEmitter();
 }

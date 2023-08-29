@@ -25,6 +25,10 @@
 		margin: 4px 0;
 	}
 
+	ion-input {
+		color: var(--ion-color-base);
+	}
+
   .team-container {
     height: auto;
     width: auto;
@@ -77,16 +81,6 @@
 
   #players-text {
     text-align: center;
-  }
-
-  #home-team-container {
-    border: 2px solid #4416fc;
-		background-color: #dbd4fa;
-  }
-
-  #away-team-container {
-    border: 2px solid #fc1616;
-		background-color: #fec3c3;
   }
 
   #court-container {
@@ -243,22 +237,6 @@
     border-radius: 10x;
   }
 
-  .home-font {
-    color: #4416fc;
-  }
-
-  .away-font {
-    color: #fc1616;
-  }
-
-  #home-button {
-    background-color: #4416fc;
-  }
-
-  #away-button {
-    background-color: #fc1616;
-  }
-
   p {
     font-size: 16px;
   }
@@ -284,14 +262,6 @@
 		white-space: nowrap;
 		margin:5px;
 		justify-content: center;
-	}
-
-	.home-font .ion-valid {
-		--highlight-color:#4416fc;
-	}
-
-	.away-font .ion-valid {
-		--highlight-color:#fc1616;
 	}
 
 	.input-box {

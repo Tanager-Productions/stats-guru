@@ -63,6 +63,11 @@ type StatsRow =  {
   styleUrls: ['./gamecast.component.scss'],
 })
 export class GamecastComponent {
+	isHomeTeam?: boolean = undefined;
+	awayColor: string = 'danger';
+	fadedAwayColor!: any;
+	homeColor: string = 'primary';
+	fadedHomeColor!: any;
   gameId!: string;
   currentGame?: Game;
 	homeTeamPlayers?: Player[];
@@ -176,6 +181,19 @@ export class GamecastComponent {
 		console.log(result);
 		if (result.errorMessages.length > 0) {
 			console.error("GameCast had errors!", result.errorMessages);
+		}
+	}
+
+	changeColor(selectedColor: string) {
+		if (this.isHomeTeam == false) {
+			this.awayColor = selectedColor;
+		} else {
+			this.homeColor = selectedColor;
+		}
+
+		if (this.isHomeTeam == undefined) {
+			this.homeColor = 'blue';
+			this.awayColor = 'red';
 		}
 	}
 

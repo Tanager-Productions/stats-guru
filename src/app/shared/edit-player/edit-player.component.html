@@ -1,4 +1,4 @@
-<ion-content color="dark" class="ion-padding">
+<ion-content class="ion-padding">
 	<ion-input
 		[(ngModel)]="player.firstName"
 		labelPlacement="stacked"
@@ -21,10 +21,10 @@
 		label="Number"
 		[readonly]="!editPlayer"
 	></ion-input>
-	<ion-button *ngIf="editPlayer" class="ion-float-right" color="light" fill="clear" (click)="savePlayer.emit(); editPlayer = false;">
+	<ion-button *ngIf="editPlayer" class="ion-float-right" color="{{color}}" fill="clear" (click)="savePlayer.emit(); editPlayer = false;">
 		<ion-icon size="large" slot="icon-only" name="checkmark"></ion-icon>
 	</ion-button>
-	<ion-button *ngIf="!editPlayer" class="ion-float-right" color="light" fill="clear" (click)="editPlayer = true;">
+	<ion-button *ngIf="!editPlayer" class="ion-float-right" color="{{color}}" fill="clear" (click)="editPlayer = true;">
 		<ion-icon size="large" slot="icon-only" name="pencil"></ion-icon>
 	</ion-button>
 </ion-content>
