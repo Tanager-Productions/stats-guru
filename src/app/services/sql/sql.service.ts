@@ -12,6 +12,7 @@ import { SyncHistory } from 'src/app/interfaces/syncHistory.interface';
 export type Table = 'games' | 'plays' | 'stats' | 'players' | 'events' | 'syncHistory' | 'gameCastSettings' | 'teams';
 export type Model = Play | Player | Game | Stat | SyncHistory | GameCastSettings;
 export type Direction = 'desc' | 'asc';
+export type GameColumns = 'gameId' | 'sdf';
 
 @Injectable({
   providedIn: 'root'
@@ -72,38 +73,22 @@ export class SqlService {
     return await this.db.execute(sqlcmd+=';');
   }
 
-  public async save(table: Table, model: Model, where?: {[key: string]: string}) {
+	public async save(table:Table, model:Model, where?: {[key: string]: string | number}) {
 		let castedModel: any = JSON.parse(JSON.stringify(model));
-		this.deleteKeys(castedModel, table);
-    const isUpdate: boolean = where ? true : false;
+		this.deleteGeneratedColumns(castedModel, table);
     const keys: string[] = Object.keys(castedModel);
-    let stmt: string = '';
     let values: any[] = [];
     for (const key of keys) {
       values.push(castedModel[key]);
     }
-    if(!isUpdate) {
-      const qMarks: string[] = [];
-			let count = 1;
-      for (const key of keys) {
-        qMarks.push(`$${count}`);
-				count++;
-      }
-      stmt = `INSERT INTO ${table} (${keys.toString()}) VALUES (${qMarks.toString()})`;
-    } else {
-      stmt = `UPDATE ${table} SET ${this.setNameForUpdate(keys)} where `;
-      let keys2:string[] = Object.keys(where!);
-      for (let key in where) {
-        stmt += `${key} = ${where[key]}`;
-        if (keys2.indexOf(key) != keys2.length - 1) {
-          stmt += ` and `
-        }
-      }
-    }
-    return await this.db.execute(stmt+=';', values);
-  }
+		if (where) {
+			return await this.update(table, keys, values, where);
+		} else {
+			return await this.insert(table, keys, values);
+		}
+	}
 
-  public async bulkInsert(table: string, model: any[]) {
+  public async bulkInsert(table: Table, model: any[]) {
     const keys: string[] = Object.keys(model[0]);
     let stmt:string = `INSERT INTO ${table} (${keys.toString()}) VALUES `;
     let values: any[] = [];
@@ -126,6 +111,41 @@ export class SqlService {
     return await this.db.execute(stmt+=';', values);
   }
 
+  public async rawQuery(query:string) {
+    return await this.db.select<any[]>(query);
+  }
+
+	public async rawExecute(statement:string) {
+		if (!statement.endsWith(';')) {
+			statement += ';';
+		}
+    return await this.db.execute(statement);
+  }
+
+  private async insert(table: Table, keys: string[], values: any[]) {
+		const qMarks: string[] = [];
+		let count = 1;
+		for (const key of keys) {
+			qMarks.push(`$${count}`);
+			count++;
+		}
+		let stmt = `INSERT INTO ${table} (${keys.toString()}) VALUES (${qMarks.toString()});`;
+    return await this.db.execute(stmt, values);
+  }
+
+	private async update(table: Table, keys: string[], values: any[], where: {[key: string]: string | number}) {
+		this.normalizeWhereParams(where);
+		let stmt = `UPDATE ${table} SET ${this.setNameForUpdate(keys)} WHERE `;
+		let whereKeys:string[] = Object.keys(where);
+		for (let key in where) {
+			stmt += `${key} = ${where[key]}`;
+			if (whereKeys.indexOf(key) != whereKeys.length - 1) {
+				stmt += ' and ';
+			}
+		}
+    return await this.db.execute(stmt+=';', values);
+	}
+
   private setNameForUpdate(names: string[]) {
     let retString = '';
 		let count = 1;
@@ -141,7 +161,15 @@ export class SqlService {
     }
   }
 
-	private deleteKeys(model: any, table: Table) {
+	private normalizeWhereParams(where: {[key: string]: string | number} ) {
+		for (let item in where) {
+			if (typeof where[item] == 'string') {
+				where[item] = `'${where[item]}'`;
+			}
+		}
+	}
+
+	private deleteGeneratedColumns(model: any, table: Table) {
 		if (table == 'games') {
 			delete model.homeFinal;
 			delete model.awayFinal;
@@ -155,15 +183,4 @@ export class SqlService {
 			delete model.id;
 		}
 	}
-
-  public async rawQuery(query:string) {
-    return await this.db.select<any[]>(query);
-  }
-
-	public async rawExecute(statement:string) {
-		if (!statement.endsWith(';')) {
-			statement += ';';
-		}
-    return await this.db.execute(statement);
-  }
 }

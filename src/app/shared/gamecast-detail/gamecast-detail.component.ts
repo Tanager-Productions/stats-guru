@@ -19,7 +19,7 @@ export class GamecastDetailComponent {
 	}
 
 	async save() {
-		await this.crud.save('gameCastSettings', this.gamecastDetails, {"id": `${this.gamecastDetails.id}`});
+		await this.crud.save('gameCastSettings', this.gamecastDetails, {"id": this.gamecastDetails.id});
 	}
 
 	setCheckbox($event:any) {

@@ -8,7 +8,6 @@ import { CommonService } from './services/common/common.service';
 import { ApiService } from './services/api/api.service';
 import { SyncService } from './services/sync/sync.service';
 import { SqlService } from './services/sql/sql.service';
-import { CrudService } from './services/crud/crud.service';
 import { AuthService } from './services/auth/auth.service';
 import { CommonModule } from '@angular/common';
 import { HomeRoutingModule } from './pages/home/home-routing.module';
@@ -38,7 +37,6 @@ import { AgGridModule } from 'ag-grid-angular';
     ApiService,
     SyncService,
     SqlService,
-    CrudService,
     AuthService
   ],
   bootstrap: [

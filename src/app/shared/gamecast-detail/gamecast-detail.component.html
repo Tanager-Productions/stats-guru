@@ -1,43 +1,58 @@
-<ion-content *ngIf="gamecastDetails" class="ion-padding" color="light">
-	<ion-input
-	  fill="outline"
-	  label="Full Timeouts"
-	  class="ion-margin-vertical"
-	  type="number"
-	  [(ngModel)]="gamecastDetails.fullTimeouts"
-	></ion-input>
-	<ion-input
-	  fill="outline"
-	  label="Partial Timeouts"
-	  class="ion-margin-vertical"
-	  [(ngModel)]="gamecastDetails.partialTimeouts"
-	  type="number"
-	></ion-input>
-	<ion-input
-	  fill="outline"
-	  label="Periods/Game"
-	  class="ion-margin-vertical"
-	  [(ngModel)]="gamecastDetails.periodsPerGame"
-	  type="number"
-	></ion-input>
-	<ion-input
-	  fill="outline"
-	  label="Minutes/Period"
-	  class="ion-margin-vertical"
-	  [(ngModel)]="gamecastDetails.minutesPerPeriod"
-	  type="number"
-	></ion-input>
-	<ion-input
-	  fill="outline"
-	  label="Minutes/Overtime"
-	  class="ion-margin-vertical"
-	  [(ngModel)]="gamecastDetails.minutesPerOvertime"
-	  type="number"
-	></ion-input>
-	<ion-item lines="none" color="light" fill="outline" class="ion-margin-vertical">
-		<ion-checkbox (ionChange)="setCheckbox($event)" [checked]="gamecastDetails.resetTimeoutsEveryPeriod == 1">
-			Reset TOs/Period
-		</ion-checkbox>
-	</ion-item>
+<ion-content *ngIf="gamecastDetails">
+	<ion-list lines="full">
+		<ion-list-header>Game Settings</ion-list-header>
+		<ion-item>
+			<ion-input
+				class="ion-text-right"
+				labelPlacement="start"
+				label="Full Timeouts"
+				type="number"
+				[(ngModel)]="gamecastDetails.fullTimeouts"
+			></ion-input>
+		</ion-item>
+		<ion-item>
+			<ion-input
+				class="ion-text-right"
+				labelPlacement="start"
+				label="Partial Timeouts"
+				[(ngModel)]="gamecastDetails.partialTimeouts"
+				type="number"
+			></ion-input>
+		</ion-item>
+		<ion-item>
+			<ion-input
+				class="ion-text-right"
+				labelPlacement="start"
+				label="Periods/Game"
+				[(ngModel)]="gamecastDetails.periodsPerGame"
+				type="number"
+			></ion-input>
+		</ion-item>
+		<ion-item>
+			<ion-input
+				class="ion-text-right"
+				labelPlacement="start"
+				label="Minutes/Period"
+				[(ngModel)]="gamecastDetails.minutesPerPeriod"
+				type="number"
+			></ion-input>
+		</ion-item>
+		<ion-item>
+			<ion-input
+				class="ion-text-right"
+				labelPlacement="start"
+				label="Minutes/Overtime"
+				[(ngModel)]="gamecastDetails.minutesPerOvertime"
+				type="number"
+			></ion-input>
+		</ion-item>
+		<ion-item>
+			<ion-checkbox
+				(ionChange)="setCheckbox($event)"
+				[checked]="gamecastDetails.resetTimeoutsEveryPeriod == 1">
+				Reset TOs/Period
+			</ion-checkbox>
+		</ion-item>
+	</ion-list>
 	<ion-button expand="block" (click)="save()">Save</ion-button>
   </ion-content>
