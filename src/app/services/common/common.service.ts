@@ -12,18 +12,12 @@ import { Event } from 'src/app/interfaces/event.interface';
   providedIn: 'root'
 })
 export class CommonService {
-  private gamesSubject: BehaviorSubject<Game[]> = new BehaviorSubject<Game[]>([]);
-  private isGamesReady: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  private eventsSubject: BehaviorSubject<Event[]> = new BehaviorSubject<Event[]>([]);
-  private isEventsReady: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  private playersSubject: BehaviorSubject<Player[]> = new BehaviorSubject<Player[]>([]);
-  private isPlayersReady: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  private playsSubject: BehaviorSubject<Play[]> = new BehaviorSubject<Play[]>([]);
-  private isPlaysReady: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  private teamsSubject: BehaviorSubject<Team[]> = new BehaviorSubject<Team[]>([]);
-  private isTeamsReady: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  private statsSubject: BehaviorSubject<Stat[]> = new BehaviorSubject<Stat[]>([]);
-  private isStatsReady: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+  private gamesSubject: BehaviorSubject<Game[] | null> = new BehaviorSubject<Game[] | null>(null);
+  private eventsSubject: BehaviorSubject<Event[] | null> = new BehaviorSubject<Event[] | null>(null);
+  private playersSubject: BehaviorSubject<Player[] | null> = new BehaviorSubject<Player[] | null>(null);
+  private playsSubject: BehaviorSubject<Play[] | null> = new BehaviorSubject<Play[] | null>(null);
+  private teamsSubject: BehaviorSubject<Team[] | null> = new BehaviorSubject<Team[] | null>(null);
+  private statsSubject: BehaviorSubject<Stat[] | null> = new BehaviorSubject<Stat[] | null>(null);
 
   constructor(private sql:SqlService) { }
 
@@ -38,84 +32,54 @@ export class CommonService {
     ]);
   }
 
-  public gameState() {
-    return this.isGamesReady.asObservable();
-  }
-
   public async fetchGames() {
     let games: Game[] = await this.sql.query("games", undefined, "gameDate", 'desc');
     this.gamesSubject.next(games);
-    this.isGamesReady.next(true);
   }
 
   public getGames() {
     return this.gamesSubject.asObservable();
   }
 
-  public eventState() {
-    return this.isEventsReady.asObservable();
-  }
-
   public async fetchEvents() {
     let events: Event[] = await this.sql.query("events", undefined, "title", "asc");
     this.eventsSubject.next(events);
-    this.isEventsReady.next(true);
   }
 
   public getEvents() {
     return this.eventsSubject.asObservable();
   }
 
-  public playerState() {
-    return this.isPlayersReady.asObservable();
-  }
-
   public async fetchPlayers() {
     let players: Player[] = await this.sql.query("players");
     this.playersSubject.next(players);
-    this.isPlayersReady.next(true);
   }
 
   public getPlayers() {
     return this.playersSubject.asObservable();
   }
 
-  public playState() {
-    return this.isPlaysReady.asObservable();
-  }
-
   public async fetchPlays() {
     let plays: Play[] = await this.sql.query("plays");
     this.playsSubject.next(plays);
-    this.isPlaysReady.next(true);
   }
 
   public getPlays() {
     return this.playsSubject.asObservable();
   }
 
-  public teamState() {
-    return this.isTeamsReady.asObservable();
-  }
-
   public async fetchTeams() {
     let teams: Team[] = await this.sql.query("teams");
     this.teamsSubject.next(teams);
-    this.isTeamsReady.next(true);
   }
 
   public getTeams() {
     return this.teamsSubject.asObservable();
   }
 
-  public statState() {
-    return this.isStatsReady.asObservable();
-  }
-
   public async fetchStats() {
     let stats: Stat[] = await this.sql.query("stats");
     this.statsSubject.next(stats);
-    this.isStatsReady.next(true);
   }
 
   public getStats() {

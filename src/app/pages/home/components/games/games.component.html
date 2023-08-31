@@ -18,7 +18,7 @@
                 <ion-item>
                   <ion-radio [value]="0">All</ion-radio>
                 </ion-item>
-                <ion-item *ngFor="let item of events$ | async">
+                <ion-item *ngFor="let item of events">
                   <ion-radio [value]="item.eventId">{{item.title}}</ion-radio>
                 </ion-item>
               </ion-radio-group>
@@ -26,20 +26,25 @@
           </ion-content>
         </ng-template>
       </ion-popover>
-      <ion-button (click)="navigateToAddGame()">
+      <ion-button id="addPopoverButton">
         <ion-icon slot="icon-only" name="add"></ion-icon>
       </ion-button>
+	  <ion-popover trigger="addPopoverButton" #addPopover>
+		<ng-template>
+			<app-add-games (dismiss)="addPopover.dismiss()"></app-add-games>
+		</ng-template>
+	  </ion-popover>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content color="light">
-  <ion-grid *ngIf="games$ && logos">
+  <ion-grid *ngIf="games && logos">
     <ion-row>
       <ion-col size="1" size-lg="2"></ion-col>
       <ion-col size="10" size-lg="8">
 
-        <ion-card *ngFor="let item of games$ | async" [hidden]="filterEventId != 0 && item.eventId != filterEventId" [button]="true" (click)="navigateToGamecast(item.gameId)">
+        <ion-card *ngFor="let item of games" [hidden]="filterEventId != 0 && item.eventId != filterEventId" [button]="true" routerLink="/gamecast/{{item.gameId}}">
           <ion-card-header>
             <ion-grid class="ion-no-padding" style="width: 80%">
               <ion-row class="ion-text-center ion-align-items-center">

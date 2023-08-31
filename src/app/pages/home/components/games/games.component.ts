@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
 import { Event } from 'src/app/interfaces/event.interface';
 import { Game } from 'src/app/interfaces/game.interface';
 import { CommonService } from 'src/app/services/common/common.service';
@@ -13,38 +12,35 @@ import { SyncService } from 'src/app/services/sync/sync.service';
   styleUrls: ['./games.component.scss'],
 })
 export class GamesComponent implements OnInit {
-  public games$?: Observable<Game[]>;
-  public events$?: Observable<Event[]>;
+  public games?: Game[];
+  public events?: Event[];
   public logos?: {name:string, isMale:number, logo:string|null}[];
   filterEventId:number = 0;
 
-  constructor(
-    private common: CommonService,
-    private router: Router,
-    private sql:SqlService,
-    sync:SyncService
-  ) {
+  constructor(private common: CommonService,
+    					private router: Router,
+    					private sql:SqlService,
+    					private sync:SyncService) {}
+
+  ngOnInit() {
 		this.sql.isReady().subscribe(ready => {
 			if (ready) {
-				if (sync.online) {
-					sync.beginSync(true);
+				if (this.sync.online) {
+					this.sync.beginSync(true);
 				} else {
 					this.common.initializeService();
 				}
 			}
 		});
-  }
-
-  ngOnInit() {
-    this.common.gameState().subscribe(async ready => {
-      if (ready) {
-        this.games$ = this.common.getGames();
+		this.common.getGames().subscribe(async games => {
+			if (games != null) {
+        this.games = games;
         this.logos = await this.sql.rawQuery('select teams.name, teams.isMale, teams.logo from teams;');
-      }
-    });
-    this.common.eventState().subscribe(ready => {
-      if (ready) {
-        this.events$ = this.common.getEvents();
+			}
+		});
+    this.common.getEvents().subscribe(events => {
+      if (events != null) {
+        this.events = events;
       }
     });
   }
@@ -56,13 +52,5 @@ export class GamesComponent implements OnInit {
     } else {
       return item.logo;
     }
-  }
-
-  navigateToAddGame() {
-    this.router.navigateByUrl('/add-game');
-  }
-
-  navigateToGamecast(gameId: string) {
-    this.router.navigateByUrl(`/gamecast/${gameId}`);
   }
 }

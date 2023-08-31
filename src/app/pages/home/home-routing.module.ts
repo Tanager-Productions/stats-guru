@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { GamesComponent } from './components/games/games.component';
-import { AddGamesComponent } from './components/add-games/add-games.component';
+import { AddGamesComponent } from '../../shared/add-games/add-games.component';
 import { GamecastComponent } from './components/gamecast/gamecast.component';
 
 const routes: Routes = [
@@ -17,10 +17,6 @@ const routes: Routes = [
   {
     path: 'gamecast/:gameId',
     component: GamecastComponent
-  },
-  {
-    path: 'add-game',
-    component: AddGamesComponent
   }
 ];
 

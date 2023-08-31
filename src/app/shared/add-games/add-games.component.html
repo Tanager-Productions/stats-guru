@@ -1,0 +1,37 @@
+<ion-content>
+	<ion-list lines="full">
+		<ion-item>
+			<ion-select class="ion-margin-vertical" label="Gender" labelPlacement="floating" interface="popover" [(ngModel)]="isMale">
+				<ion-select-option [value]="1">Male</ion-select-option>
+				<ion-select-option [value]="0">Female</ion-select-option>
+			</ion-select>
+		</ion-item>
+		<ion-item>
+			<ion-select class="ion-margin-vertical" label="Home Team" labelPlacement="floating" interface="popover" [(ngModel)]="homeTeam">
+				<ion-select-option *ngFor="let team of teams" [hidden]="team.isMale != isMale">{{team.name}}</ion-select-option>
+			</ion-select>
+		</ion-item>
+		<ion-item>
+			<ion-select class="ion-margin-vertical" label="Away Team" labelPlacement="floating" interface="popover" [(ngModel)]="awayTeam">
+				<ion-select-option *ngFor="let team of teams" [hidden]="team.isMale != isMale">{{team.name}}</ion-select-option>
+			</ion-select>
+		</ion-item>
+		<ion-item>
+			<ion-select class="ion-margin-vertical" label="Event" labelPlacement="floating" interface="popover" [(ngModel)]="event">
+				<ion-select-option [value]="null">None</ion-select-option>
+				<ion-select-option [value]="event.eventId" *ngFor="let event of events">{{event.title}}</ion-select-option>
+			</ion-select>
+		</ion-item>
+		<ion-item>
+			<ion-input
+				class="ion-margin-vertical"
+				label="Date"
+				labelPlacement="floating"
+				type="datetime-local"
+				[(ngModel)]="date"
+			></ion-input>
+		</ion-item>
+	</ion-list>
+	<ion-button expand="block" (click)="addGame()">Save</ion-button>
+</ion-content>
+

@@ -1,10 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 import { Game } from 'src/app/interfaces/game.interface';
 import { Team } from 'src/app/interfaces/team.interface';
 import { Event } from 'src/app/interfaces/event.interface'
 import { SqlService } from 'src/app/services/sql/sql.service';
 import { SyncState } from 'src/app/interfaces/syncState.enum';
 import { Router } from '@angular/router';
+import { Location } from '@angular/common';
+import { CommonService } from 'src/app/services/common/common.service';
 
 @Component({
   selector: 'app-add-games',
@@ -19,20 +21,13 @@ export class AddGamesComponent {
 	homeTeam:string = '';
 	awayTeam:string = '';
 	event:number | null = null;
+	@Output() dismiss: EventEmitter<void> = new EventEmitter<void>();
 
-  constructor(private crud: SqlService, private router: Router) {}
+  constructor(private crud: SqlService, private common: CommonService) {}
 
 	async ngOnInit() {
     this.teams = await this.crud.query('teams');
     this.events = await this.crud.query('events');
-	}
-
-  navigateToGames() {
-    this.router.navigateByUrl('/games');
-  }
-
-	updateDate(event:any) {
-		this.date = new Date(event.detail.value).toJSON();
 	}
 
 	async addGame() {
@@ -40,7 +35,7 @@ export class AddGamesComponent {
 			gameId: crypto.randomUUID(),
 			homeTeam: this.homeTeam,
 			awayTeam: this.awayTeam,
-			gameDate: this.date,
+			gameDate: new Date(this.date).toJSON(),
 			homePointsQ1: 0,
 			awayPointsQ1: 0,
 			homePointsQ2: 0,
@@ -65,6 +60,7 @@ export class AddGamesComponent {
 			complete: 1
 		}
 		await this.crud.save('games', game);
-		this.navigateToGames();
+		this.dismiss.emit();
+		this.common.fetchGames();
 	}
 }

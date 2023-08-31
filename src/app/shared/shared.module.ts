@@ -8,6 +8,7 @@ import { EditPlayerComponent } from './edit-player/edit-player.component';
 import { AgGridModule } from 'ag-grid-angular';
 import { GamecastDetailComponent } from './gamecast-detail/gamecast-detail.component';
 import { EditPeriodTotalComponent } from './edit-period-total/edit-period-total.component';
+import { AddGamesComponent } from './add-games/add-games.component';
 
 @NgModule({
   declarations: [
@@ -15,7 +16,8 @@ import { EditPeriodTotalComponent } from './edit-period-total/edit-period-total.
     AddPlayerComponent,
     EditPlayerComponent,
 		GamecastDetailComponent,
-  	EditPeriodTotalComponent
+  	EditPeriodTotalComponent,
+		AddGamesComponent
   ],
   imports: [
 		AgGridModule,
@@ -29,7 +31,8 @@ import { EditPeriodTotalComponent } from './edit-period-total/edit-period-total.
 		AddPlayerComponent,
 		EditPlayerComponent,
 		GamecastDetailComponent,
-		EditPeriodTotalComponent
+		EditPeriodTotalComponent,
+		AddGamesComponent
   ]
 })
 export class SharedModule { }

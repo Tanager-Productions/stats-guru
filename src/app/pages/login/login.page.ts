@@ -78,7 +78,7 @@ export class LoginPage {
       this.authService.storeCredential(Credentials.Token, token);
       res = await this.server.GetUser(token)
       this.authService.storeUser(res.data);
-      this.authService.showPopover = true;
+			this.authService.showPopover = true;
       this.router.navigateByUrl('/home');
     } else {
       (await this.toastCtrl.create({message: res.data, color: 'danger', duration: 2500})).present();
