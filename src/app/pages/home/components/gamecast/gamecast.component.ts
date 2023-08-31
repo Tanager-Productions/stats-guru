@@ -706,7 +706,7 @@ export class GamecastComponent {
 		if (this.sync.online) {
 			await this.sql.save('plays', play);
 		} else {
-			let existingPlay = (await this.sql.query('plays', {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`}));
+			let existingPlay = (await this.sql.query('plays', {"playId": play.playId, "gameId": this.gameId}));
 			if (existingPlay.length == 1) {
 				play.syncState = SyncState.Modified;
 				await this.sql.save('plays', play, {"playId": play.playId, "gameId": this.gameId});
@@ -1009,7 +1009,7 @@ export class GamecastComponent {
 		let play = this.plays![0];
 		await this.undoAction(play);
 		if (this.sync.online) {
-			await this.sql.delete('plays', {"playId": `${play.playId}`, "gameId": `'${this.gameId}'`});
+			await this.sql.delete('plays', {"playId": play.playId, "gameId": this.gameId});
 			this.plays!.splice(0, 1);
 		} else {
 			play.syncState = SyncState.Deleted;

@@ -12,7 +12,6 @@ import { SyncHistory } from 'src/app/interfaces/syncHistory.interface';
 export type Table = 'games' | 'plays' | 'stats' | 'players' | 'events' | 'syncHistory' | 'gameCastSettings' | 'teams';
 export type Model = Play | Player | Game | Stat | SyncHistory | GameCastSettings;
 export type Direction = 'desc' | 'asc';
-export type GameColumns = 'gameId' | 'sdf';
 
 @Injectable({
   providedIn: 'root'
@@ -40,9 +39,10 @@ export class SqlService {
 		this.initialized.next(true);
 	}
 
-  public async query(table:Table, where?: {[key: string]: string}, orderByColumn?:string, orderDirection:Direction = 'asc') {
+  public async query(table:Table, where?: {[key: string]: string | number}, orderByColumn?:string, orderDirection:Direction = 'asc') {
     let sqlcmd:string = `select * from ${table}`;
     if (where) {
+			this.normalizeWhereParams(where);
       sqlcmd += " where ";
       let keys:string[] = Object.keys(where);
       for (let key in where) {
@@ -58,9 +58,10 @@ export class SqlService {
     return await this.db.select<any[]>(sqlcmd);
   }
 
-  public async delete(table:Table, where?: {[key: string]: string}) {
+  public async delete(table:Table, where?: {[key: string]: string | number}) {
     let sqlcmd:string = `delete from ${table}`;
     if (where) {
+			this.normalizeWhereParams(where);
       sqlcmd += " where ";
       let keys:string[] = Object.keys(where);
       for (let key in where) {
