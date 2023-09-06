@@ -158,7 +158,8 @@ export const version1: string[] = [
 
 export const version2: string[] = [
 	`ALTER TABLE gameCastSettings ADD COLUMN homeHasPossession INTEGER NULL;`,
-	`ALTER TABLE gameCastSettings ADD COLUMN hiddenPlayers TEXT NULL;`
+	`ALTER TABLE gameCastSettings ADD COLUMN hiddenPlayers TEXT NULL;`,
+	`ALTER TABLE games RENAME COLUMN has4Quarters TO hasFourQuarters;`
 ];
 
 export const currentDatabaseVersion = 2;

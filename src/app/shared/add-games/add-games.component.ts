@@ -50,7 +50,7 @@ export class AddGamesComponent {
 			clock: '00:00',
 			homeTeamTOL: 0,
 			awayTeamTOL:0,
-			has4Quarters: 0,
+			hasFourQuarters: 0,
 			homeFinal: 0,
 			awayFinal: 0,
 			period: 0,

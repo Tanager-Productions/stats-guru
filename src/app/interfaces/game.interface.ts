@@ -18,7 +18,7 @@ export interface Game {
   clock: string;
   homeTeamTOL: number;
   awayTeamTOL: number;
-  has4Quarters: number | null;
+  hasFourQuarters: number | null;
   homeFinal: number;
   awayFinal: number;
   period: number;
@@ -47,7 +47,7 @@ export interface ServerGame {
   clock: string;
   homeTeamTOL: number;
   awayTeamTOL: number;
-  has4Quarters: boolean | null;
+  hasFourQuarters: boolean | null;
   homeFinal: number | null;
   awayFinal: number | null;
   period: number;
