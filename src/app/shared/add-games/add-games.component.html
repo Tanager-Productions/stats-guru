@@ -7,19 +7,19 @@
 			</ion-select>
 		</ion-item>
 		<ion-item>
-			<ion-select class="ion-margin-vertical" label="Home Team" labelPlacement="floating" interface="popover" [(ngModel)]="homeTeam">
+			<ion-select class="ion-margin-vertical" label="Home Team" labelPlacement="floating" interface="popover" [(ngModel)]="homeTeamId">
 				<ion-select-option *ngFor="let team of teams" [hidden]="team.isMale != isMale">{{team.name}}</ion-select-option>
 			</ion-select>
 		</ion-item>
 		<ion-item>
-			<ion-select class="ion-margin-vertical" label="Away Team" labelPlacement="floating" interface="popover" [(ngModel)]="awayTeam">
+			<ion-select class="ion-margin-vertical" label="Away Team" labelPlacement="floating" interface="popover" [(ngModel)]="awayTeamId">
 				<ion-select-option *ngFor="let team of teams" [hidden]="team.isMale != isMale">{{team.name}}</ion-select-option>
 			</ion-select>
 		</ion-item>
 		<ion-item>
 			<ion-select class="ion-margin-vertical" label="Event" labelPlacement="floating" interface="popover" [(ngModel)]="event">
 				<ion-select-option [value]="null">None</ion-select-option>
-				<ion-select-option [value]="event.eventId" *ngFor="let event of events">{{event.title}}</ion-select-option>
+				<ion-select-option [value]="event.id" *ngFor="let event of events">{{event.title}}</ion-select-option>
 			</ion-select>
 		</ion-item>
 		<ion-item>

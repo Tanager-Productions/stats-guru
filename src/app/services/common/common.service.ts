@@ -1,12 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Subject } from 'rxjs';
-import { Game } from 'src/app/interfaces/game.interface';
-import { Player } from 'src/app/interfaces/player.interface';
-import { Play } from 'src/app/interfaces/play.interface';
-import { Team } from 'src/app/interfaces/team.interface';
-import { Stat } from 'src/app/interfaces/stat.interface';
 import { SqlService } from '../sql/sql.service';
-import { Event } from 'src/app/interfaces/event.interface';
+import { Game, Play, Player, Stat, Team, Event } from 'src/app/interfaces/models';
 
 @Injectable({
   providedIn: 'root'
@@ -33,7 +28,10 @@ export class CommonService {
   }
 
   public async fetchGames() {
-    let games: Game[] = await this.sql.query("games", undefined, "gameDate", 'desc');
+    let games: Game[] = await this.sql.query({
+			table: 'games',
+			orderByColumn: 'startDate'
+		});
     this.gamesSubject.next(games);
   }
 
@@ -42,7 +40,11 @@ export class CommonService {
   }
 
   public async fetchEvents() {
-    let events: Event[] = await this.sql.query("events", undefined, "title", "asc");
+    let events: Event[] = await this.sql.query({
+			table: "events",
+			orderByColumn: "title",
+			orderDirection: "asc"
+		});
     this.eventsSubject.next(events);
   }
 
@@ -51,7 +53,7 @@ export class CommonService {
   }
 
   public async fetchPlayers() {
-    let players: Player[] = await this.sql.query("players");
+    let players: Player[] = await this.sql.query({table: "players"});
     this.playersSubject.next(players);
   }
 
@@ -60,7 +62,7 @@ export class CommonService {
   }
 
   public async fetchPlays() {
-    let plays: Play[] = await this.sql.query("plays");
+    let plays: Play[] = await this.sql.query({table: "plays"});
     this.playsSubject.next(plays);
   }
 
@@ -69,7 +71,7 @@ export class CommonService {
   }
 
   public async fetchTeams() {
-    let teams: Team[] = await this.sql.query("teams");
+    let teams: Team[] = await this.sql.query({table: "teams"});
     this.teamsSubject.next(teams);
   }
 
@@ -78,7 +80,7 @@ export class CommonService {
   }
 
   public async fetchStats() {
-    let stats: Stat[] = await this.sql.query("stats");
+    let stats: Stat[] = await this.sql.query({table: "stats"});
     this.statsSubject.next(stats);
   }
 

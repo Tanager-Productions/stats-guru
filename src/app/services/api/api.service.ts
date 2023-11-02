@@ -11,8 +11,6 @@ import { environment } from 'src/environments/environment';
 export class ApiService {
   public serverUrl:string = environment.serverUrl;
 
-  constructor() { }
-
   public getApiToken() {
     let userString = localStorage.getItem("user");
     if (userString == null) {

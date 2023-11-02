@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { Event } from 'src/app/interfaces/event.interface';
-import { Game } from 'src/app/interfaces/game.interface';
+import { Game, Event } from 'src/app/interfaces/models';
 import { CommonService } from 'src/app/services/common/common.service';
 import { SqlService } from 'src/app/services/sql/sql.service';
 import { SyncService } from 'src/app/services/sync/sync.service';
@@ -14,7 +13,7 @@ import { SyncService } from 'src/app/services/sync/sync.service';
 export class GamesComponent implements OnInit {
   public games?: Game[];
   public events?: Event[];
-  public logos?: {name:string, isMale:number, logo:string|null}[];
+  public logos?: {id:number, defaultLogo:string|null}[];
   filterEventId:number = 0;
 
   constructor(private common: CommonService,
@@ -35,7 +34,7 @@ export class GamesComponent implements OnInit {
 		this.common.getGames().subscribe(async games => {
 			if (games != null) {
         this.games = games;
-        this.logos = await this.sql.rawQuery('select teams.name, teams.isMale, teams.logo from teams;');
+        this.logos = await this.sql.rawQuery('select teams.id, teams.defaultLogo from teams;');
 			}
 		});
     this.common.getEvents().subscribe(events => {
@@ -45,12 +44,12 @@ export class GamesComponent implements OnInit {
     });
   }
 
-  public getLogo(teamName:string, isMale:number) {
-    let item = this.logos?.find(t => t.name == teamName && t.isMale == isMale)!;
-    if (item.logo == null) {
-      return '../../../../assets/icon-black.png'
+  public getLogo(teamId:number) {
+    let item = this.logos?.find(t => t.id == teamId)!;
+    if (item.defaultLogo == null) {
+      return 'assets/icon-black.png'
     } else {
-      return item.logo;
+      return item.defaultLogo;
     }
   }
 }

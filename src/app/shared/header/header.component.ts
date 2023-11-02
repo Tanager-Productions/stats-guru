@@ -50,7 +50,7 @@ export class HeaderComponent implements OnInit {
   ngOnInit() {
     this.sync.syncComplete().subscribe(async complete => {
       if (complete) {
-        this.syncHistory = await this.crud.query("syncHistory", undefined, "dateOccurred", "desc");
+        this.syncHistory = await this.crud.query({table: "syncHistory", orderByColumn: "dateOccurred", orderDirection: "desc"});
       }
     })
   }

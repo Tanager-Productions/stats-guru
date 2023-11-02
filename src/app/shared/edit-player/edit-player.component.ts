@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { Player } from 'src/app/interfaces/player.interface';
+import { Player } from 'src/app/interfaces/models';
 
 @Component({
   selector: 'app-edit-player',

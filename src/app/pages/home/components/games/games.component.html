@@ -19,7 +19,7 @@
                   <ion-radio [value]="0">All</ion-radio>
                 </ion-item>
                 <ion-item *ngFor="let item of events">
-                  <ion-radio [value]="item.eventId">{{item.title}}</ion-radio>
+                  <ion-radio [value]="item.id">{{item.title}}</ion-radio>
                 </ion-item>
               </ion-radio-group>
             </ion-list>
@@ -44,20 +44,20 @@
       <ion-col size="1" size-lg="2"></ion-col>
       <ion-col size="10" size-lg="8">
 
-        <ion-card *ngFor="let item of games" [hidden]="filterEventId != 0 && item.eventId != filterEventId" [button]="true" routerLink="/gamecast/{{item.gameId}}">
+        <ion-card *ngFor="let item of games" [hidden]="filterEventId != 0 && item.eventId != filterEventId" [button]="true" routerLink="/gamecast/{{item.id}}">
           <ion-card-header>
             <ion-grid class="ion-no-padding" style="width: 80%">
               <ion-row class="ion-text-center ion-align-items-center">
                 <ion-col>
-                  <img height="60" width="60" [src]="getLogo(item.homeTeam, item.isMale!)"> <br>
-                  <ion-label>{{item.homeTeam}}</ion-label>
+                  <img height="60" width="60" [src]="getLogo(item.homeTeamId)"> <br>
+                  <ion-label>{{item.homeTeamId}}</ion-label>
                 </ion-col>
                 <ion-col>
                   <strong>VS</strong>
                 </ion-col>
                 <ion-col>
-                  <img height="60" width="60" [src]="getLogo(item.awayTeam, item.isMale!)"> <br>
-                  <ion-label>{{item.awayTeam}}</ion-label>
+                  <img height="60" width="60" [src]="getLogo(item.awayTeamId)"> <br>
+                  <ion-label>{{item.awayTeamId}}</ion-label>
                 </ion-col>
               </ion-row>
             </ion-grid>

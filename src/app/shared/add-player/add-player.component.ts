@@ -1,6 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { GameCastSettings } from 'src/app/interfaces/gameCastSetting.interface';
-import { Player } from 'src/app/interfaces/player.interface';
+import { Game, Player, Positions } from 'src/app/interfaces/models';
 import { SyncState } from 'src/app/interfaces/syncState.enum';
 
 @Component({
@@ -14,24 +13,24 @@ export class AddPlayerComponent {
 	newPlayerFirstName!: string;
 	newPlayerLastName!: string;
 	@Input() team!: 'home' | 'away';
-	@Input() teamName!:string;
-	@Input() isMale!:number;
+	@Input() teamId!:number;
+	@Input() isMale!:boolean;
 	@Output() dismiss: EventEmitter<void> = new EventEmitter();
 	@Output() playerAdded: EventEmitter<Player> = new EventEmitter();
 	@Output() playerHidden: EventEmitter<Player> = new EventEmitter();
 	@Output() playerUnhidden: EventEmitter<Player> = new EventEmitter();
 	@Input() color!:string;
 	@Input() players!: Player[];
-	@Input() settings!: GameCastSettings;
+	@Input() settings!: Game;
 
 	public addToTeam() {
 		let newTeamPlayer: Player = {
-			playerId: crypto.randomUUID(),
+			id: 0,
 			firstName: this.newPlayerFirstName,
 			lastName: this.newPlayerLastName,
 			number: this.newPlayerNumber,
-			position: "",
-			team: this.teamName,
+			position: Positions.PointGuard,
+			teamId: this.teamId,
 			picture: null,
 			isMale: this.isMale,
 			syncState: SyncState.Added,
@@ -48,6 +47,6 @@ export class AddPlayerComponent {
 	}
 
 	isHidden(player:Player) {
-		return this.settings.hiddenPlayers?.split(',').includes(player.playerId);
+		return this.settings.hiddenPlayers?.split(',').includes(player.id.toString());
 	}
 }

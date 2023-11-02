@@ -1,12 +1,8 @@
 import { Component, EventEmitter, Output } from '@angular/core';
-import { Game } from 'src/app/interfaces/game.interface';
-import { Team } from 'src/app/interfaces/team.interface';
-import { Event } from 'src/app/interfaces/event.interface'
 import { SqlService } from 'src/app/services/sql/sql.service';
 import { SyncState } from 'src/app/interfaces/syncState.enum';
-import { Router } from '@angular/router';
-import { Location } from '@angular/common';
 import { CommonService } from 'src/app/services/common/common.service';
+import { Team, Event, Game } from 'src/app/interfaces/models';
 
 @Component({
   selector: 'app-add-games',
@@ -16,25 +12,25 @@ import { CommonService } from 'src/app/services/common/common.service';
 export class AddGamesComponent {
 	teams?: Team[];
 	events?: Event[];
-	isMale: number = 1;
+	isMale: boolean = true;
 	date: string = new Date().toJSON();
-	homeTeam:string = '';
-	awayTeam:string = '';
+	homeTeamId:number = 0;
+	awayTeamId:number = 0;
 	event:number | null = null;
 	@Output() dismiss: EventEmitter<void> = new EventEmitter<void>();
 
   constructor(private crud: SqlService, private common: CommonService) {}
 
 	async ngOnInit() {
-    this.teams = await this.crud.query('teams');
-    this.events = await this.crud.query('events');
+    this.teams = await this.crud.query({table: 'teams'});
+    this.events = await this.crud.query({table: 'events'});
 	}
 
 	async addGame() {
 		let game: Game = {
-			gameId: crypto.randomUUID(),
-			homeTeam: this.homeTeam,
-			awayTeam: this.awayTeam,
+			id: 0,
+			homeTeamId: this.homeTeamId,
+			awayTeamId: this.awayTeamId,
 			gameDate: new Date(this.date).toJSON(),
 			homePointsQ1: 0,
 			awayPointsQ1: 0,
@@ -46,18 +42,17 @@ export class AddGamesComponent {
 			awayPointsQ4: 0,
 			homePointsOT: 0,
 			awayPointsOT: 0,
-			isMale: this.isMale,
 			clock: '00:00',
 			homeTeamTOL: 0,
 			awayTeamTOL:0,
-			hasFourQuarters: 0,
+			hasFourQuarters: false,
 			homeFinal: 0,
 			awayFinal: 0,
 			period: 0,
 			gameLink: null,
 			eventId: this.event,
 			syncState: SyncState.Added,
-			complete: 1
+			complete: true
 		}
 		await this.crud.save('games', game);
 		this.dismiss.emit();

@@ -3,11 +3,17 @@ import { currentDatabaseVersion, databaseName, upgrades } from 'src/app/upgrades
 import { BehaviorSubject } from 'rxjs';
 import Database from "tauri-plugin-sql-api";
 import { SyncHistory } from 'src/app/interfaces/syncHistory.interface';
-import { Play, Player, Game, Stat } from '@tanager-productions/tgs';
+import { Play, Player, Game, Stat } from 'src/app/interfaces/models';
 
 export type Table = 'games' | 'plays' | 'stats' | 'players' | 'events' | 'syncHistory' | 'seasons' | 'teams';
 export type Model = Play | Player | Game | Stat | SyncHistory;
 export type Direction = 'desc' | 'asc';
+export type QueryOptions = {
+	table: Table,
+	where?: {[key: string]: string | number},
+	orderByColumn?:string,
+	orderDirection?:Direction
+}
 
 @Injectable({
   providedIn: 'root'
@@ -35,21 +41,21 @@ export class SqlService {
 		this.initialized.next(true);
 	}
 
-  public async query(table:Table, where?: {[key: string]: string | number}, orderByColumn?:string, orderDirection:Direction = 'asc') {
-    let sqlcmd:string = `select * from ${table}`;
-    if (where) {
-			this.normalizeWhereParams(where);
+  public async query(options: QueryOptions) {
+    let sqlcmd:string = `select * from ${options.table}`;
+    if (options.where) {
+			this.normalizeWhereParams(options.where);
       sqlcmd += " where ";
-      let keys:string[] = Object.keys(where);
-      for (let key in where) {
-        sqlcmd += `${key} = ${where[key]}`;
+      let keys:string[] = Object.keys(options.where);
+      for (let key in options.where) {
+        sqlcmd += `${key} = ${options.where[key]}`;
         if (keys.indexOf(key) != keys.length - 1) {
           sqlcmd += ` and `
         }
       }
     }
-    if (orderByColumn) {
-      sqlcmd += ` order by ${orderByColumn} ${orderDirection}`;
+    if (options.orderByColumn) {
+      sqlcmd += ` order by ${options.orderByColumn} ${options.orderDirection ?? 'asc'}`;
     }
     return await this.db.select<any[]>(sqlcmd);
   }
