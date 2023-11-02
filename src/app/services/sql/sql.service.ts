@@ -2,15 +2,11 @@ import { Injectable } from '@angular/core';
 import { currentDatabaseVersion, databaseName, upgrades } from 'src/app/upgrades/versions';
 import { BehaviorSubject } from 'rxjs';
 import Database from "tauri-plugin-sql-api";
-import { Play } from 'src/app/interfaces/play.interface';
-import { Player } from 'src/app/interfaces/player.interface';
-import { Game } from 'src/app/interfaces/game.interface';
-import { GameCastSettings } from 'src/app/interfaces/gameCastSetting.interface';
-import { Stat } from 'src/app/interfaces/stat.interface';
 import { SyncHistory } from 'src/app/interfaces/syncHistory.interface';
+import { Play, Player, Game, Stat } from '@tanager-productions/tgs';
 
-export type Table = 'games' | 'plays' | 'stats' | 'players' | 'events' | 'syncHistory' | 'gameCastSettings' | 'teams';
-export type Model = Play | Player | Game | Stat | SyncHistory | GameCastSettings;
+export type Table = 'games' | 'plays' | 'stats' | 'players' | 'events' | 'syncHistory' | 'seasons' | 'teams';
+export type Model = Play | Player | Game | Stat | SyncHistory;
 export type Direction = 'desc' | 'asc';
 
 @Injectable({
@@ -174,13 +170,19 @@ export class SqlService {
 		if (table == 'games') {
 			delete model.homeFinal;
 			delete model.awayFinal;
+			delete model.id;
+			delete model.homeTeamTOL;
+			delete model.awayTeamTOL;
 		} else if (table == 'stats') {
 			delete model.points;
 			delete model.rebounds;
 			delete model.eff;
+			delete model.id;
 		} else if (table == 'syncHistory') {
 			delete model.id;
-		} else if (table == 'gameCastSettings') {
+		} else if (table == 'plays') {
+			delete model.id;
+		} else if (table == 'players') {
 			delete model.id;
 		}
 	}

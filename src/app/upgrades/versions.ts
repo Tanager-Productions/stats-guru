@@ -1,46 +1,62 @@
 export const version1: string[] = [
+	`
+		CREATE TABLE IF NOT EXISTS seasons (
+			year INTEGER PRIMARY KEY AUTOINCREMENT,
+			createdOn TEXT NOT NULL,
+			createdBy TEXT NULL
+		);
+	`,
+
   `
     CREATE TABLE IF NOT EXISTS teams (
+			id INTEGER PRIMARY KEY AUTOINCREMENt,
       name TEXT NOT NULL,
-      isMale INTEGER NOT NULL,
+      isMale BOOLEAN NOT NULL,
+			seasonId INTEGER NOT NULL,
       city TEXT NOT NULL,
       state TEXT NOT NULL,
-      logo TEXT NULL,
-      official INTEGER NOT NULL,
-      PRIMARY KEY (name, isMale)
+			type INTEGER NOT NULL,
+			socialMediaString TEXT NULL,
+			infoString TEXT NULL,
+			division INTEGER NULL,
+			defaultLogo TEXT NULL,
+			darkModeLogo TEXT NULL,
+			FOREIGN KEY (seasonId) REFERENCES seasons(year) ON DELETE CASCADE
     );
   `,
 
+	`CREATE UNIQUE INDEX IF NOT EXISTS ixTeamsSeasonIdNameIsMale ON teams (seasonId, name, isMale);`,
+
   `
     CREATE TABLE IF NOT EXISTS players (
-      playerId TEXT PRIMARY KEY,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       firstName TEXT NOT NULL,
       lastName TEXT NOT NULL,
       number INTEGER NOT NULL,
-      position TEXT NOT NULL,
+      position INTEGER NOT NULL,
       picture TEXT NULL,
-      team TEXT NOT NULL,
-      isMale INTEGER NOT NULL,
+      teamId INTEGER NOT NULL,
+      isMale BOOLEAN NOT NULL,
       height TEXT NULL,
       weight INTEGER NULL,
       age INTEGER NULL,
       homeTown TEXT NULL,
       homeState TEXT NULL,
       socialMediaString TEXT NULL,
-      syncState INTEGER NOT NULL DEFAULT 0
+      infoString TEXT NULL,
+      syncState INTEGER NOT NULL DEFAULT 0,
+			FOREIGN KEY (teamId) REFERENCES teams(id) ON DELETE CASCADE
     );
   `,
 
+	`CREATE UNIQUE INDEX IF NOT EXISTS ixPlayersTeamIdIsMaleFirstNameLastName ON players (teamId, isMale, firstName, lastName);`,
+
   `
     CREATE TABLE IF NOT EXISTS games (
-      gameId TEXT PRIMARY KEY,
-      homeTeam TEXT NOT NULL,
-      awayTeam TEXT NOT NULL,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      homeTeamId INTEGER NOT NULL,
+      awayTeamId INTEGER NOT NULL,
       gameDate TEXT NOT NULL,
-      clock TEXT NOT NULL,
-      complete INTEGER NOT NULL,
-      isMale INTEGER NOT NULL,
-      has4Quarters INTEGER NULL,
       homePointsQ1 INTEGER NOT NULL,
       awayPointsQ1 INTEGER NOT NULL,
       homePointsQ2 INTEGER NOT NULL,
@@ -51,21 +67,49 @@ export const version1: string[] = [
       awayPointsQ4 INTEGER NOT NULL,
       awayPointsOT INTEGER NOT NULL,
       homePointsOT INTEGER NOT NULL,
-      homeFinal GENERATED ALWAYS AS ([homePointsQ1]+[homePointsQ2]+[homePointsQ3]+[homePointsQ4]+[homePointsOT]),
-      awayFinal GENERATED ALWAYS AS ([awayPointsQ1]+[awayPointsQ2]+[awayPointsQ3]+[awayPointsQ4]+[awayPointsOT]),
-      homeTeamTOL INTEGER NOT NULL,
-      awayTeamTOL INTEGER NOT NULL,
+			homeTeamTOL INTEGER GENERATED ALWAYS AS ([homePartialTOL] + [homeFullTOL]),
+			awayTeamTOL INTEGER GENERATED ALWAYS AS ([awayPartialTOL] + [awayFullTOL]),
+      clock TEXT NOT NULL,
+      complete BOOLEAN NOT NULL,
+      hasFourQuarters BOOLEAN NULL,
+      homeFinal GENERATED ALWAYS AS ([homePointsQ1] + [homePointsQ2] + [homePointsQ3] + [homePointsQ4] + [homePointsOT]),
+      awayFinal GENERATED ALWAYS AS ([awayPointsQ1] + [awayPointsQ2] + [awayPointsQ3] + [awayPointsQ4] + [awayPointsOT]),
       period INTEGER NOT NULL,
       gameLink TEXT NULL,
       eventId INTEGER NULL,
-      syncState INTEGER NOT NULL DEFAULT 0
+			homePartialTOL INTEGER NOT NULL,
+			awayPartialTOL INTEGER NOT NULL,
+			homeFullTOL INTEGER NOT NULL,
+			awayFullTOL INTEGER NOT NULL,
+			homeCurrentFouls INTEGER NULL,
+			awayCurrentFouls INTEGER NULL,
+			homeHasPossession BOOLEAN NULL,
+			resetTimeoutsEveryPeriod BOOLEAN NULL,
+			fullTimeoutsPerGame INTEGER NULL,
+			partialTimeoutsPerGame INTEGER NULL,
+			minutesPerPeriod INTEGER NULL,
+			minutesPerOvertime INTEGER NULL,
+			hiddenPlayers TEXT NULL,
+      syncState INTEGER NOT NULL DEFAULT 0,
+			FOREIGN KEY (eventId) REFERENCES events(id) ON DELETE SET NULL,
+			FOREIGN KEY (awayTeamId) REFERENCES teams(id) ON DELETE CASCADE,
+			FOREIGN KEY (homeTeamId) REFERENCES teams(id) ON DELETE CASCADE
     );
   `,
 
+	`CREATE INDEX IF NOT EXISTS ixGamesAwayTeamId ON games (awayTeamId);`,
+
+	`CREATE INDEX IF NOT EXISTS ixGamesEventId ON games (eventId);`,
+
+	`CREATE UNIQUE INDEX IF NOT EXISTS ixGamesGameDateHomeTeamIdAwayTeamId ON games (gameDate, homeTeamId, awayTeamId);`,
+
+	`CREATE INDEX IF NOT EXISTS ixGamesHomeTeamId ON games (homeTeamId);`,
+
   `
     CREATE TABLE IF NOT EXISTS plays (
-      playId INTEGER NOT NULL,
-      gameId TEXT NOT NULL,
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+      order INTEGER NOT NULL,
+      gameId INTEGER NOT NULL,
       turboStatsData TEXT NULL,
 			teamName TEXT NULL,
 			playerName TEXT NULL,
@@ -76,49 +120,59 @@ export const version1: string[] = [
 			score TEXT NULL,
 			timeStamp TEXT NULL,
       syncState INTEGER NOT NULL DEFAULT 0,
-      PRIMARY KEY (playId, gameId)
+      FOREIGN KEY (gameId) REFERENCES games(id) ON DELETE CASCADE
     );
   `,
+
+	`CREATE UNIQUE INDEX IF NOT EXISTS ixPlaysGameIdOrder ON plays (game_id, order);`,
 
   `
     CREATE TABLE IF NOT EXISTS stats (
-      player TEXT NOT NULL,
-      game TEXT NOT NULL,
-      minutes INTEGER NULL,
-      assists INTEGER NULL,
-      fieldGoalsMade INTEGER NULL,
-      fieldGoalsAttempted INTEGER NULL,
-      blocks INTEGER NULL,
-      steals INTEGER NULL,
-      threesMade INTEGER NULL,
-      threesAttempted INTEGER NULL,
-      freethrowsMade INTEGER NULL,
-      freethrowsAttempted INTEGER NULL,
-      points GENERATED ALWAYS AS (([threesMade]*(3)+[freethrowsMade])+([fieldGoalsMade]-[threesMade])*(2)),
-      turnovers INTEGER NULL,
-      fouls INTEGER NULL,
-      plusOrMinus INTEGER NULL,
-      offensiveRebounds INTEGER NULL,
-      defensiveRebounds INTEGER NULL,
-      rebounds GENERATED ALWAYS AS ([offensiveRebounds]+[defensiveRebounds]),
+			id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT
+      playerId INTEGER NOT NULL,
+      gameId INTEGER NOT NULL,
+      minutes INTEGER NOT NULL,
+      assists INTEGER NOT NULL,
+      rebounds GENERATED ALWAYS AS ([offensiveRebounds] + [defensiveRebounds]),
+      offensiveRebounds INTEGER NOT NULL,
+      defensiveRebounds INTEGER NOT NULL,
+      fieldGoalsMade INTEGER NOT NULL,
+      fieldGoalsAttempted INTEGER NOT NULL,
+      blocks INTEGER NOT NULL,
+      steals INTEGER NOT NULL,
+      threesMade INTEGER NOT NULL,
+      threesAttempted INTEGER NOT NULL,
+      freethrowsMade INTEGER NOT NULL,
+      freethrowsAttempted INTEGER NOT NULL,
+      points GENERATED ALWAYS AS ([threesMade] * 3 + [freeThrowsMade] + ([fieldGoalsMade] - [threesMade]) * 2),
+      turnovers INTEGER NOT NULL,
+      fouls INTEGER NOT NULL,
+      plusOrMinus INTEGER NOT NULL,
       eff GENERATED ALWAYS AS (
-				(([threesMade]*3)+[freeThrowsMade]+(([fieldGoalsMade]-[threesMade])*2))+[offensiveRebounds]+[defensiveRebounds]+[assists]+[steals]+[blocks]-([fieldGoalsAttempted]-[fieldGoalsMade])-([freethrowsAttempted]-[freethrowsMade])-[turnovers]
+				([threesMade] * 3 + [freeThrowsMade] + ([fieldGoalsMade] - [threesMade]) * 2 + [offensiveRebounds] + defensiveRebounds] + [assists] + [steals] + [blocks] - ([fieldGoalsAttempted] - [fieldGoalsMade]) - ([freeThrowsAttempted] - [freeThrowsMade]) - [turnovers])
       ),
 			technicalFouls INTEGER NULL,
+			onCourt BOOLEAN NULL,
       syncState INTEGER NOT NULL DEFAULT 0,
-      PRIMARY KEY (player, game)
+      FOREIGN KEY (playerId) REFERENCES players(id) ON DELETE CASCADE,
+			FOREIGN KEY (gameId) REFERENCES games(id) ON DELETE CASCADE
     );
   `,
 
+	`CREATE UNIQUE INDEX IF NOT EXISTS ixStatsGameIdPlayerId ON stats (gameId, playerId);`,
+
+	`CREATE INDEX IF NOT EXISTS ixStatsPlayerId ON stats (playerId);`,
+
   `
     CREATE TABLE IF NOT EXISTS events (
-      eventId INTEGER PRIMARY KEY AUTOINCREMENT,
-      startDate TEXT NULL,
-      endDate TEXT NULL,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      startDate TEXT NOT NULL,
+      endDate TEXT NOT NULL,
       state TEXT NULL,
-      title TEXT NULL,
+      title TEXT NOT NULL,
       city TEXT NULL,
-      picture TEXT NULL
+      picture TEXT NULL,
+			type INTEGER NOT NULL
     );
   `,
 
@@ -132,42 +186,14 @@ export const version1: string[] = [
       statsSynced INTEGER NOT NULL,
       errorMessages TEXT NOT NULL
     );
-  `,
-
-  `
-    CREATE TABLE IF NOT EXISTS gameCastSettings (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      homePlayersOnCourt TEXT NULL,
-      awayPlayersOnCourt TEXT NULL,
-      fullTimeouts INTEGER NULL,
-			partialTimeouts INTEGER NULL,
-      periodsPerGame INTEGER NULL,
-      minutesPerPeriod INTEGER NULL,
-      minutesPerOvertime INTEGER NULL,
-			game TEXT NOT NULL,
-			resetTimeoutsEveryPeriod INTEGER NULL,
-			homePartialTOL INTEGER NULL,
-			awayPartialTOL INTEGER NULL,
-			homeFullTOL INTEGER NULL,
-			awayFullTOL INTEGER NULL,
-			homeCurrentFouls INTEGER NULL,
-			awayCurrentFouls INTEGER NULL
-    );
   `
 ];
 
-export const version2: string[] = [
-	`ALTER TABLE gameCastSettings ADD COLUMN homeHasPossession INTEGER NULL;`,
-	`ALTER TABLE gameCastSettings ADD COLUMN hiddenPlayers TEXT NULL;`,
-	`ALTER TABLE games RENAME COLUMN has4Quarters TO hasFourQuarters;`
-];
-
-export const currentDatabaseVersion = 2;
-export const databaseName = "sqlite:statsguru.db";
+export const currentDatabaseVersion = 1;
+export const databaseName = "sqlite:tgs-stats.db";
 export const upgrades = {
   database: databaseName,
   upgrade: [
-    { toVersion: 1, statements: version1 },
-		{ toVersion: 2, statements: version2 }
+    { toVersion: 1, statements: version1 }
   ]
 };

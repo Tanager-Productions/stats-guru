@@ -1,7 +1,4 @@
-import { Game } from "./game.interface";
-import { Play } from "./play.interface";
-import { Player } from "./player.interface";
-import { Stat } from "./stat.interface";
+import { Game, Play, Stat, Player } from "@tanager-productions/tgs";
 
 export interface SyncDto {
   version: number;

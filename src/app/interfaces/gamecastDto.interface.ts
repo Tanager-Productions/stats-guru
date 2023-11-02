@@ -1,7 +1,4 @@
-import { Game } from "./game.interface";
-import { Play } from "./play.interface";
-import { Player } from "./player.interface";
-import { Stat } from "./stat.interface";
+import { Play, Player, Stat, Game } from "@tanager-productions/tgs";
 import { SyncMode } from "./sync.interface";
 
 export interface GamecastDto {
