@@ -1,4 +1,4 @@
-import { Game, Play, Stat, Player } from "@tanager-productions/tgs";
+import { Game, Play, Stat, Player } from "./models";
 
 export interface SyncDto {
   version: number;

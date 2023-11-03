@@ -1,4 +1,4 @@
-import { Play, Player, Stat, Game } from "@tanager-productions/tgs";
+import { Play, Player, Stat, Game } from "./models";
 import { SyncMode } from "./sync.interface";
 
 export interface GamecastDto {
