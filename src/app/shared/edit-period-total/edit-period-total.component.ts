@@ -8,8 +8,6 @@ import { GamecastComponent } from 'src/app/pages/home/components/gamecast/gameca
 })
 export class EditPeriodTotalComponent {
 	@Input() team!: 'home' | 'away';
-	@Input() teamName!:string;
-	@Input() isMale!:number;
 	@Input() firstPeriodPoints!: number;
 	@Input() secondPeriodPoints!: number;
 	@Input() thirdPeriodPoints!: number;
