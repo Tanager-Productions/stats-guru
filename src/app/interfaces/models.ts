@@ -18,9 +18,9 @@ export interface Game {
 	awayPointsOT: number;
 	homeTeamTOL: number;
 	awayTeamTOL: number;
-	complete: boolean;
+	complete: number;
 	clock: string;
-	hasFourQuarters: boolean | null;
+	hasFourQuarters: number | null;
 	homeFinal: number;
 	awayFinal: number;
 	period: number;
@@ -32,8 +32,8 @@ export interface Game {
 	awayFullTOL: number;
 	homeCurrentFouls: number | null;
 	awayCurrentFouls: number | null;
-	homeHasPossession: boolean | null;
-	resetTimeoutsEveryPeriod: boolean | null;
+	homeHasPossession: number | null;
+	resetTimeoutsEveryPeriod: number | null;
 	fullTimeoutsPerGame: number | null;
 	partialTimeoutsPerGame: number | null;
 	minutesPerPeriod: number | null;
@@ -59,9 +59,9 @@ export const DEFAULT_GAME: Game = {
 	awayPointsOT: 0,
 	homeTeamTOL: 0,
 	awayTeamTOL: 0,
-	complete: true,
+	complete: 1,
 	clock: "00:00",
-	hasFourQuarters: false,
+	hasFourQuarters: 0,
 	homeFinal: 0,
 	awayFinal: 0,
 	period: 0,
@@ -85,7 +85,7 @@ export const DEFAULT_GAME: Game = {
 
 export interface Play {
 	id: number;
-	order: number;
+	playOrder: number;
 	gameId: number;
 	turboStatsData: string | null;
 	teamName: string | null;
@@ -107,7 +107,7 @@ export interface Player {
 	position: Positions | null;
 	teamId: number;
 	picture: string | null;
-	isMale: boolean;
+	isMale: number;
 	height: string | null;
 	weight: number | null;
 	age: number | null;
@@ -126,7 +126,7 @@ export const DEFAULT_PLAYER: Player = {
 	position: null,
 	teamId: 0,
 	picture: null,
-	isMale: false,
+	isMale: 0,
 	height: null,
 	weight: null,
 	age: null,
@@ -160,7 +160,7 @@ export interface Stat {
 	plusOrMinus: number;
 	eff: number;
 	technicalFouls: number | null;
-	onCourt: boolean | null;
+	onCourt: number | null;
 	syncState: SyncState;
 }
 
@@ -184,7 +184,7 @@ export interface Event {
 export interface Team {
 	id: number;
 	name: string;
-	isMale: boolean;
+	isMale: number;
 	seasonId: number;
 	city: string;
 	state: string;

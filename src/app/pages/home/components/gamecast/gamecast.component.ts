@@ -68,7 +68,7 @@ export class GamecastComponent {
   currentGame?: Game;
 	homeTeamName:string = '';
 	awayTeamName:string = '';
-	isMale = true;
+	isMale = 1;
 	homeTeamPlayers?: Player[];
 	awayTeamPlayers?: Player[];
 	homeTeamStats!: StatsRow[];
@@ -232,11 +232,21 @@ export class GamecastComponent {
 			FROM 			Plays
 			WHERE 		gameId = '${this.gameId}'
 			AND				syncState != 3
-			ORDER BY	playId DESC
+			ORDER BY	playOrder DESC
 		`);
 	}
 
 	async addPlayer(player:Player) {
+		await this.sql.save('players', player);
+		player = (await this.sql.query({
+			table: 'players',
+			where: {
+				teamId: player.teamId,
+				isMale: player.isMale,
+				firstName: player.firstName,
+				lastName: player.lastName
+			}
+		}))[0];
 		if (this.addHomePlayer) {
 			this.homeTeamPlayers!.push(player);
 			this.homeTeamPlayers?.sort((a, b) => {
@@ -258,14 +268,13 @@ export class GamecastComponent {
 					return 1;
 			});
 		}
-		await this.sql.save('players', player);
 	}
 
 	private async fetchData() {
 		this.currentGame = (await this.sql.query({table: 'games', where: { id: this.gameId }}))[0];
-		this.isMale = (await this.sql.rawQuery(`select isMale from teams where id = ${this.currentGame!.homeTeamId}`))[0];
-		this.homeTeamName = (await this.sql.rawQuery(`select name from teams where id = ${this.currentGame!.homeTeamId}`))[0];
-		this.awayTeamName = (await this.sql.rawQuery(`select name from teams where id = ${this.currentGame!.awayTeamId}`))[0];
+		this.isMale = (await this.sql.rawQuery(`select isMale from teams where id = ${this.currentGame!.homeTeamId}`))[0].isMale;
+		this.homeTeamName = (await this.sql.rawQuery(`select name from teams where id = ${this.currentGame!.homeTeamId}`))[0].name;
+		this.awayTeamName = (await this.sql.rawQuery(`select name from teams where id = ${this.currentGame!.awayTeamId}`))[0].name;
 		this.homeTeamPlusOrMinus = this.currentGame!.homeFinal;
 		this.awayTeamPlusOrMinus = this.currentGame!.awayFinal;
     this.homeTeamPlayers = await this.sql.query({
@@ -287,7 +296,7 @@ export class GamecastComponent {
 			FROM 			plays
 			WHERE 		gameId = ${this.gameId}
 			AND				syncState != 3
-			ORDER BY	playId DESC
+			ORDER BY	playOrder DESC
 		`);
 		if (this.homeTeamPlayers.find(t => t.firstName == 'team' && t.lastName == 'team') == undefined) {
 			this.addHomePlayer = true;
@@ -339,22 +348,22 @@ export class GamecastComponent {
 
 	private async fetchPlayersOnCourt() {
 		this.homePlayersOnCourt = await this.sql.rawQuery(`
-			SELECT 	*
-			FROM 		players
-			JOIN		stats ON players.id = stats.playerId
-			WHERE 	stats.gameId = ${this.gameId}
-			AND 		stats.onCourt IS NOT NULL
-			AND 		stats.onCourt = true
-			AND 		stats.playerId IN (${this.homeTeamPlayers!.map(t => t.id).toString()})
+			SELECT 	p.*
+			FROM 		players p
+			JOIN		stats s ON p.id = s.playerId
+			WHERE 	s.gameId = ${this.gameId}
+			AND 		s.onCourt IS NOT NULL
+			AND 		s.onCourt = true
+			AND 		s.playerId IN (${this.homeTeamPlayers!.map(t => t.id).toString()})
 		`);
 		this.awayPlayersOnCourt = await this.sql.rawQuery(`
-			SELECT 	*
-			FROM 		players
-			JOIN		stats ON players.id = stats.playerId
-			WHERE 	stats.gameId = ${this.gameId}
-			AND 		stats.onCourt IS NOT NULL
-			AND 		stats.onCourt = true
-			AND 		stats.playerId IN (${this.awayTeamPlayers!.map(t => t.id).toString()})
+			SELECT 	p.*
+			FROM 		players p
+			JOIN		stats s ON p.id = s.playerId
+			WHERE 	s.gameId = ${this.gameId}
+			AND 		s.onCourt IS NOT NULL
+			AND 		s.onCourt = true
+			AND 		s.playerId IN (${this.awayTeamPlayers!.map(t => t.id).toString()})
 		`);
 		if (this.homePlayersOnCourt.find(t => t.firstName == 'team' && t.lastName == 'team') == undefined) {
 			this.homePlayersOnCourt.push(this.homeTeamPlayers!.find(t => t.firstName == 'team' && t.lastName == 'team')!)
@@ -378,10 +387,10 @@ export class GamecastComponent {
 	}
 
 	async switchPossession() {
-		if (this.currentGame!.homeHasPossession == true) {
-			this.currentGame!.homeHasPossession = false;
+		if (this.currentGame!.homeHasPossession == 1) {
+			this.currentGame!.homeHasPossession = 0;
 		} else {
-			this.currentGame!.homeHasPossession = true;
+			this.currentGame!.homeHasPossession = 1;
 		}
 		await this.updateGame();
 	}
@@ -480,27 +489,27 @@ export class GamecastComponent {
   }
 
 	toggleGameComplete() {
-		if (this.currentGame!.complete) {
-			this.currentGame!.complete = false;
+		if (this.currentGame!.complete == 1) {
+			this.currentGame!.complete = 0;
 			this.updateGame();
 		} else {
-			this.currentGame!.complete = true;
+			this.currentGame!.complete = 1;
 			this.updateGame();
 		}
 	}
 
 	async addToCourt(team: 'home' | 'away', player: Player) {
 		if (team == 'home') {
-			if (this.homePlayersOnCourt.length < 6) {
+			if (this.homePlayersOnCourt.length < 6 && !this.homePlayersOnCourt.find(t => t.id == player.id)) {
 				this.homePlayersOnCourt.push(player);
 			}
 		} else {
-			if (this.awayPlayersOnCourt.length < 6) {
+			if (this.awayPlayersOnCourt.length < 6 && !this.awayPlayersOnCourt.find(t => t.id == player.id)) {
 				this.awayPlayersOnCourt.push(player);
 			}
 		}
 		let stat = await this.getStat(player.id);
-		stat.onCourt = true;
+		stat.onCourt = 1;
 		await this.saveStat(stat);
 		await this.updateGame();
 	}
@@ -570,7 +579,7 @@ export class GamecastComponent {
 			this.homePlayersOnCourt.splice(this.homePlayersOnCourt.indexOf(player), 1);
 		}
 		let stat = await this.getStat(player.id);
-		stat.onCourt = false;
+		stat.onCourt = 0;
 		await this.saveStat(stat);
 		await this.updateGame();
   }
@@ -589,6 +598,7 @@ export class GamecastComponent {
 	private async getStat(playerId:number) {
 		let stat = this.stats!.find(t => t.playerId == playerId);
 		if (stat == undefined) {
+			console.log('here', this.stats, playerId);
 			let newStat:Stat = {
 				id: 0,
 				gameId: this.gameId!,
@@ -669,7 +679,7 @@ export class GamecastComponent {
 	private async addPlay(team: 'home' | 'away', action: GameActions, player?: Player) {
 		let play: Play = {
 			id:0,
-			order: this.plays!.length + 1,
+			playOrder: this.plays!.length + 1,
 			gameId: this.gameId!,
 			turboStatsData: null,
 			syncState: SyncState.Unchanged,
@@ -687,11 +697,11 @@ export class GamecastComponent {
 		} else {
 			let existingPlay = await this.sql.query({
 				table: 'plays',
-				where: {'\"order\"': play.order, "gameId": this.gameId}
+				where: {playOrder: play.playOrder, "gameId": this.gameId}
 			});
 			if (existingPlay.length == 1) {
 				play.syncState = SyncState.Modified;
-				await this.sql.save('plays', play, {"\"order\"": play.order, "gameId": this.gameId});
+				await this.sql.save('plays', play, {playOrder: play.playOrder, "gameId": this.gameId});
 			} else {
 				play.syncState = SyncState.Added;
 				await this.sql.save('plays', play);
@@ -848,7 +858,6 @@ export class GamecastComponent {
 			}
 		}
 		await this.updateGame();
-		await this.updateGame();
 		await this.addPlay(team, partial ? GameActions.PartialTO : GameActions.FullTO);
   }
 
@@ -981,18 +990,18 @@ export class GamecastComponent {
 				this.currentGame!.syncState = state;
 			}
 		}
-		await this.sql.save('games', this.currentGame!, { "gameId": this.gameId });
+		await this.sql.save('games', this.currentGame!, { "id": this.gameId });
 	}
 
 	public async removeLastPlay() {
 		let play = this.plays![0];
 		await this.undoAction(play);
 		if (this.sync.online) {
-			await this.sql.delete('plays', {"\"order\"": play.order, "gameId": this.gameId});
+			await this.sql.delete('plays', {playOrder: play.playOrder, "gameId": this.gameId});
 			this.plays!.splice(0, 1);
 		} else {
 			play.syncState = SyncState.Deleted;
-			await this.sql.save('plays', play, { "\"order\"": play.order,"gameId": this.gameId });
+			await this.sql.save('plays', play, { playOrder: play.playOrder,"gameId": this.gameId });
 			this.plays = this.plays!.filter(t => t.syncState != SyncState.Deleted);
 		}
 	}
@@ -1033,9 +1042,9 @@ export class GamecastComponent {
 					this.currentGame!.homePointsQ1--;
 				} else if (play.period == 2) {
 					this.currentGame!.homePointsQ2--;
-				} else if (play.period == 3 && !this.currentGame!.hasFourQuarters) {
+				} else if (play.period == 3 && this.currentGame!.hasFourQuarters == 0) {
 					this.currentGame!.homePointsOT--;
-				} else if (play.period == 3 && this.currentGame!.hasFourQuarters) {
+				} else if (play.period == 3 && this.currentGame!.hasFourQuarters == 1) {
 					this.currentGame!.homePointsQ3--;
 				} else if (play.period == 4) {
 					this.currentGame!.homePointsQ4--;
@@ -1048,9 +1057,9 @@ export class GamecastComponent {
 					this.currentGame!.awayPointsQ1--;
 				} else if (play.period == 2) {
 					this.currentGame!.awayPointsQ2--;
-				} else if (play.period == 3 && !this.currentGame!.hasFourQuarters) {
+				} else if (play.period == 3 && this.currentGame!.hasFourQuarters == 0) {
 					this.currentGame!.awayPointsOT--;
-				} else if (play.period == 3 && this.currentGame!.hasFourQuarters) {
+				} else if (play.period == 3 && this.currentGame!.hasFourQuarters == 1) {
 					this.currentGame!.awayPointsQ3--;
 				} else if (play.period == 4) {
 					this.currentGame!.awayPointsQ4--;
@@ -1099,9 +1108,9 @@ export class GamecastComponent {
 					this.currentGame!.homePointsQ1 -= 2;
 				} else if (play.period == 2) {
 					this.currentGame!.homePointsQ2 -= 2;
-				} else if (play.period == 3 && !this.currentGame!.hasFourQuarters) {
+				} else if (play.period == 3 && this.currentGame!.hasFourQuarters == 0) {
 					this.currentGame!.homePointsOT -= 2;
-				} else if (play.period == 3 && this.currentGame!.hasFourQuarters) {
+				} else if (play.period == 3 && this.currentGame!.hasFourQuarters == 1) {
 					this.currentGame!.homePointsQ3 -= 2;
 				} else if (play.period == 4) {
 					this.currentGame!.homePointsQ4 -= 2;
@@ -1114,9 +1123,9 @@ export class GamecastComponent {
 					this.currentGame!.awayPointsQ1 -= 2;
 				} else if (play.period == 2) {
 					this.currentGame!.awayPointsQ2 -= 2;
-				} else if (play.period == 3 && !this.currentGame!.hasFourQuarters) {
+				} else if (play.period == 3 && this.currentGame!.hasFourQuarters == 0) {
 					this.currentGame!.awayPointsOT -= 2;
-				} else if (play.period == 3 && this.currentGame!.hasFourQuarters) {
+				} else if (play.period == 3 && this.currentGame!.hasFourQuarters == 1) {
 					this.currentGame!.awayPointsQ3 -= 2;
 				} else if (play.period == 4) {
 					this.currentGame!.awayPointsQ4 -= 2;
@@ -1145,9 +1154,9 @@ export class GamecastComponent {
 					this.currentGame!.homePointsQ1 -= 3;
 				} else if (play.period == 2) {
 					this.currentGame!.homePointsQ2 -= 3;
-				} else if (play.period == 3 && !this.currentGame!.hasFourQuarters) {
+				} else if (play.period == 3 && this.currentGame!.hasFourQuarters == 0) {
 					this.currentGame!.homePointsOT -= 3;
-				} else if (play.period == 3 && this.currentGame!.hasFourQuarters) {
+				} else if (play.period == 3 && this.currentGame!.hasFourQuarters == 1) {
 					this.currentGame!.homePointsQ3 -= 3;
 				} else if (play.period == 4) {
 					this.currentGame!.homePointsQ4 -= 3;
@@ -1160,9 +1169,9 @@ export class GamecastComponent {
 					this.currentGame!.awayPointsQ1 -= 3;
 				} else if (play.period == 2) {
 					this.currentGame!.awayPointsQ2 -= 3;
-				} else if (play.period == 3 && !this.currentGame!.hasFourQuarters) {
+				} else if (play.period == 3 && this.currentGame!.hasFourQuarters == 0) {
 					this.currentGame!.awayPointsOT -= 3;
-				} else if (play.period == 3 && this.currentGame!.hasFourQuarters) {
+				} else if (play.period == 3 && this.currentGame!.hasFourQuarters == 1) {
 					this.currentGame!.awayPointsQ3 -= 3;
 				} else if (play.period == 4) {
 					this.currentGame!.awayPointsQ4 -= 3;
@@ -1219,9 +1228,9 @@ export class GamecastComponent {
 					this.currentGame!.homePointsQ1++;
 				} else if (play.period == 2) {
 					this.currentGame!.homePointsQ2++;
-				} else if (play.period == 3 && !this.currentGame!.hasFourQuarters) {
+				} else if (play.period == 3 && this.currentGame!.hasFourQuarters == 0) {
 					this.currentGame!.homePointsOT++;
-				} else if (play.period == 3 && this.currentGame!.hasFourQuarters) {
+				} else if (play.period == 3 && this.currentGame!.hasFourQuarters == 1) {
 					this.currentGame!.homePointsQ3++;
 				} else if (play.period == 4) {
 					this.currentGame!.homePointsQ4++;
@@ -1234,9 +1243,9 @@ export class GamecastComponent {
 					this.currentGame!.awayPointsQ1++;
 				} else if (play.period == 2) {
 					this.currentGame!.awayPointsQ2++;
-				} else if (play.period == 3 && !this.currentGame!.hasFourQuarters) {
+				} else if (play.period == 3 && this.currentGame!.hasFourQuarters == 0) {
 					this.currentGame!.awayPointsOT++;
-				} else if (play.period == 3 && this.currentGame!.hasFourQuarters) {
+				} else if (play.period == 3 && this.currentGame!.hasFourQuarters == 1) {
 					this.currentGame!.awayPointsQ3++;
 				} else if (play.period == 4) {
 					this.currentGame!.awayPointsQ4++;
@@ -1285,9 +1294,9 @@ export class GamecastComponent {
 					this.currentGame!.homePointsQ1 += 2;
 				} else if (play.period == 2) {
 					this.currentGame!.homePointsQ2 += 2;
-				} else if (play.period == 3 && !this.currentGame!.hasFourQuarters) {
+				} else if (play.period == 3 && this.currentGame!.hasFourQuarters == 0) {
 					this.currentGame!.homePointsOT += 2;
-				} else if (play.period == 3 && this.currentGame!.hasFourQuarters) {
+				} else if (play.period == 3 && this.currentGame!.hasFourQuarters == 1) {
 					this.currentGame!.homePointsQ3 += 2;
 				} else if (play.period == 4) {
 					this.currentGame!.homePointsQ4 += 2;
@@ -1300,9 +1309,9 @@ export class GamecastComponent {
 					this.currentGame!.awayPointsQ1 += 2;
 				} else if (play.period == 2) {
 					this.currentGame!.awayPointsQ2 += 2;
-				} else if (play.period == 3 && !this.currentGame!.hasFourQuarters) {
+				} else if (play.period == 3 && this.currentGame!.hasFourQuarters == 0) {
 					this.currentGame!.awayPointsOT += 2;
-				} else if (play.period == 3 && this.currentGame!.hasFourQuarters) {
+				} else if (play.period == 3 && this.currentGame!.hasFourQuarters == 1) {
 					this.currentGame!.awayPointsQ3 += 2;
 				} else if (play.period == 4) {
 					this.currentGame!.awayPointsQ4 += 2;
@@ -1331,9 +1340,9 @@ export class GamecastComponent {
 					this.currentGame!.homePointsQ1 += 3;
 				} else if (play.period == 2) {
 					this.currentGame!.homePointsQ2 += 3;
-				} else if (play.period == 3 && !this.currentGame!.hasFourQuarters) {
+				} else if (play.period == 3 && this.currentGame!.hasFourQuarters == 0) {
 					this.currentGame!.homePointsOT += 3;
-				} else if (play.period == 3 && this.currentGame!.hasFourQuarters) {
+				} else if (play.period == 3 && this.currentGame!.hasFourQuarters == 1) {
 					this.currentGame!.homePointsQ3 += 3;
 				} else if (play.period == 4) {
 					this.currentGame!.homePointsQ4 += 3;
@@ -1346,9 +1355,9 @@ export class GamecastComponent {
 					this.currentGame!.awayPointsQ1 += 3;
 				} else if (play.period == 2) {
 					this.currentGame!.awayPointsQ2 += 3;
-				} else if (play.period == 3 && !this.currentGame!.hasFourQuarters) {
+				} else if (play.period == 3 && this.currentGame!.hasFourQuarters == 0) {
 					this.currentGame!.awayPointsOT += 3;
-				} else if (play.period == 3 && this.currentGame!.hasFourQuarters) {
+				} else if (play.period == 3 && this.currentGame!.hasFourQuarters == 1) {
 					this.currentGame!.awayPointsQ3 += 3;
 				} else if (play.period == 4) {
 					this.currentGame!.awayPointsQ4 += 3;
@@ -1370,7 +1379,7 @@ export class GamecastComponent {
 	}
 
 	public async updatePlay(play: Play) {
-		let prevPlay = this.prevPlays!.find(t => t.order == play.order)!;
+		let prevPlay = this.prevPlays!.find(t => t.playOrder == play.playOrder)!;
 		if (prevPlay.teamName != play.teamName && play.playerName != null) {
 			if (play.teamName == this.homeTeamName) {
 				play.playerName = this.homeTeamPlayers![0].firstName + ' ' + this.homeTeamPlayers![0].lastName;
@@ -1386,7 +1395,7 @@ export class GamecastComponent {
 		if (!this.sync.online) {
 			play.syncState = SyncState.Modified;
 		}
-		await this.sql.save('plays', play, {"\"order\"": play.order, "gameId": this.gameId});
+		await this.sql.save('plays', play, {playOrder: play.playOrder, "gameId": this.gameId});
 		await this.setPrevPlays();
 	}
 
@@ -1408,7 +1417,7 @@ export class GamecastComponent {
 
   async startTimer() {
 		if (this.currentGame!.clock == "00:00") {
-			if (this.currentGame!.period < (this.currentGame!.hasFourQuarters ? 4 : 2))
+			if (this.currentGame!.period < (this.currentGame!.hasFourQuarters == 1 ? 4 : 2))
 				this.timerDuration = this.currentGame!.minutesPerPeriod! * 60;
 			else
 				this.timerDuration = this.currentGame!.minutesPerOvertime! * 60;
@@ -1430,7 +1439,7 @@ export class GamecastComponent {
   }
 
 	async resetTOs() {
-		if (this.currentGame!.resetTimeoutsEveryPeriod == true) {
+		if (this.currentGame!.resetTimeoutsEveryPeriod == 1) {
 			this.currentGame!.homeFullTOL = this.currentGame!.fullTimeoutsPerGame ?? 0;
 			this.currentGame!.awayFullTOL = this.currentGame!.fullTimeoutsPerGame ?? 0;
 			this.currentGame!.homePartialTOL = this.currentGame!.partialTimeoutsPerGame ?? 0;
@@ -1452,6 +1461,7 @@ export class GamecastComponent {
 		let awayPlusOrMinusToAdd = homePlusOrMinusToAdd * -1;
 		let homePlayers = this.homePlayersOnCourt.slice(0);
 		let awayPlayers = this.awayPlayersOnCourt.slice(0);
+		console.log(this.homePlayersOnCourt)
 		for (let item of homePlayers) {
 			let stat = await this.getStat(item.id);
 			stat.plusOrMinus += homePlusOrMinusToAdd;

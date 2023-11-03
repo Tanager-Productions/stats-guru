@@ -51,7 +51,7 @@
 				<ion-list>
 					<ion-item *ngFor="let player of players">
 						<ion-thumbnail slot="start">
-							<img *ngIf="player.picture == null" src="../../../assets/default.png">
+							<img *ngIf="player.picture == null" src="assets/default.png">
 							<img *ngIf="player.picture != null" [src]="player.picture">
 						</ion-thumbnail>
 						<ion-label>{{player.number}} {{player.firstName}} {{player.lastName}}</ion-label>

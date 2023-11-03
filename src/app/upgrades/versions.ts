@@ -33,7 +33,7 @@ export const version1: string[] = [
       firstName TEXT NOT NULL,
       lastName TEXT NOT NULL,
       number INTEGER NOT NULL,
-      position INTEGER NOT NULL,
+      position INTEGER NULL,
       picture TEXT NULL,
       teamId INTEGER NOT NULL,
       isMale BOOLEAN NOT NULL,
@@ -108,7 +108,7 @@ export const version1: string[] = [
   `
     CREATE TABLE IF NOT EXISTS plays (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-      "order" INTEGER NOT NULL,
+      playOrder INTEGER NOT NULL,
       gameId INTEGER NOT NULL,
       turboStatsData TEXT NULL,
 			teamName TEXT NULL,
@@ -124,7 +124,7 @@ export const version1: string[] = [
     );
   `,
 
-	`CREATE UNIQUE INDEX IF NOT EXISTS ixPlaysGameIdOrder ON plays (gameId, "order");`,
+	`CREATE UNIQUE INDEX IF NOT EXISTS ixPlaysGameIdOrder ON plays (gameId, playOrder);`,
 
   `
     CREATE TABLE IF NOT EXISTS stats (
@@ -190,7 +190,7 @@ export const version1: string[] = [
 ];
 
 export const currentDatabaseVersion = 1;
-export const databaseName = "sqlite:tgs-stats.db";
+export const databaseName = "sqlite:theGrindSessionStatsGuru.db";
 export const upgrades = {
   database: databaseName,
   upgrade: [

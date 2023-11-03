@@ -7,9 +7,9 @@
       </ion-buttons>
       <ion-title data-tauri-drag-region class="no-select">Stats Guru</ion-title>
       <ion-buttons slot="end" class="no-drag">
-		<ion-button class="syncing" *ngIf="sync.syncing">
+		<ion-button *ngIf="sync.syncing">
 		  {{ sync.syncingMessage }}
-		  <ion-icon slot="end" name="sync"></ion-icon>
+		  <ion-icon class="syncing" slot="end" name="sync"></ion-icon>
 		</ion-button>
         <ion-button (click)="minimize()" class="hover">
           <ion-icon slot="icon-only" name="remove"></ion-icon>

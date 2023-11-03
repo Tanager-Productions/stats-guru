@@ -4,6 +4,7 @@ import { BehaviorSubject } from 'rxjs';
 import Database from "tauri-plugin-sql-api";
 import { SyncHistory } from 'src/app/interfaces/syncHistory.interface';
 import { Play, Player, Game, Stat } from 'src/app/interfaces/models';
+import { appLocalDataDir, appDataDir, appCacheDir } from '@tauri-apps/api/path';
 
 export type Table = 'games' | 'plays' | 'stats' | 'players' | 'events' | 'syncHistory' | 'seasons' | 'teams';
 export type Model = Play | Player | Game | Stat | SyncHistory;
@@ -27,6 +28,10 @@ export class SqlService {
 	}
 
 	public async init() {
+		const appLocalDataDirPath = await appLocalDataDir();
+		const appDataDirPath = await appDataDir();
+		const appCacheDataDirPath = await appCacheDir();
+		console.log(appLocalDataDirPath, appDataDirPath, appCacheDataDirPath);
 		this.db = await Database.load(databaseName);
 		for (let item of upgrades.upgrade) {
 			console.log(`Running version ${item.toVersion} upgrades`);
@@ -82,6 +87,9 @@ export class SqlService {
     const keys: string[] = Object.keys(castedModel);
     let values: any[] = [];
     for (const key of keys) {
+			if (typeof castedModel[key] == 'boolean') {
+				castedModel[key] = castedModel[key] ? 1 : 0;
+			}
       values.push(castedModel[key]);
     }
 		if (where) {
@@ -93,7 +101,7 @@ export class SqlService {
 
   public async bulkInsert(table: Table, models: any[]) {
 		for (let model of models) {
-			this.deleteGeneratedColumns(model, table);
+			this.deleteGeneratedColumns(model, table, true);
 		}
     const keys: string[] = Object.keys(models[0]);
     let stmt:string = `INSERT INTO ${table} (${keys.toString()}) VALUES `;
@@ -175,24 +183,19 @@ export class SqlService {
 		}
 	}
 
-	private deleteGeneratedColumns(model: any, table: Table) {
+	private deleteGeneratedColumns(model: any, table: Table, isBulk:boolean = false) {
+		if (!isBulk) {
+			delete model.id;
+		}
 		if (table == 'games') {
 			delete model.homeFinal;
 			delete model.awayFinal;
-			delete model.id;
 			delete model.homeTeamTOL;
 			delete model.awayTeamTOL;
 		} else if (table == 'stats') {
 			delete model.points;
 			delete model.rebounds;
 			delete model.eff;
-			delete model.id;
-		} else if (table == 'syncHistory') {
-			delete model.id;
-		} else if (table == 'plays') {
-			delete model.id;
-		} else if (table == 'players') {
-			delete model.id;
 		}
 	}
 }

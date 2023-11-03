@@ -30,7 +30,7 @@ export class CommonService {
   public async fetchGames() {
     let games: Game[] = await this.sql.query({
 			table: 'games',
-			orderByColumn: 'startDate'
+			orderByColumn: 'gameDate'
 		});
     this.gamesSubject.next(games);
   }

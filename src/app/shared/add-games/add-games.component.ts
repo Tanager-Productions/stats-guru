@@ -12,7 +12,7 @@ import { Team, Event, Game, DEFAULT_GAME } from 'src/app/interfaces/models';
 export class AddGamesComponent {
 	teams?: Team[];
 	events?: Event[];
-	isMale: boolean = true;
+	isMale: number = 1;
 	date: string = new Date().toJSON();
 	homeTeamId:number = 0;
 	awayTeamId:number = 0;
@@ -33,6 +33,7 @@ export class AddGamesComponent {
 		game.gameDate = new Date(this.date).toJSON();
 		game.eventId = this.event;
 		game.syncState = SyncState.Added;
+		console.log(game);
 		await this.crud.save('games', game);
 		this.dismiss.emit();
 		this.common.fetchGames();

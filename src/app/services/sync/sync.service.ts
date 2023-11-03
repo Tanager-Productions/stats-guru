@@ -48,6 +48,7 @@ export class SyncService {
 					stats: await this.sqlService.query({table: "stats"}),
 					plays: await this.sqlService.query({table: "plays"})
 				}
+				console.log(res);
 				let httpResponse = await this.api.postSync(res);
 				if (httpResponse.status == 200) {
 					let res: SyncResult = httpResponse.data;
@@ -70,6 +71,7 @@ export class SyncService {
 						delete from players;
 						delete from teams;
 						delete from events;
+						delete from seasons;
 					`);
 					await this.getData();
 				} else {
@@ -107,25 +109,39 @@ export class SyncService {
       let dto: DataDto = response.data;
 
 			this.syncingMessage = 'Adding seasons...';
-      await this.sqlService.bulkInsert("seasons", dto.seasons);
+			if (dto.seasons.length > 0) {
+				await this.sqlService.bulkInsert("seasons", dto.seasons);
+			}
 
 			this.syncingMessage = 'Adding teams...';
-      await this.sqlService.bulkInsert("teams", dto.teams);
+			if (dto.teams.length > 0) {
+				await this.sqlService.bulkInsert("teams", dto.teams);
+			}
 
 			this.syncingMessage = 'Adding events...';
-      await this.sqlService.bulkInsert("events", dto.events);
+			if (dto.events.length > 0) {
+				await this.sqlService.bulkInsert("events", dto.events);
+			}
 
 			this.syncingMessage = 'Adding players...';
-      await this.sqlService.bulkInsert("players", dto.players);
+			if (dto.players.length > 0) {
+				await this.sqlService.bulkInsert("players", dto.players);
+			}
 
 			this.syncingMessage = 'Adding games...';
-      await this.sqlService.bulkInsert("games", dto.games);
+			if (dto.games.length > 0) {
+				await this.sqlService.bulkInsert("games", dto.games);
+			}
 
 			this.syncingMessage = 'Adding plays...';
-      await this.sqlService.bulkInsert("plays", dto.plays);
+			if (dto.plays.length > 0) {
+				await this.sqlService.bulkInsert("plays", dto.plays);
+			}
 
 			this.syncingMessage = 'Adding stats...';
-      await this.sqlService.bulkInsert("stats", dto.stats);
+			if (dto.stats.length > 0) {
+				await this.sqlService.bulkInsert("stats", dto.stats);
+			}
     } else {
       throw new Error(`Failed to fetch data from server: ${response.data}`);
     }

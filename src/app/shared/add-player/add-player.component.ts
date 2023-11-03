@@ -14,7 +14,7 @@ export class AddPlayerComponent {
 	newPlayerLastName!: string;
 	@Input() team!: 'home' | 'away';
 	@Input() teamId!:number;
-	@Input() isMale!:boolean;
+	@Input() isMale!:number;
 	@Output() dismiss: EventEmitter<void> = new EventEmitter();
 	@Output() playerAdded: EventEmitter<Player> = new EventEmitter();
 	@Output() playerHidden: EventEmitter<Player> = new EventEmitter();
