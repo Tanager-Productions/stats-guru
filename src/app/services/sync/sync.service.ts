@@ -48,7 +48,6 @@ export class SyncService {
 					stats: await this.sqlService.query({table: "stats"}),
 					plays: await this.sqlService.query({table: "plays"})
 				}
-				console.log(res);
 				let httpResponse = await this.api.postSync(res);
 				if (httpResponse.status == 200) {
 					let res: SyncResult = httpResponse.data;

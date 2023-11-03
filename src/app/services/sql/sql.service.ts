@@ -4,7 +4,7 @@ import { BehaviorSubject } from 'rxjs';
 import Database from "tauri-plugin-sql-api";
 import { SyncHistory } from 'src/app/interfaces/syncHistory.interface';
 import { Play, Player, Game, Stat } from 'src/app/interfaces/models';
-import { appLocalDataDir, appDataDir, appCacheDir } from '@tauri-apps/api/path';
+import { appDataDir } from '@tauri-apps/api/path';
 
 export type Table = 'games' | 'plays' | 'stats' | 'players' | 'events' | 'syncHistory' | 'seasons' | 'teams';
 export type Model = Play | Player | Game | Stat | SyncHistory;
@@ -28,10 +28,8 @@ export class SqlService {
 	}
 
 	public async init() {
-		const appLocalDataDirPath = await appLocalDataDir();
 		const appDataDirPath = await appDataDir();
-		const appCacheDataDirPath = await appCacheDir();
-		console.log(appLocalDataDirPath, appDataDirPath, appCacheDataDirPath);
+		console.log(appDataDirPath);
 		this.db = await Database.load(databaseName);
 		for (let item of upgrades.upgrade) {
 			console.log(`Running version ${item.toVersion} upgrades`);

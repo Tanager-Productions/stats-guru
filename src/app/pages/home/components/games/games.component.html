@@ -39,25 +39,25 @@
 </ion-header>
 
 <ion-content color="light">
-  <ion-grid *ngIf="games && logos">
+  <ion-grid *ngIf="games">
     <ion-row>
       <ion-col size="1" size-lg="2"></ion-col>
       <ion-col size="10" size-lg="8">
 
-        <ion-card *ngFor="let item of games" [hidden]="filterEventId != 0 && item.eventId != filterEventId" [button]="true" routerLink="/gamecast/{{item.id}}">
+        <ion-card *ngFor="let item of games" [hidden]="filterEventId != 0 && item.eventId != filterEventId" [button]="true" routerLink="/gamecast/{{item.gameId}}">
           <ion-card-header>
             <ion-grid class="ion-no-padding" style="width: 80%">
               <ion-row class="ion-text-center ion-align-items-center">
                 <ion-col>
-                  <img height="60" width="60" [src]="getLogo(item.homeTeamId)"> <br>
-                  <ion-label>{{item.homeTeamId}}</ion-label>
+                  <img height="60" width="60" [src]="item.homeTeamLogo ?? 'assets/icon-black.png'"> <br>
+                  <ion-label>{{item.homeTeamName}}</ion-label>
                 </ion-col>
                 <ion-col>
                   <strong>VS</strong>
                 </ion-col>
                 <ion-col>
-                  <img height="60" width="60" [src]="getLogo(item.awayTeamId)"> <br>
-                  <ion-label>{{item.awayTeamId}}</ion-label>
+                  <img height="60" width="60" [src]="item.awayTeamLogo ?? 'assets/icon-black.png'"> <br>
+                  <ion-label>{{item.awayTeamName}}</ion-label>
                 </ion-col>
               </ion-row>
             </ion-grid>

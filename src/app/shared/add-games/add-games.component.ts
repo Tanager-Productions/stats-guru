@@ -33,7 +33,6 @@ export class AddGamesComponent {
 		game.gameDate = new Date(this.date).toJSON();
 		game.eventId = this.event;
 		game.syncState = SyncState.Added;
-		console.log(game);
 		await this.crud.save('games', game);
 		this.dismiss.emit();
 		this.common.fetchGames();

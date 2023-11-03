@@ -11,45 +11,46 @@ import { SyncService } from 'src/app/services/sync/sync.service';
   styleUrls: ['./games.component.scss'],
 })
 export class GamesComponent implements OnInit {
-  public games?: Game[];
+  public games?: {
+		gameId:number,
+		gameDate:string,
+		homeTeamName:string,
+		awayTeamName:string,
+		homeTeamLogo:string|null,
+		awayTeamLogo:string|null,
+		eventId:number|null
+	}[];
   public events?: Event[];
-  public logos?: {id:number, defaultLogo:string|null}[];
   filterEventId:number = 0;
 
-  constructor(private common: CommonService,
-    					private router: Router,
-    					private sql:SqlService,
-    					private sync:SyncService) {}
+  constructor(private sql:SqlService, private sync:SyncService) {}
 
   ngOnInit() {
-		this.sql.isReady().subscribe(ready => {
+		this.sql.isReady().subscribe(async ready => {
 			if (ready) {
 				if (this.sync.online) {
-					this.sync.beginSync(true);
-				} else {
-					this.common.initializeService();
+					await this.sync.beginSync(true);
 				}
-			}
-		});
-		this.common.getGames().subscribe(async games => {
-			if (games != null) {
-        this.games = games;
-        this.logos = await this.sql.rawQuery('select teams.id, teams.defaultLogo from teams;');
-			}
-		});
-    this.common.getEvents().subscribe(events => {
-      if (events != null) {
-        this.events = events;
-      }
-    });
-  }
 
-  public getLogo(teamId:number) {
-    let item = this.logos?.find(t => t.id == teamId)!;
-    if (item.defaultLogo == null) {
-      return 'assets/icon-black.png'
-    } else {
-      return item.defaultLogo;
-    }
+				this.games = await this.sql.rawQuery(`
+					SELECT
+						g.id as gameId,
+						g.gameDate,
+						g.eventId,
+						homeTeam.name AS homeTeamName,
+						awayTeam.name AS awayTeamName,
+						homeTeam.defaultLogo AS homeTeamLogo,
+						awayTeam.defaultLogo AS awayTeamLogo
+					FROM
+						Games g
+					JOIN
+						Teams AS homeTeam ON g.homeTeamId = homeTeam.id
+					JOIN
+						Teams AS awayTeam ON g.awayTeamId = awayTeam.id
+					ORDER BY
+						g.gameDate DESC;
+				`);
+			}
+		});
   }
 }

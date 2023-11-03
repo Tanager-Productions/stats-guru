@@ -598,7 +598,6 @@ export class GamecastComponent {
 	private async getStat(playerId:number) {
 		let stat = this.stats!.find(t => t.playerId == playerId);
 		if (stat == undefined) {
-			console.log('here', this.stats, playerId);
 			let newStat:Stat = {
 				id: 0,
 				gameId: this.gameId!,
@@ -903,7 +902,6 @@ export class GamecastComponent {
 	}
 
 	async addPassback(team: 'home' | 'away', made: boolean) {
-		await this.addPoints(team, 2, true);
 		await this.addRebound(team, true);
 		await this.addPoints(team, 2, !made);
 		this.reboundDisplay = false;
@@ -1461,7 +1459,6 @@ export class GamecastComponent {
 		let awayPlusOrMinusToAdd = homePlusOrMinusToAdd * -1;
 		let homePlayers = this.homePlayersOnCourt.slice(0);
 		let awayPlayers = this.awayPlayersOnCourt.slice(0);
-		console.log(this.homePlayersOnCourt)
 		for (let item of homePlayers) {
 			let stat = await this.getStat(item.id);
 			stat.plusOrMinus += homePlusOrMinusToAdd;
