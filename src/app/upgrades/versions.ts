@@ -142,8 +142,8 @@ export const version1: string[] = [
       steals INTEGER NOT NULL,
       threesMade INTEGER NOT NULL,
       threesAttempted INTEGER NOT NULL,
-      freethrowsMade INTEGER NOT NULL,
-      freethrowsAttempted INTEGER NOT NULL,
+      freeThrowsMade INTEGER NOT NULL,
+      freeThrowsAttempted INTEGER NOT NULL,
       points GENERATED ALWAYS AS ([threesMade] * 3 + [freeThrowsMade] + ([fieldGoalsMade] - [threesMade]) * 2),
       turnovers INTEGER NOT NULL,
       fouls INTEGER NOT NULL,
@@ -190,7 +190,7 @@ export const version1: string[] = [
 ];
 
 export const currentDatabaseVersion = 1;
-export const databaseName = "sqlite:theGrindSessionStatsGuru.db";
+export const databaseName = "sqlite:grindSessionStatsGuru.db";
 export const upgrades = {
   database: databaseName,
   upgrade: [
