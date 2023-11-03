@@ -108,7 +108,7 @@ export const version1: string[] = [
   `
     CREATE TABLE IF NOT EXISTS plays (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-      order INTEGER NOT NULL,
+      "order" INTEGER NOT NULL,
       gameId INTEGER NOT NULL,
       turboStatsData TEXT NULL,
 			teamName TEXT NULL,
@@ -124,11 +124,11 @@ export const version1: string[] = [
     );
   `,
 
-	`CREATE UNIQUE INDEX IF NOT EXISTS ixPlaysGameIdOrder ON plays (game_id, order);`,
+	`CREATE UNIQUE INDEX IF NOT EXISTS ixPlaysGameIdOrder ON plays (gameId, "order");`,
 
   `
     CREATE TABLE IF NOT EXISTS stats (
-			id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT
+			id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
       playerId INTEGER NOT NULL,
       gameId INTEGER NOT NULL,
       minutes INTEGER NOT NULL,
@@ -149,7 +149,7 @@ export const version1: string[] = [
       fouls INTEGER NOT NULL,
       plusOrMinus INTEGER NOT NULL,
       eff GENERATED ALWAYS AS (
-				([threesMade] * 3 + [freeThrowsMade] + ([fieldGoalsMade] - [threesMade]) * 2 + [offensiveRebounds] + defensiveRebounds] + [assists] + [steals] + [blocks] - ([fieldGoalsAttempted] - [fieldGoalsMade]) - ([freeThrowsAttempted] - [freeThrowsMade]) - [turnovers])
+				([threesMade] * 3 + [freeThrowsMade] + ([fieldGoalsMade] - [threesMade]) * 2 + [offensiveRebounds] + [defensiveRebounds] + [assists] + [steals] + [blocks] - ([fieldGoalsAttempted] - [fieldGoalsMade]) - ([freeThrowsAttempted] - [freeThrowsMade]) - [turnovers])
       ),
 			technicalFouls INTEGER NULL,
 			onCourt BOOLEAN NULL,
