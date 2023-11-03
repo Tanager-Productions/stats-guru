@@ -1,9 +1,9 @@
 export interface SyncHistory {
   id: number;
   dateOccurred: string;
-  playsSynced: number;
-  playersSynced: number;
-  gamesSynced: number;
-  statsSynced: number;
+  playsSynced: boolean;
+  playersSynced: boolean;
+  gamesSynced: boolean;
+  statsSynced: boolean;
   errorMessages: string;
 }

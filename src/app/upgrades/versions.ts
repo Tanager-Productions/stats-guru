@@ -180,10 +180,10 @@ export const version1: string[] = [
     CREATE TABLE IF NOT EXISTS syncHistory (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       dateOccurred TEXT NOT NULL,
-      playsSynced INTEGER NOT NULL,
-      playersSynced INTEGER NOT NULL,
-      gamesSynced INTEGER NOT NULL,
-      statsSynced INTEGER NOT NULL,
+      playsSynced BOOLEAN NOT NULL,
+      playersSynced BOOLEAN NOT NULL,
+      gamesSynced BOOLEAN NOT NULL,
+      statsSynced BOOLEAN NOT NULL,
       errorMessages TEXT NOT NULL
     );
   `

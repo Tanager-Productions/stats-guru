@@ -30,50 +30,9 @@ export class ApiService {
     return await CapacitorHttp.post(options);
   }
 
-  public async getAllGames() {
+  public async getData() {
     let options: HttpOptions = {
-      url: `${this.serverUrl}/Games`,
-      headers: {"X-ACCESS-TOKEN": this.getApiToken()}
-    };
-    return await CapacitorHttp.get(options);
-  }
-
-  public async getAllTeams(logos:boolean = false) {
-    let options: HttpOptions = {
-      url: `${this.serverUrl}/Teams`,
-      params: {"logos": `${logos}`},
-      headers: {"X-ACCESS-TOKEN": this.getApiToken()}
-    };
-    return await CapacitorHttp.get(options);
-  }
-
-  public async getAllPlayers() {
-    let options: HttpOptions = {
-      url: `${this.serverUrl}/Players`,
-      headers: {"X-ACCESS-TOKEN": this.getApiToken()}
-    };
-    return await CapacitorHttp.get(options);
-  }
-
-  public async getAllStats() {
-    let options: HttpOptions = {
-      url: `${this.serverUrl}/Stats`,
-      headers: {"X-ACCESS-TOKEN": this.getApiToken()}
-    };
-    return await CapacitorHttp.get(options);
-  }
-
-  public async getAllPlays() {
-    let options: HttpOptions = {
-      url: `${this.serverUrl}/Stats/GetPlays`,
-      headers: {"X-ACCESS-TOKEN": this.getApiToken()}
-    };
-    return await CapacitorHttp.get(options);
-  }
-
-  public async getAllEvents() {
-    let options: HttpOptions = {
-      url: `${this.serverUrl}/Events`,
+      url: `${this.serverUrl}/StatsGuru/GetData`,
       headers: {"X-ACCESS-TOKEN": this.getApiToken()}
     };
     return await CapacitorHttp.get(options);

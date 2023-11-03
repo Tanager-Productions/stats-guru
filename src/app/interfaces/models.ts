@@ -42,6 +42,47 @@ export interface Game {
 	syncState: SyncState;
 }
 
+export const DEFAULT_GAME: Game = {
+	id: 0,
+	homeTeamId: 0,
+	awayTeamId: 0,
+	gameDate: new Date().toJSON(),
+	homePointsQ1: 0,
+	awayPointsQ1: 0,
+	homePointsQ2: 0,
+	awayPointsQ2: 0,
+	homePointsQ3: 0,
+	awayPointsQ3: 0,
+	homePointsQ4: 0,
+	awayPointsQ4: 0,
+	homePointsOT: 0,
+	awayPointsOT: 0,
+	homeTeamTOL: 0,
+	awayTeamTOL: 0,
+	complete: true,
+	clock: "00:00",
+	hasFourQuarters: false,
+	homeFinal: 0,
+	awayFinal: 0,
+	period: 0,
+	gameLink: null,
+	eventId: null,
+	homePartialTOL: 0,
+	awayPartialTOL: 0,
+	homeFullTOL: 0,
+	awayFullTOL: 0,
+	homeCurrentFouls: null,
+	awayCurrentFouls: null,
+	homeHasPossession: null,
+	resetTimeoutsEveryPeriod: null,
+	fullTimeoutsPerGame: null,
+	partialTimeoutsPerGame: null,
+	minutesPerPeriod: null,
+	minutesPerOvertime: null,
+	hiddenPlayers: null,
+	syncState: SyncState.Unchanged
+}
+
 export interface Play {
 	id: number;
 	order: number;
@@ -75,6 +116,25 @@ export interface Player {
 	socialMediaString: string | null;
 	infoString: string | null;
 	syncState: SyncState;
+}
+
+export const DEFAULT_PLAYER: Player = {
+	id: 0,
+	firstName: "",
+	lastName: "",
+	number: 0,
+	position: null,
+	teamId: 0,
+	picture: null,
+	isMale: false,
+	height: null,
+	weight: null,
+	age: null,
+	homeTown: null,
+	homeState: null,
+	socialMediaString: null,
+	infoString: null,
+	syncState: SyncState.Unchanged
 }
 
 export interface Stat {

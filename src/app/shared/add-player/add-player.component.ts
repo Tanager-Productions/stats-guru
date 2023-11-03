@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { Game, Player, Positions } from 'src/app/interfaces/models';
+import { DEFAULT_PLAYER, Game, Player, Positions } from 'src/app/interfaces/models';
 import { SyncState } from 'src/app/interfaces/syncState.enum';
 
 @Component({
@@ -24,24 +24,13 @@ export class AddPlayerComponent {
 	@Input() settings!: Game;
 
 	public addToTeam() {
-		let newTeamPlayer: Player = {
-			id: 0,
-			firstName: this.newPlayerFirstName,
-			lastName: this.newPlayerLastName,
-			number: this.newPlayerNumber,
-			position: Positions.PointGuard,
-			teamId: this.teamId,
-			picture: null,
-			isMale: this.isMale,
-			syncState: SyncState.Added,
-			height: null,
-			weight: null,
-			age: null,
-			homeState: null,
-			homeTown: null,
-			socialMediaString: null
-		}
-
+		let newTeamPlayer = DEFAULT_PLAYER;
+		newTeamPlayer.firstName = this.newPlayerFirstName;
+		newTeamPlayer.lastName = this.newPlayerLastName;
+		newTeamPlayer.number = this.newPlayerNumber;
+		newTeamPlayer.teamId = this.teamId;
+		newTeamPlayer.isMale = this.isMale;
+		newTeamPlayer.syncState = SyncState.Added;
 		this.playerAdded.emit(newTeamPlayer);
 		this.dismiss.emit();
 	}

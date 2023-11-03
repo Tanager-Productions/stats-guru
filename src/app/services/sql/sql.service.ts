@@ -91,12 +91,15 @@ export class SqlService {
 		}
 	}
 
-  public async bulkInsert(table: Table, model: any[]) {
-    const keys: string[] = Object.keys(model[0]);
+  public async bulkInsert(table: Table, models: any[]) {
+		for (let model of models) {
+			this.deleteGeneratedColumns(model, table);
+		}
+    const keys: string[] = Object.keys(models[0]);
     let stmt:string = `INSERT INTO ${table} (${keys.toString()}) VALUES `;
     let values: any[] = [];
 		let count = 1;
-    for (let item of model) {
+    for (let item of models) {
       for (const key of keys) {
 				if (typeof item[key] == 'boolean') {
 					item[key] = item[key] ? 1 : 0;
