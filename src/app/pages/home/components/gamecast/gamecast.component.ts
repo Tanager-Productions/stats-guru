@@ -123,7 +123,7 @@ export class GamecastComponent {
 		{field: 'number', headerName: 'NUM', pinned: true, editable: false},
 		{field: 'firstName', headerName: 'First Name', editable: false},
 		{field: 'lastName', headerName: 'Last Name', editable: false},
-		{field: 'assists', headerName: 'MIN', width: 80},
+		{field: 'assists', headerName: 'AST', width: 80},
 		{field: 'rebounds', headerName: 'REB', width: 80, editable: false},
 		{field: 'defensiveRebounds', headerName: 'DREB', width: 90},
 		{field: 'offensiveRebounds', headerName: 'OREB', width: 90},
