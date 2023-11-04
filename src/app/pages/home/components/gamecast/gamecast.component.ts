@@ -38,9 +38,9 @@ type StatsRow =  {
   fieldGoalsAttempted: number,
   fieldGoalsMade: number,
   fouls: number,
-  freethrowsAttempted: number,
-  freethrowsMade: number,
-  minutes: number,
+  freeThrowsAttempted: number,
+  freeThrowsMade: number,
+  assists: number,
   plusOrMinus: number,
   points: number,
   rebounds: number,
@@ -123,7 +123,7 @@ export class GamecastComponent {
 		{field: 'number', headerName: 'NUM', pinned: true, editable: false},
 		{field: 'firstName', headerName: 'First Name', editable: false},
 		{field: 'lastName', headerName: 'Last Name', editable: false},
-		{field: 'minutes', headerName: 'MIN', width: 80},
+		{field: 'assists', headerName: 'MIN', width: 80},
 		{field: 'rebounds', headerName: 'REB', width: 80, editable: false},
 		{field: 'defensiveRebounds', headerName: 'DREB', width: 90},
 		{field: 'offensiveRebounds', headerName: 'OREB', width: 90},
@@ -133,8 +133,8 @@ export class GamecastComponent {
 		{field: 'steals', headerName: 'STL', width: 80},
 		{field: 'threesMade', headerName: '3FGM', width: 90},
 		{field: 'threesAttempted', headerName: '3FGA', width: 90},
-		{field: 'freethrowsMade', headerName: 'FTM', width: 80},
-		{field: 'freethrowsAttempted', headerName: 'FTA', width: 80},
+		{field: 'freeThrowsMade', headerName: 'FTM', width: 80},
+		{field: 'freeThrowsAttempted', headerName: 'FTA', width: 80},
 		{field: 'points', headerName: 'PTS', width: 80, editable: false},
 		{field: 'turnovers', headerName: 'TO', width: 80},
 		{field: 'fouls', headerName: 'FOUL', width: 90},
@@ -397,9 +397,9 @@ export class GamecastComponent {
 
 	async loadBoxScore() {
 		this.homeTeamStats = await this.sql.rawQuery(`
-			SELECT		p.number, p.firstName, p.lastName, s.playerId, s.minutes, s.rebounds, s.defensiveRebounds,
+			SELECT		p.number, p.firstName, p.lastName, s.playerId, s.assists, s.rebounds, s.defensiveRebounds,
 								s.offensiveRebounds, s.fieldGoalsMade, s.fieldGoalsAttempted, s.blocks, s.steals, s.threesMade,
-								s.threesAttempted, s.freethrowsMade, s.freethrowsAttempted, s.points, s.turnovers,
+								s.threesAttempted, s.freeThrowsMade, s.freeThrowsAttempted, s.points, s.turnovers,
 								s.fouls, s.technicalFouls, s.plusOrMinus
 			FROM			stats s
 			JOIN			players p ON s.playerId = p.id
@@ -408,9 +408,9 @@ export class GamecastComponent {
 			ORDER BY 	p.number;
 		`);
 		this.awayTeamStats = await this.sql.rawQuery(`
-			SELECT		p.number, p.firstName, p.lastName, s.playerId, s.minutes, s.rebounds, s.defensiveRebounds,
+			SELECT		p.number, p.firstName, p.lastName, s.playerId, s.assists, s.rebounds, s.defensiveRebounds,
 								s.offensiveRebounds, s.fieldGoalsMade, s.fieldGoalsAttempted, s.blocks, s.steals, s.threesMade,
-								s.threesAttempted, s.freethrowsMade, s.freethrowsAttempted, s.points, s.turnovers,
+								s.threesAttempted, s.freeThrowsMade, s.freeThrowsAttempted, s.points, s.turnovers,
 								s.fouls, s.technicalFouls, s.plusOrMinus
 			FROM			stats s
 			JOIN			players p ON s.playerId = p.id
