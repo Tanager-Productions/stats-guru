@@ -29,7 +29,7 @@ export enum GameActions {
 	FullTO = 70,
 	PartialTO = 75
 }
-
+  
 type StatsRow =  {
   game: number,
   modified: boolean,
@@ -69,6 +69,9 @@ export class GamecastComponent {
 	homeTeamName:string = '';
 	awayTeamName:string = '';
 	isMale = 1;
+	selectedPlayerStat?: Stat;
+	selectedPlayerName!:string;
+	displayPlayerStat:boolean= false;
 	homeTeamPlayers?: Player[];
 	awayTeamPlayers?: Player[];
 	homeTeamStats!: StatsRow[];
@@ -514,7 +517,11 @@ export class GamecastComponent {
 		await this.updateGame();
 	}
 
-	selectPlayer(team: 'home' | 'away', index: number) {
+	selectPlayer(team: 'home' | 'away', player: Player, index: number) {
+		this.displayPlayerStat = true;
+		this.selectedPlayerName = player.firstName +' '+ player.lastName; 
+		this.selectedPlayerStat = this.stats!.find(t => t.playerId == player.id);	
+
 		var prevPlayerWasHome = this.awayPlayerSelected == -1;
 		if (team == 'away') {
 			if (this.awayPlayerSelected == index) {
@@ -567,6 +574,9 @@ export class GamecastComponent {
 	}
 
   async removeFromCourt (team: 'home' | 'away', player: Player, index:number) {
+		this.displayPlayerStat = false;
+		this.selectedPlayerName='';
+		this.selectedPlayerStat = undefined;
 		if (team == 'away') {
 			if (this.awayPlayerSelected == index) {
 				this.awayPlayerSelected = -1;

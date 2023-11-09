@@ -124,22 +124,46 @@ export class SyncService {
 
 			this.syncingMessage = 'Adding players...';
 			if (dto.players.length > 0) {
-				await this.sqlService.bulkInsert("players", dto.players);
+				for (var i = 0; i < dto.players.length; i = i + 50) {
+					let end = i+50;
+					if (end > dto.players.length) {
+					  end = dto.players.length-1;
+					}
+					await this.sqlService.bulkInsert("players", dto.players.slice(i, end));
+				  }
 			}
 
 			this.syncingMessage = 'Adding games...';
 			if (dto.games.length > 0) {
-				await this.sqlService.bulkInsert("games", dto.games);
+				for (var i = 0; i < dto.games.length; i = i + 50) {
+					let end = i+50;
+					if (end > dto.games.length) {
+					  end = dto.games.length-1;
+					}
+					await this.sqlService.bulkInsert("games", dto.games.slice(i, end));
+				  }
 			}
 
 			this.syncingMessage = 'Adding plays...';
 			if (dto.plays.length > 0) {
-				await this.sqlService.bulkInsert("plays", dto.plays);
+				for (var i = 0; i < dto.plays.length; i = i + 50) {
+					let end = i+50;
+					if (end > dto.plays.length) {
+					  end = dto.plays.length-1;
+					}
+					await this.sqlService.bulkInsert("plays", dto.plays.slice(i, end));
+				  }
 			}
 
 			this.syncingMessage = 'Adding stats...';
 			if (dto.stats.length > 0) {
-				await this.sqlService.bulkInsert("stats", dto.stats);
+				for (var i = 0; i < dto.stats.length; i = i + 50) {
+					let end = i+50;
+					if (end > dto.stats.length) {
+					  end = dto.stats.length-1;
+					}
+					await this.sqlService.bulkInsert("stats", dto.stats.slice(i, end));
+				  }
 			}
     } else {
       throw new Error(`Failed to fetch data from server: ${response.data}`);

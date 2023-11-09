@@ -116,7 +116,7 @@
 															fill="clear"
 															shape="round"
 															expand="block"
-															(tap)="selectPlayer('home', i)"
+															(tap)="selectPlayer('home', player, i)"
 															(doubleTap)="removeFromCourt('home', player, i)">
 															<ion-label>{{player.number}}</ion-label>
 														</ion-button>
@@ -128,7 +128,7 @@
 															fill="clear"
 															shape="round"
 															expand="block"
-															(tap)="selectPlayer('home', i)">
+															(tap)="selectPlayer('home', player, i)">
 															<ion-label>T</ion-label>
 														</ion-button>
 													</ion-col>
@@ -295,7 +295,43 @@
 												</ion-col>
 												<ion-col size="2"></ion-col>
 											</ion-row>
-											<ion-row style="height: 50%; align-items: center;">
+											<ion-row>
+												<ion-col size="2"></ion-col>
+												<ion-col class="ion-text-center" size="8">
+													<ion-card *ngIf="displayPlayerStat">
+														<ion-card-header>
+														  	<ion-card-title>{{this.selectedPlayerName}}</ion-card-title>
+														</ion-card-header>
+													  
+														<ion-card-content>
+														 <ion-row>
+															<ion-col>
+																FOULS:{{this.selectedPlayerStat?.fouls}}
+															</ion-col>
+															<ion-col>
+																PTS:{{this.selectedPlayerStat?.points}}
+															</ion-col>
+															<ion-col>
+																RB:{{this.selectedPlayerStat?.rebounds}}
+															</ion-col>
+														 </ion-row>
+														 <ion-row>
+															<ion-col>
+																AST:{{this.selectedPlayerStat?.assists}}
+															</ion-col>
+															<ion-col>
+																STL:{{this.selectedPlayerStat?.steals}}
+															</ion-col>
+															<ion-col>
+																BLK:{{this.selectedPlayerStat?.blocks}}
+															</ion-col>
+														 </ion-row>
+														</ion-card-content>
+													  </ion-card>
+												</ion-col>
+												<ion-col size="2"></ion-col>
+											</ion-row>
+											<ion-row style="height: 30%; align-items: center;">
 												<ion-col size="1"></ion-col>
 												<ion-col size="10">
 													<ion-item color="light" *ngIf="assistDisplay" lines="none">
@@ -356,7 +392,7 @@
 															color="{{awayColor}}" fill="clear"
 															shape="round"
 															expand="block"
-															(tap)="selectPlayer('away', i)"
+															(tap)="selectPlayer('away', player, i)"
 															(doubleTap)="removeFromCourt('away', player, i)">
 															<ion-label>{{player.number}}</ion-label>
 														</ion-button>
@@ -367,7 +403,7 @@
 															color="{{awayColor}}" fill="clear"
 															shape="round"
 															expand="block"
-															(tap)="selectPlayer('away', i)">
+															(tap)="selectPlayer('away', player, i)">
 															<ion-label>T</ion-label>
 														</ion-button>
 													</ion-col>
