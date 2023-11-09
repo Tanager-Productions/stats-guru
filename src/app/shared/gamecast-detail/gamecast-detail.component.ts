@@ -18,10 +18,10 @@ export class GamecastDetailComponent {
 	}
 
 	setCheckbox($event:any) {
-		this.game.resetTimeoutsEveryPeriod = $event.detail.checked;
+		this.game.resetTimeoutsEveryPeriod = $event.detail.checked ? 1 : 0;
 	}
 
 	setPeriods($event:any) {
-		this.game.hasFourQuarters = $event.detail.checked;
+		this.game.hasFourQuarters = $event.detail.checked ? 1 : 0;
 	}
 }

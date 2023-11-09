@@ -28,9 +28,9 @@
 <ion-header mode="ios" *ngIf="!isWin" class="drag">
   <ion-toolbar data-tauri-drag-region color="tertiary">
     <ion-buttons slot="end" *ngIf="showPopover">
-      <ion-button class="syncing" *ngIf="sync.syncing">
+      <ion-button *ngIf="sync.syncing">
 		{{ sync.syncingMessage }}
-        <ion-icon slot="end" name="sync"></ion-icon>
+        <ion-icon class="syncing" slot="end" name="sync"></ion-icon>
       </ion-button>
       <ion-button class="no-drag" id="click-trigger">
         <ion-icon slot="icon-only" name="person-circle"></ion-icon>
@@ -74,7 +74,6 @@
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
-    <ion-content class="ion-padding">
 	<ion-content [scrollY]="false">
 		<ag-grid-angular
 			class="ag-theme-alpine"
@@ -87,7 +86,6 @@
 			[suppressCellFocus]="true">
 		</ag-grid-angular>
 	</ion-content>
-    </ion-content>
   </ng-template>
 </ion-modal>
 

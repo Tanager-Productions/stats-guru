@@ -8,6 +8,14 @@ import { SyncService } from 'src/app/services/sync/sync.service';
 import { ColDef } from 'ag-grid-community';
 import { appWindow } from '@tauri-apps/api/window'
 import { os, window } from '@tauri-apps/api';
+import { DatePipe } from "@angular/common";
+import { ValueFormatterParams } from "ag-grid-community";
+
+function getDate(params:ValueFormatterParams) {
+  const date:Date = new Date(params.value);
+  const datepipe: DatePipe = new DatePipe('en-US');
+  return datepipe.transform(date, 'short') ?? "";
+}
 
 @Component({
   selector: 'app-header',
@@ -23,8 +31,7 @@ export class HeaderComponent implements OnInit {
 
 	//Sync information:
 	public syncData: ColDef [] = [
-		{field: 'dateOccurred', headerName: 'Date Occurred', width: 200,  pinned: true, cellRenderer: (data: any) => {
-			return data.value ? (new Date(data.value)).toLocaleString('en-GB', { timeZone: 'UTC' }) : '';}},
+		{field: 'dateOccurred', headerName: 'Date Occurred', width: 200,  pinned: true, valueFormatter: getDate, filter: 'date'},
 		{field: 'playsSynced', headerName: 'Plays Synced', cellRenderer: (data: any) => { return (Boolean(data.value))}},
 		{field: 'playersSynced', headerName: 'Players Synced', cellRenderer: (data: any) => { return (Boolean(data.value))}},
 		{field: 'gamesSynced', headerName: 'Games Synced', cellRenderer: (data: any) => { return (Boolean(data.value))}},

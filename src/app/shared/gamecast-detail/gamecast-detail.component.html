@@ -22,7 +22,7 @@
 		<ion-item>
 			<ion-checkbox
 				(ionChange)="setPeriods($event)"
-				[checked]="game.hasFourQuarters">
+				[checked]="(game.hasFourQuarters ?? 0) == 1">
 				Has 4 Quarters
 			</ion-checkbox>
 		</ion-item>
@@ -47,7 +47,7 @@
 		<ion-item>
 			<ion-checkbox
 				(ionChange)="setCheckbox($event)"
-				[checked]="game.resetTimeoutsEveryPeriod">
+				[checked]="(game.resetTimeoutsEveryPeriod ?? 0) == 1">
 				Reset TOs/Period
 			</ion-checkbox>
 		</ion-item>
