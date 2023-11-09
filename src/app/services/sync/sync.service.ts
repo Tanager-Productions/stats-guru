@@ -55,24 +55,19 @@ export class SyncService {
 						id: 0,
 						dateOccurred: new Date().toUTCString(),
 						statsSynced: res.statsSynced,
-						gamesSynced: res.statsSynced,
-						playersSynced: res.statsSynced,
-						playsSynced: res.statsSynced,
+						gamesSynced: res.gamesSynced,
+						playersSynced: res.playersSynced,
+						playsSynced: res.playsSynced,
 						errorMessages: JSON.stringify(res.errorMessages)
 					};
 					await this.sqlService.save('syncHistory', history);
-
-					this.syncingMessage = 'Clearing database...';
-					await this.sqlService.rawExecute(`
-						delete from plays;
-						delete from stats;
-						delete from games;
-						delete from players;
-						delete from teams;
-						delete from events;
-						delete from seasons;
-					`);
-					await this.getData();
+					if (history.statsSynced && history.playersSynced && history.gamesSynced && history.playsSynced) {
+						await this.sqlService.rawExecute(`
+							delete from seasons;
+							delete from events;
+						`);
+						await this.getData();
+					}
 				} else {
 					throw "Failed to post sync"
 				}

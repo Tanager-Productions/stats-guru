@@ -1,4 +1,3 @@
-import { GameActions } from "../pages/home/components/gamecast/gamecast.component";
 import { SyncState } from "./syncState.enum";
 
 export interface Game {
@@ -221,4 +220,22 @@ export enum Positions {
 	Center = 4,
 	Guard = 5,
 	Forward = 6
+}
+
+export enum GameActions {
+	OffRebound = 5,
+	DefRebound = 10,
+	Assist = 15,
+	Block = 20,
+	Steal = 25,
+	Foul = 30,
+	Turnover = 35,
+	ShotMade = 40,
+	ShotMissed = 45,
+	ThreeMade = 50,
+	ThreeMissed = 55,
+	FreeThrowMissed = 60,
+	FreeThrowMade = 65,
+	FullTO = 70,
+	PartialTO = 75
 }

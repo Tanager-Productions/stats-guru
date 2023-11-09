@@ -10,25 +10,7 @@ import { currentDatabaseVersion } from 'src/app/upgrades/versions';
 import { SyncMode } from 'src/app/interfaces/sync.interface';
 import { SyncResult } from 'src/app/interfaces/syncResult.interface';
 import { SyncService } from 'src/app/services/sync/sync.service';
-import { Game, Player, Stat, Play } from 'src/app/interfaces/models';
-
-export enum GameActions {
-	OffRebound = 5,
-	DefRebound = 10,
-	Assist = 15,
-	Block = 20,
-	Steal = 25,
-	Foul = 30,
-	Turnover = 35,
-	ShotMade = 40,
-	ShotMissed = 45,
-	ThreeMade = 50,
-	ThreeMissed = 55,
-	FreeThrowMissed = 60,
-	FreeThrowMade = 65,
-	FullTO = 70,
-	PartialTO = 75
-}
+import { Game, Player, Stat, Play, GameActions } from 'src/app/interfaces/models';
 
 type StatsRow =  {
   game: number,
@@ -152,7 +134,7 @@ export class GamecastComponent {
 		this.initSub = this.sql.isReady().subscribe(ready => {
 			if (ready) {
 				this.sync.gameCastInProgress = true;
-				this.route.params.subscribe((params: { [x: string]: number }) => {
+				this.route.params.subscribe(params => {
 					this.gameId = params['gameId'];
 					this.fetchData();
 					if (this.sync.online) {
