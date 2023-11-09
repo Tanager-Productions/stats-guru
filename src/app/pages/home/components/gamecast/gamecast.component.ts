@@ -10,7 +10,16 @@ import { currentDatabaseVersion } from 'src/app/upgrades/versions';
 import { SyncMode } from 'src/app/interfaces/sync.interface';
 import { SyncResult } from 'src/app/interfaces/syncResult.interface';
 import { SyncService } from 'src/app/services/sync/sync.service';
-import { Game, Player, Stat, Play, GameActions } from 'src/app/interfaces/models';
+import { Game, Player, Stat, Play, GameActions, DEFAULT_PLAYER } from 'src/app/interfaces/models';
+
+const playerSort = (a:Player, b:Player) => {
+	if (a.number == b.number)
+		return 0;
+	else if (a.number < b.number)
+		return -1;
+	else
+		return 1;
+}
 
 type StatsRow =  {
   game: number,
@@ -69,7 +78,6 @@ export class GamecastComponent {
 	newPlayerNumber: string = '';
 	homePlayerSelected: number = -1;
 	awayPlayerSelected: number = -1;
-	editPlayer: boolean = false;
 	statsTab: 'home' | 'away' = 'home';
 	initSub?:Subscription;
 	gameActions = GameActions;
@@ -82,10 +90,6 @@ export class GamecastComponent {
 		});
 	homeStatGridApi!: GridApi<StatsRow>;
 	awayStatGridApi!: GridApi<StatsRow>;
-	addHomePlayer:boolean = true;
-	showAddPlayer:boolean = false;
-	showPeriodTotal: boolean = false;
-	editHomePeriod: boolean = true;
 
 	//Displaying Auto-Complete Options:
 	reboundDisplay: boolean = false;
@@ -136,10 +140,12 @@ export class GamecastComponent {
 				this.sync.gameCastInProgress = true;
 				this.route.params.subscribe(params => {
 					this.gameId = params['gameId'];
-					this.fetchData();
-					if (this.sync.online) {
-						this.interval = setInterval(() => this.send(), 15000);
-					}
+					this.fetchData()
+						.then(() => {
+							if (this.sync.online) {
+								this.interval = setInterval(() => this.send(), 15000);
+							}
+						});
 				});
 			}
 		});
@@ -178,7 +184,7 @@ export class GamecastComponent {
 		}
 	}
 
-	editingStopped(event: any) {
+	async editingStopped(event: any) {
     let updatedStat: Stat = {
 			playerId: event.data.player,
 			gameId: this.gameId,
@@ -200,12 +206,12 @@ export class GamecastComponent {
 			fouls: event.data.fouls,
 			plusOrMinus: event.data.plusOrMinus,
 			eff: event.data.eff,
-			syncState: event.data.syncState = SyncState.Modified,
+			syncState: event.data.syncState == SyncState.Added ? SyncState.Added : SyncState.Modified,
 			technicalFouls: event.data.technicalFouls,
 			id: event.data.Id,
 			onCourt: null
 		}
-		this.saveStat(updatedStat);
+		await this.saveStat(updatedStat);
   }
 
 	async setPrevPlays() {
@@ -218,7 +224,7 @@ export class GamecastComponent {
 		`);
 	}
 
-	async addPlayer(player:Player) {
+	async addPlayer(isHome:boolean, player:Player) {
 		await this.sql.save('players', player);
 		player = (await this.sql.query({
 			table: 'players',
@@ -229,26 +235,12 @@ export class GamecastComponent {
 				lastName: player.lastName
 			}
 		}))[0];
-		if (this.addHomePlayer) {
-			this.homeTeamPlayers!.push(player);
-			this.homeTeamPlayers?.sort((a, b) => {
-				if (a.number == b.number)
-					return 0;
-				else if (a.number < b.number)
-					return -1;
-				else
-					return 1;
-			});
+		if (isHome) {
+			this.homeTeamPlayers?.push(player);
+			this.homeTeamPlayers?.sort(playerSort);
 		} else {
-			this.awayTeamPlayers!.push(player);
-			this.awayTeamPlayers?.sort((a, b) => {
-				if (a.number == b.number)
-					return 0;
-				else if (a.number < b.number)
-					return -1;
-				else
-					return 1;
-			});
+			this.awayTeamPlayers?.push(player);
+			this.awayTeamPlayers?.sort(playerSort);
 		}
 	}
 
@@ -281,46 +273,24 @@ export class GamecastComponent {
 			ORDER BY	playOrder DESC
 		`);
 		if (this.homeTeamPlayers.find(t => t.firstName == 'team' && t.lastName == 'team') == undefined) {
-			this.addHomePlayer = true;
-			await this.addPlayer({
-				id:0,
-				picture: null,
-				firstName: 'team',
-				lastName: 'team',
-				isMale: this.isMale,
-				teamId: this.currentGame!.homeTeamId,
-				socialMediaString: null,
-				weight: null,
-				age: null,
-				number: -1,
-				position: null,
-				height: null,
-				homeState: null,
-				homeTown: null,
-				syncState: SyncState.Unchanged,
-				infoString: null
-			});
+			let teamPlayer = DEFAULT_PLAYER;
+			teamPlayer.firstName = 'team';
+			teamPlayer.lastName = 'team';
+			teamPlayer.number = -1;
+			teamPlayer.syncState = SyncState.Added;
+			teamPlayer.isMale = this.isMale;
+			teamPlayer.teamId = this.currentGame!.homeTeamId;
+			await this.addPlayer(true, teamPlayer);
 		}
 		if (this.awayTeamPlayers.find(t => t.firstName == 'team' && t.lastName == 'team') == undefined) {
-			this.addHomePlayer = false;
-			await this.addPlayer({
-				id: 0,
-				picture: null,
-				firstName: 'team',
-				lastName: 'team',
-				isMale: this.isMale,
-				teamId: this.currentGame!.awayTeamId,
-				socialMediaString: null,
-				weight: null,
-				age: null,
-				number: -1,
-				position: null,
-				height: null,
-				homeState: null,
-				homeTown: null,
-				syncState: SyncState.Unchanged,
-				infoString: null
-			});
+			let teamPlayer = DEFAULT_PLAYER;
+			teamPlayer.firstName = 'team';
+			teamPlayer.lastName = 'team';
+			teamPlayer.number = -1;
+			teamPlayer.syncState = SyncState.Added;
+			teamPlayer.isMale = this.isMale;
+			teamPlayer.teamId = this.currentGame!.awayTeamId;
+			await this.addPlayer(false, teamPlayer);
 		}
 		if (this.currentGame!.hiddenPlayers != null && this.currentGame!.hiddenPlayers != "") {
 			this.hiddenPlayerIds = this.currentGame!.hiddenPlayers.split(',');
@@ -402,31 +372,15 @@ export class GamecastComponent {
 		`);
 	}
 
-	async savePlayer(player: Player) {
-		if (!this.sync.online) {
-			player.syncState = SyncState.Modified;
-		}
+	/** Used by the app-edit-player component */
+	public async savePlayer(player: Player) {
+		player.syncState == SyncState.Added ? SyncState.Added : SyncState.Modified;
 		await this.sql.save("players", player, {"id": player.id});
 		if (player.teamId == this.currentGame!.homeTeamId) {
-			this.homeTeamPlayers?.sort((a, b) => {
-				if (a.number == b.number)
-					return 0;
-				else if (a.number < b.number)
-					return -1;
-				else
-					return 1;
-			});
+			this.homeTeamPlayers?.sort(playerSort);
 		} else {
-			this.awayTeamPlayers?.sort((a, b) => {
-				if (a.number == b.number)
-					return 0;
-				else if (a.number < b.number)
-					return -1;
-				else
-					return 1;
-			});
+			this.awayTeamPlayers?.sort(playerSort);
 		}
-		this.editPlayer = false;
 	}
 
   inputNumber (numberClicked: number) {
@@ -449,7 +403,7 @@ export class GamecastComponent {
       teamId: team == 'home' ? this.currentGame!.homeTeamId : this.currentGame!.awayTeamId,
       picture: null,
       isMale: this.isMale,
-      syncState: this.sync.online ? SyncState.Unchanged : SyncState.Added,
+      syncState: SyncState.Added,
 			height: null,
 			weight: null,
 			age: null,
@@ -539,11 +493,11 @@ export class GamecastComponent {
 		if (this.homePlayerSelected == -1) {
 			let stat = await this.getStat(this.awayPlayersOnCourt[this.awayPlayerSelected].id);
 			stat.technicalFouls = stat.technicalFouls == null ? 1 : stat.technicalFouls+1;
-			this.saveStat(stat);
+			await this.saveStat(stat);
 		} else {
 			let stat = await this.getStat(this.homePlayersOnCourt[this.homePlayerSelected].id);
 			stat.technicalFouls = stat.technicalFouls == null ? 1 : stat.technicalFouls+1;
-			this.saveStat(stat);
+			await this.saveStat(stat);
 		}
 		this.foulDisplay = false;
 	}
@@ -601,7 +555,7 @@ export class GamecastComponent {
 				defensiveRebounds: 0,
 				blocks: 0,
 				turnovers: 0,
-				syncState: this.sync.online ? SyncState.Unchanged : SyncState.Added,
+				syncState: SyncState.Added,
 				points: 0,
 				eff: 0,
 				onCourt: null
@@ -618,9 +572,7 @@ export class GamecastComponent {
 	}
 
 	private async saveStat(stat:Stat) {
-		if (!this.sync.online) {
-			stat.syncState == SyncState.Modified;
-		}
+		stat.syncState = SyncState.Added ? SyncState.Added : SyncState.Modified;
 		await this.sql.save("stats", stat, {"playerId": stat.playerId, "gameId": this.gameId});
 		stat = (await this.sql.rawQuery(`select * from stats where playerId = '${stat.playerId}' and gameId = '${stat.gameId}'`))[0];
 	}
@@ -673,20 +625,16 @@ export class GamecastComponent {
 			action: action,
 			gameClock: this.currentGame!.clock
 		}
-		if (this.sync.online) {
-			await this.sql.save('plays', play);
+		let existingPlay = await this.sql.query({
+			table: 'plays',
+			where: {playOrder: play.playOrder, "gameId": this.gameId}
+		});
+		if (existingPlay.length == 1) {
+			play.syncState = existingPlay[0].SyncState == SyncState.Added ? SyncState.Added : SyncState.Modified;
+			await this.sql.save('plays', play, {playOrder: play.playOrder, "gameId": this.gameId});
 		} else {
-			let existingPlay = await this.sql.query({
-				table: 'plays',
-				where: {playOrder: play.playOrder, "gameId": this.gameId}
-			});
-			if (existingPlay.length == 1) {
-				play.syncState = SyncState.Modified;
-				await this.sql.save('plays', play, {playOrder: play.playOrder, "gameId": this.gameId});
-			} else {
-				play.syncState = SyncState.Added;
-				await this.sql.save('plays', play);
-			}
+			play.syncState = SyncState.Added;
+			await this.sql.save('plays', play);
 		}
 		this.plays?.unshift(play);
 	}
@@ -796,7 +744,7 @@ export class GamecastComponent {
 					this.currentGame!.awayCurrentFouls++;
 				}
 				await this.updateGame();
-				this.addPlay(team, GameActions.Foul, player);
+				await this.addPlay(team, GameActions.Foul, player);
 			}
 		} else {
 			if (this.homePlayerSelected != -1) {
@@ -849,7 +797,7 @@ export class GamecastComponent {
 				let stat = await this.getStat(player.id);
 				stat.steals++;
 				await this.saveStat(stat);
-				this.addPlay(team, GameActions.Steal, player);
+				await this.addPlay(team, GameActions.Steal, player);
 			}
 		} else {
 			if (this.homePlayerSelected != -1) {
@@ -857,7 +805,7 @@ export class GamecastComponent {
 				let stat = await this.getStat(player.id);
 				stat.steals++;
 				await this.saveStat(stat);
-				this.addPlay(team, GameActions.Steal, player);
+				await this.addPlay(team, GameActions.Steal, player);
 			}
 		}
 		this.stealDisplay = true;
@@ -870,7 +818,7 @@ export class GamecastComponent {
 				let stat = await this.getStat(player.id);
 				stat.assists++;
 				await this.saveStat(stat);
-				this.addPlay(team, GameActions.Assist, player);
+				await this.addPlay(team, GameActions.Assist, player);
 			}
 		} else {
 			if (this.homePlayerSelected != -1) {
@@ -878,7 +826,7 @@ export class GamecastComponent {
 				let stat = await this.getStat(player.id);
 				stat.assists++;
 				await this.saveStat(stat);
-				this.addPlay(team, GameActions.Assist, player);
+				await this.addPlay(team, GameActions.Assist, player);
 			}
 		}
 	}
@@ -929,7 +877,7 @@ export class GamecastComponent {
 				let stat = await this.getStat(player.id);
 				stat.blocks++;
 				await this.saveStat(stat);
-				this.addPlay(team, GameActions.Block, player);
+				await this.addPlay(team, GameActions.Block, player);
 				this.missedDisplay = true;
 			}
 		} else {
@@ -938,7 +886,7 @@ export class GamecastComponent {
 				let stat = await this.getStat(player.id);
 				stat.blocks++;
 				await this.saveStat(stat);
-				this.addPlay(team, GameActions.Block, player);
+				await this.addPlay(team, GameActions.Block, player);
 				this.missedDisplay = true;
 			}
 		}
@@ -951,7 +899,7 @@ export class GamecastComponent {
 				let stat = await this.getStat(player.id);
 				stat.turnovers++;
 				await this.saveStat(stat);
-				this.addPlay(team, GameActions.Turnover, player);
+				await this.addPlay(team, GameActions.Turnover, player);
 			}
 		} else {
 			if (this.homePlayerSelected != -1) {
@@ -959,16 +907,14 @@ export class GamecastComponent {
 				let stat = await this.getStat(player.id);
 				stat.turnovers++;
 				await this.saveStat(stat);
-				this.addPlay(team, GameActions.Turnover, player);
+				await this.addPlay(team, GameActions.Turnover, player);
 			}
 		}
 	}
 
 	public async updateGame(state: SyncState = SyncState.Modified) {
-		if (!this.sync.online) {
-			if (this.currentGame!.syncState != SyncState.Added) {
-				this.currentGame!.syncState = state;
-			}
+		if (this.currentGame!.syncState != SyncState.Added) {
+			this.currentGame!.syncState = state;
 		}
 		await this.sql.save('games', this.currentGame!, { "id": this.gameId });
 	}
@@ -976,9 +922,9 @@ export class GamecastComponent {
 	public async removeLastPlay() {
 		let play = this.plays![0];
 		await this.undoAction(play);
-		if (this.sync.online) {
-			await this.sql.delete('plays', {playOrder: play.playOrder, "gameId": this.gameId});
-			this.plays!.splice(0, 1);
+		if (play.syncState == SyncState.Added) {
+			await this.sql.delete('plays', { playOrder: play.playOrder, "gameId": this.gameId });
+			this.plays?.shift();
 		} else {
 			play.syncState = SyncState.Deleted;
 			await this.sql.save('plays', play, { playOrder: play.playOrder,"gameId": this.gameId });
@@ -1248,7 +1194,6 @@ export class GamecastComponent {
 				this.currentGame!.awayFullTOL!--;
 			}
 			await this.updateGame();
-			await this.updateGame();
 		} else if (play.action == GameActions.OffRebound) {
 			let stat = await this.getStat(this.getPlayer(play)!.id);
 			stat.offensiveRebounds++;
@@ -1261,7 +1206,6 @@ export class GamecastComponent {
 				this.currentGame!.awayTeamTOL--;
 				this.currentGame!.awayPartialTOL!--;
 			}
-			await this.updateGame();
 			await this.updateGame();
 		} else if (play.action == GameActions.ShotMade) {
 			let player = this.getPlayer(play)!;
@@ -1372,9 +1316,7 @@ export class GamecastComponent {
 		await this.undoAction(prevPlay);
 		await this.redoAction(play);
 		play.score = `${this.currentGame!.homeFinal} - ${this.currentGame!.awayFinal}`;
-		if (!this.sync.online) {
-			play.syncState = SyncState.Modified;
-		}
+		play.syncState = play.syncState == SyncState.Added ? SyncState.Added : SyncState.Modified;
 		await this.sql.save('plays', play, {playOrder: play.playOrder, "gameId": this.gameId});
 		await this.setPrevPlays();
 	}

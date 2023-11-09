@@ -3,35 +3,51 @@ import { BehaviorSubject, Subject } from 'rxjs';
 import { SqlService } from '../sql/sql.service';
 import { Game, Play, Player, Stat, Team, Event } from 'src/app/interfaces/models';
 
+export type HomePageGame = {
+	gameId:number,
+	gameDate:string,
+	homeTeamName:string,
+	awayTeamName:string,
+	homeTeamLogo:string|null,
+	awayTeamLogo:string|null,
+	eventId:number|null
+};
+
 @Injectable({
   providedIn: 'root'
 })
 export class CommonService {
-  private gamesSubject: BehaviorSubject<Game[] | null> = new BehaviorSubject<Game[] | null>(null);
+  private gamesSubject: BehaviorSubject<HomePageGame[] | null> = new BehaviorSubject<HomePageGame[] | null>(null);
   private eventsSubject: BehaviorSubject<Event[] | null> = new BehaviorSubject<Event[] | null>(null);
-  private playersSubject: BehaviorSubject<Player[] | null> = new BehaviorSubject<Player[] | null>(null);
-  private playsSubject: BehaviorSubject<Play[] | null> = new BehaviorSubject<Play[] | null>(null);
-  private teamsSubject: BehaviorSubject<Team[] | null> = new BehaviorSubject<Team[] | null>(null);
-  private statsSubject: BehaviorSubject<Stat[] | null> = new BehaviorSubject<Stat[] | null>(null);
 
   constructor(private sql:SqlService) { }
 
   public async initializeService() {
     await Promise.all([
-      this.fetchPlayers(),
       this.fetchGames(),
-      this.fetchPlays(),
-      this.fetchStats(),
-      this.fetchTeams(),
       this.fetchEvents()
     ]);
   }
 
   public async fetchGames() {
-    let games: Game[] = await this.sql.query({
-			table: 'games',
-			orderByColumn: 'gameDate'
-		});
+    let games = await this.sql.rawQuery(`
+			SELECT
+				g.id as gameId,
+				g.gameDate,
+				g.eventId,
+				homeTeam.name AS homeTeamName,
+				awayTeam.name AS awayTeamName,
+				homeTeam.defaultLogo AS homeTeamLogo,
+				awayTeam.defaultLogo AS awayTeamLogo
+			FROM
+				Games g
+			JOIN
+				Teams AS homeTeam ON g.homeTeamId = homeTeam.id
+			JOIN
+				Teams AS awayTeam ON g.awayTeamId = awayTeam.id
+			ORDER BY
+				g.gameDate DESC;
+		`);
     this.gamesSubject.next(games);
   }
 
@@ -50,41 +66,5 @@ export class CommonService {
 
   public getEvents() {
     return this.eventsSubject.asObservable();
-  }
-
-  public async fetchPlayers() {
-    let players: Player[] = await this.sql.query({table: "players"});
-    this.playersSubject.next(players);
-  }
-
-  public getPlayers() {
-    return this.playersSubject.asObservable();
-  }
-
-  public async fetchPlays() {
-    let plays: Play[] = await this.sql.query({table: "plays"});
-    this.playsSubject.next(plays);
-  }
-
-  public getPlays() {
-    return this.playsSubject.asObservable();
-  }
-
-  public async fetchTeams() {
-    let teams: Team[] = await this.sql.query({table: "teams"});
-    this.teamsSubject.next(teams);
-  }
-
-  public getTeams() {
-    return this.teamsSubject.asObservable();
-  }
-
-  public async fetchStats() {
-    let stats: Stat[] = await this.sql.query({table: "stats"});
-    this.statsSubject.next(stats);
-  }
-
-  public getStats() {
-    return this.statsSubject.asObservable();
   }
 }

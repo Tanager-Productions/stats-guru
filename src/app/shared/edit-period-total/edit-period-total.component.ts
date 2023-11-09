@@ -1,4 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { ModalController } from '@ionic/angular';
+import { Game } from 'src/app/interfaces/models';
 import { GamecastComponent } from 'src/app/pages/home/components/gamecast/gamecast.component';
 
 @Component({
@@ -8,73 +10,63 @@ import { GamecastComponent } from 'src/app/pages/home/components/gamecast/gameca
 })
 export class EditPeriodTotalComponent {
 	@Input() team!: 'home' | 'away';
-	@Input() firstPeriodPoints!: number;
-	@Input() secondPeriodPoints!: number;
-	@Input() thirdPeriodPoints!: number;
-	@Input() fourthPeriodPoints!: number;
-	@Input() overtimePoints!: number;
-	@Output() dismiss: EventEmitter<void> = new EventEmitter();
 	@Input() color!:string;
-	homePoints!: number;
-	awayPoints!:number;
+	@Input() game!: Game;
+	public firstPeriodPoints!: number;
+	public secondPeriodPoints!: number;
+	public thirdPeriodPoints!: number;
+	public fourthPeriodPoints!: number;
+	public overtimePoints!: number;
+	@Output() update = new EventEmitter<void>()
 
-	constructor(
-		private gamecastComponent: GamecastComponent
-	) {}
+	constructor(public modalCtrl: ModalController) {}
 
 	ngOnInit() {
-		this.getPoints();
-	}
-
-	getPoints() {
 		if (this.team == 'home') {
-			this.firstPeriodPoints = this.gamecastComponent.currentGame!.homePointsQ1;
-			this.secondPeriodPoints = this.gamecastComponent.currentGame!.homePointsQ2;
-			this.thirdPeriodPoints = this.gamecastComponent.currentGame!.homePointsQ3;
-			this.fourthPeriodPoints = this.gamecastComponent.currentGame!.homePointsQ4;
-			this.overtimePoints = this.gamecastComponent.currentGame!.homePointsOT;
-
+			this.firstPeriodPoints = this.game.homePointsQ1;
+			this.secondPeriodPoints = this.game.homePointsQ2;
+			this.thirdPeriodPoints = this.game.homePointsQ3;
+			this.fourthPeriodPoints = this.game.homePointsQ4;
+			this.overtimePoints = this.game.homePointsOT;
 		}
 		else {
-			this.firstPeriodPoints = this.gamecastComponent.currentGame!.awayPointsQ1;
-			this.secondPeriodPoints = this.gamecastComponent.currentGame!.awayPointsQ2;
-			this.thirdPeriodPoints = this.gamecastComponent.currentGame!.awayPointsQ3;
-			this.fourthPeriodPoints = this.gamecastComponent.currentGame!.awayPointsQ4;
-			this.overtimePoints = this.gamecastComponent.currentGame!.awayPointsOT;
+			this.firstPeriodPoints = this.game.awayPointsQ1;
+			this.secondPeriodPoints = this.game.awayPointsQ2;
+			this.thirdPeriodPoints = this.game.awayPointsQ3;
+			this.fourthPeriodPoints = this.game.awayPointsQ4;
+			this.overtimePoints = this.game.awayPointsOT;
 		}
 	}
 
 	async submitPoints() {
 		if (this.team == 'home') {
-			this.gamecastComponent.currentGame!.homePointsQ1 = this.firstPeriodPoints;
-			this.gamecastComponent.currentGame!.homePointsQ2 = this.secondPeriodPoints;
-			this.gamecastComponent.currentGame!.homePointsQ3 = this.thirdPeriodPoints;
-			this.gamecastComponent.currentGame!.homePointsQ4 = this.fourthPeriodPoints;
-			this.gamecastComponent.currentGame!.homePointsOT = this.overtimePoints;
-			this.homePoints =
+			this.game.homePointsQ1 = this.firstPeriodPoints;
+			this.game.homePointsQ2 = this.secondPeriodPoints;
+			this.game.homePointsQ3 = this.thirdPeriodPoints;
+			this.game.homePointsQ4 = this.fourthPeriodPoints;
+			this.game.homePointsOT = this.overtimePoints;
+			this.game.homeFinal =
 				this.firstPeriodPoints +
 				this.secondPeriodPoints +
 				this.thirdPeriodPoints +
 				this.fourthPeriodPoints +
-				this.overtimePoints
-			this.gamecastComponent.currentGame!.homeFinal = this.homePoints;
+				this.overtimePoints;
 		}
 		else {
-			this.gamecastComponent.currentGame!.awayPointsQ1 = this.firstPeriodPoints;
-			this.gamecastComponent.currentGame!.awayPointsQ2 = this.secondPeriodPoints;
-			this.gamecastComponent.currentGame!.awayPointsQ3 = this.thirdPeriodPoints;
-			this.gamecastComponent.currentGame!.awayPointsQ4 = this.fourthPeriodPoints;
-			this.gamecastComponent.currentGame!.awayPointsOT = this.overtimePoints;
-			this.awayPoints =
+			this.game.awayPointsQ1 = this.firstPeriodPoints;
+			this.game.awayPointsQ2 = this.secondPeriodPoints;
+			this.game.awayPointsQ3 = this.thirdPeriodPoints;
+			this.game.awayPointsQ4 = this.fourthPeriodPoints;
+			this.game.awayPointsOT = this.overtimePoints;
+			this.game.awayFinal =
 				this.firstPeriodPoints +
 				this.secondPeriodPoints +
 				this.thirdPeriodPoints +
 				this.fourthPeriodPoints +
-				this.overtimePoints
-			this.gamecastComponent.currentGame!.awayFinal = this.awayPoints;
+				this.overtimePoints;
 		}
 
-		await this.gamecastComponent.updateGame();
-		this.dismiss.emit();
+		this.update.emit();
+		this.modalCtrl.dismiss();
 	}
 }

@@ -141,7 +141,7 @@
 													{{ homeTeamName }}
 												</ion-card-title>
 												<ion-label class="ion-margin-top ion-text-center">
-													<ion-button (click)="showPeriodTotal = true; editHomePeriod = true" fill="clear" color="{{homeColor}}" class="team-score digital-number">{{ currentGame.homeFinal }}</ion-button>
+													<ion-button id="editHomePeriod" fill="clear" color="{{homeColor}}" class="team-score digital-number">{{ currentGame.homeFinal }}</ion-button>
 													<div class="home-font">
 														<div class="input-div">
 															<div class="input">
@@ -244,7 +244,7 @@
 												<ion-col size="3">
 													<ion-button fill="clear" expand="block" color="{{homeColor}}" (click)="addTimeout('home', true)">T30</ion-button>
 													<ion-button fill="clear" expand="block" color="{{homeColor}}" (click)="addTimeout('home', false)">T60</ion-button>
-													<ion-button (click)="addHomePlayer = true; showAddPlayer = true" fill="clear" expand="block" color="{{homeColor}}">
+													<ion-button id="addHomePlayer" fill="clear" expand="block" color="{{homeColor}}">
 														<ion-icon size="large" slot="icon-only" name="add-circle-sharp"></ion-icon>
 													</ion-button>
 												</ion-col>
@@ -268,7 +268,7 @@
 												<ion-col size="3">
 													<ion-button fill="clear" expand="block" color="{{awayColor}}" (click)="addTimeout('away', true)">T30</ion-button>
 													<ion-button fill="clear" expand="block" color="{{awayColor}}" (click)="addTimeout('away', false)">T60</ion-button>
-													<ion-button (click)="addHomePlayer = false; showAddPlayer = true" fill="clear" expand="block" color="{{awayColor}}">
+													<ion-button id="addAwayPlayer" fill="clear" expand="block" color="{{awayColor}}">
 														<ion-icon size="large" slot="icon-only" name="add-circle-sharp"></ion-icon>
 													</ion-button>
 												</ion-col>
@@ -380,7 +380,7 @@
 													{{ awayTeamName }}
 												</ion-card-title>
 												<ion-label class="ion-margin-top ion-text-center">
-													<ion-button (click)="showPeriodTotal = true; editHomePeriod = false" fill="clear" color="{{awayColor}}" class="team-score digital-number">{{ currentGame.awayFinal }}</ion-button>
+													<ion-button id="editAwayPeriod" fill="clear" color="{{awayColor}}" class="team-score digital-number">{{ currentGame.awayFinal }}</ion-button>
 													<div class="away-font">
 														<div class="input-div">
 															<div class="input">
@@ -662,30 +662,60 @@
 			</ion-content>
 		</ng-template>
 	</ion-modal>
-	<ion-modal [isOpen]="showAddPlayer" [backdropDismiss]="false">
+	<ion-modal trigger="addHomePlayer" #addHomePlayerModal [backdropDismiss]="false">
 		<ng-template>
 			<app-add-player
 				style="height: 100%;"
-				[team]="addHomePlayer ? 'home' : 'away'"
-				[teamId]="addHomePlayer ? currentGame.homeTeamId : currentGame.awayTeamId"
+				team="home"
+				[teamId]="currentGame.homeTeamId"
 				[isMale]="isMale"
-				[players]="addHomePlayer ? homeTeamPlayers : awayTeamPlayers"
+				[players]="homeTeamPlayers"
 				[settings]="currentGame!"
-				(playerAdded)="addPlayer($event)"
+				(playerAdded)="addPlayer(true, $event)"
 				(playerHidden)="hidePlayer($event)"
 				(playerUnhidden)="unhidePlayer($event)"
-				(dismiss)="showAddPlayer = false"
-				[color]="addHomePlayer ? '{{homeColor}}' : '{{awayColor}}'"
+				[color]="homeColor"
+				(dismiss)="addHomePlayerModal.dismiss()"
 			></app-add-player>
 		</ng-template>
 	</ion-modal>
-	<ion-modal class="edit-points-modal" [isOpen]="showPeriodTotal" [backdropDismiss]="false">
+	<ion-modal trigger="addAwayPlayer" #addAwayPlayerModal [backdropDismiss]="false">
+		<ng-template>
+			<app-add-player
+				style="height: 100%;"
+				team="away"
+				[teamId]="currentGame.awayTeamId"
+				[isMale]="isMale"
+				[players]="awayTeamPlayers"
+				[settings]="currentGame!"
+				(playerAdded)="addPlayer(false, $event)"
+				(playerHidden)="hidePlayer($event)"
+				(playerUnhidden)="unhidePlayer($event)"
+				[color]="awayColor"
+				(dismiss)="addAwayPlayerModal.dismiss()"
+			></app-add-player>
+		</ng-template>
+	</ion-modal>
+	<ion-modal class="edit-points-modal" trigger="editHomePeriod" [backdropDismiss]="false">
 		<ng-template>
 			<ion-content [scrollY]="false">
 				<app-edit-period-total
-					[team]="editHomePeriod ? 'home' : 'away'"
-					(dismiss)="showPeriodTotal = false"
-					[color]="editHomePeriod ? 'primary' : 'danger'"
+					team="home"
+					[color]="homeColor"
+					[game]="currentGame"
+					(update)="updateGame()"
+				></app-edit-period-total>
+			</ion-content>
+		</ng-template>
+	</ion-modal>
+	<ion-modal class="edit-points-modal" trigger="editAwayPeriod" [backdropDismiss]="false">
+		<ng-template>
+			<ion-content [scrollY]="false">
+				<app-edit-period-total
+					team="away"
+					[color]="awayColor"
+					[game]="currentGame"
+					(update)="updateGame()"
 				></app-edit-period-total>
 			</ion-content>
 		</ng-template>

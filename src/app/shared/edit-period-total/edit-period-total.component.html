@@ -3,7 +3,7 @@
 		<ion-title>Edit Points</ion-title>
 		<ion-buttons slot="end">
 			<ion-button (click)="submitPoints()" [disabled]="!firstPeriodPoints && !secondPeriodPoints && !thirdPeriodPoints && !fourthPeriodPoints && !overtimePoints">Submit</ion-button>
-			<ion-button (click)="dismiss.emit()">
+			<ion-button (click)="modalCtrl.dismiss()">
 				<ion-icon slot="icon-only" name="close"></ion-icon>
 			</ion-button>
 		</ion-buttons>
