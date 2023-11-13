@@ -10,7 +10,7 @@ import { currentDatabaseVersion } from 'src/app/upgrades/versions';
 import { SyncMode } from 'src/app/interfaces/sync.interface';
 import { SyncResult } from 'src/app/interfaces/syncResult.interface';
 import { SyncService } from 'src/app/services/sync/sync.service';
-import { Game, Player, Stat, Play, GameActions, DEFAULT_PLAYER } from 'src/app/interfaces/models';
+import { Game, Player, Stat, Play, GameActions, DEFAULT_PLAYER, GAME_ACTIONS_MAP } from 'src/app/interfaces/models';
 
 const playerSort = (a:Player, b:Player) => {
 	if (a.number == b.number)
@@ -50,60 +50,50 @@ type StatsRow =  {
   styleUrls: ['./gamecast.component.scss'],
 })
 export class GamecastComponent {
-	isHomeTeam?: boolean;
-	awayColor: string = 'danger';
-	fadedAwayColor!: any;
-	homeColor: string = 'primary';
-	fadedHomeColor!: any;
-  gameId!: number;
-  currentGame?: Game;
-	homeTeamName:string = '';
-	awayTeamName:string = '';
-	isMale = 1;
-	homeTeamPlayers?: Player[];
-	awayTeamPlayers?: Player[];
-	homeTeamStats!: StatsRow[];
-	awayTeamStats!: StatsRow[];
-	homePlayersOnCourt: Player[] = [];
-	awayPlayersOnCourt: Player[] = [];
-	hiddenPlayerIds: string[] = [];
-	stats?: Stat[];
-	plays?: Play[];
-	prevPlays?: Play[];
-	homeTeamFouls: number = 0;
-	awayTeamFouls: number = 0;
-  timerSubscription?: Subscription;
-  timerDuration!: number;
-  timerRunning: boolean = false;
-	newPlayerNumber: string = '';
-	homePlayerSelected: number = -1;
-	awayPlayerSelected: number = -1;
-	statsTab: 'home' | 'away' = 'home';
-	initSub?:Subscription;
-	gameActions = GameActions;
-	actions: {key:number, value:string}[] =
-		Object.entries(GameActions)
-		.reverse()
-		.slice(0,15)
-		.map(t => {
-			return { key:Number(t[1]), value:t[0] as string }
-		});
-	homeStatGridApi!: GridApi<StatsRow>;
-	awayStatGridApi!: GridApi<StatsRow>;
+	public isHomeTeam: boolean|null = null;
+	public awayColor: string = 'danger';
+	public homeColor: string = 'primary';
+  private gameId!: number;
+  public currentGame?: Game;
+	public homeTeamName:string = '';
+	public awayTeamName:string = '';
+	public isMale = 1;
+	public homeTeamPlayers?: Player[];
+	public awayTeamPlayers?: Player[];
+	public homeTeamStats!: StatsRow[];
+	public awayTeamStats!: StatsRow[];
+	public homePlayersOnCourt: Player[] = [];
+	public awayPlayersOnCourt: Player[] = [];
+	public hiddenPlayerIds: string[] = [];
+	private stats?: Stat[];
+	public plays?: Play[];
+	private prevPlays?: Play[];
+	public homeTeamFouls: number = 0;
+	public awayTeamFouls: number = 0;
+  private timerSubscription?: Subscription;
+  private timerDuration!: number;
+  public timerRunning: boolean = false;
+	public homePlayerSelected: number = -1;
+	public awayPlayerSelected: number = -1;
+	public statsTab: 'home' | 'away' = 'home';
+	private initSub?:Subscription;
+	public actions = GAME_ACTIONS_MAP;
+	public homeStatGridApi!: GridApi<StatsRow>;
+	public awayStatGridApi!: GridApi<StatsRow>;
 
 	//Displaying Auto-Complete Options:
-	reboundDisplay: boolean = false;
-	stealDisplay: boolean = false;
-	assistDisplay: boolean = false;
-	foulDisplay: boolean = false;
-	missedDisplay: boolean = false;
+	public reboundDisplay: boolean = false;
+	public stealDisplay: boolean = false;
+	public assistDisplay: boolean = false;
+	public foulDisplay: boolean = false;
+	public missedDisplay: boolean = false;
 
 	//plusOrMinus
-	homeTeamPlusOrMinus = 0;
-	awayTeamPlusOrMinus = 0;
+	private homeTeamPlusOrMinus = 0;
+	private awayTeamPlusOrMinus = 0;
 
 	//gamecast
-	interval: any;
+	private interval: any;
 
 	public teamStats: ColDef[] = [
 		{field: 'number', headerName: 'NUM', pinned: true, editable: false},
@@ -171,7 +161,7 @@ export class GamecastComponent {
 		}
 	}
 
-	changeColor(selectedColor: string) {
+	public changeColor(selectedColor: string) {
 		if (this.isHomeTeam == false) {
 			this.awayColor = selectedColor;
 		} else {
@@ -184,7 +174,7 @@ export class GamecastComponent {
 		}
 	}
 
-	async editingStopped(event: any) {
+	public async editingStopped(event: any) {
     let updatedStat: Stat = {
 			playerId: event.data.player,
 			gameId: this.gameId,
@@ -214,7 +204,7 @@ export class GamecastComponent {
 		await this.saveStat(updatedStat);
   }
 
-	async setPrevPlays() {
+	public async setPrevPlays() {
 		this.prevPlays = await this.sql.rawQuery(`
 			SELECT 		*
 			FROM 			Plays
@@ -224,7 +214,7 @@ export class GamecastComponent {
 		`);
 	}
 
-	async addPlayer(isHome:boolean, player:Player) {
+	public async addPlayer(isHome:boolean, player:Player) {
 		await this.sql.save('players', player);
 		player = (await this.sql.query({
 			table: 'players',
@@ -325,20 +315,20 @@ export class GamecastComponent {
 		}
 	}
 
-	async hidePlayer($event:Player) {
+	public async hidePlayer($event:Player) {
 		this.hiddenPlayerIds.push($event.id.toString());
 		this.currentGame!.hiddenPlayers = this.hiddenPlayerIds.toString();
 		await this.updateGame();
 	}
 
-	async unhidePlayer($event:Player) {
+	public async unhidePlayer($event:Player) {
 		let index = this.hiddenPlayerIds.findIndex(t => t == $event.id.toString());
 		this.hiddenPlayerIds.splice(index, 1);
 		this.currentGame!.hiddenPlayers = this.hiddenPlayerIds.toString();
 		await this.updateGame();
 	}
 
-	async switchPossession() {
+	public async switchPossession() {
 		if (this.currentGame!.homeHasPossession == 1) {
 			this.currentGame!.homeHasPossession = 0;
 		} else {
@@ -347,7 +337,7 @@ export class GamecastComponent {
 		await this.updateGame();
 	}
 
-	async loadBoxScore() {
+	public async loadBoxScore() {
 		this.homeTeamStats = await this.sql.rawQuery(`
 			SELECT		p.number, p.firstName, p.lastName, s.playerId, s.assists, s.rebounds, s.defensiveRebounds,
 								s.offensiveRebounds, s.fieldGoalsMade, s.fieldGoalsAttempted, s.blocks, s.steals, s.threesMade,
@@ -383,48 +373,7 @@ export class GamecastComponent {
 		}
 	}
 
-  inputNumber (numberClicked: number) {
-    if (this.newPlayerNumber.length < 3) {
-      this.newPlayerNumber += numberClicked;
-    }
-  }
-
-  clearNumberInput() {
-    this.newPlayerNumber = '';
-  }
-
-  async addToTeam(team: 'home' | 'away') {
-    let newTeamPlayer: Player = {
-      id: 0,
-      firstName: "New",
-      lastName: "Player",
-      number: Number(this.newPlayerNumber),
-      position: null,
-      teamId: team == 'home' ? this.currentGame!.homeTeamId : this.currentGame!.awayTeamId,
-      picture: null,
-      isMale: this.isMale,
-      syncState: SyncState.Added,
-			height: null,
-			weight: null,
-			age: null,
-			homeState: null,
-			homeTown: null,
-			socialMediaString: null,
-			infoString: null
-    }
-
-		if (team == 'home') {
-			this.homeTeamPlayers!.push(newTeamPlayer);
-		} else {
-			this.awayTeamPlayers!.push(newTeamPlayer);
-		}
-
-    this.clearNumberInput();
-
-		await this.sql.save("players", newTeamPlayer);
-  }
-
-	toggleGameComplete() {
+	public toggleGameComplete() {
 		if (this.currentGame!.complete == 1) {
 			this.currentGame!.complete = 0;
 			this.updateGame();
@@ -434,7 +383,7 @@ export class GamecastComponent {
 		}
 	}
 
-	async addToCourt(team: 'home' | 'away', player: Player) {
+	public async addToCourt(team: 'home' | 'away', player: Player) {
 		if (team == 'home') {
 			if (this.homePlayersOnCourt.length < 6 && !this.homePlayersOnCourt.find(t => t.id == player.id)) {
 				this.homePlayersOnCourt.push(player);
@@ -450,7 +399,7 @@ export class GamecastComponent {
 		await this.updateGame();
 	}
 
-	selectPlayer(team: 'home' | 'away', index: number) {
+	public selectPlayer(team: 'home' | 'away', index: number) {
 		var prevPlayerWasHome = this.awayPlayerSelected == -1;
 		if (team == 'away') {
 			if (this.awayPlayerSelected == index) {
@@ -489,7 +438,7 @@ export class GamecastComponent {
 		}
 	}
 
-	async addTechnical() {
+	public async addTechnical() {
 		if (this.homePlayerSelected == -1) {
 			let stat = await this.getStat(this.awayPlayersOnCourt[this.awayPlayerSelected].id);
 			stat.technicalFouls = stat.technicalFouls == null ? 1 : stat.technicalFouls+1;
@@ -502,7 +451,7 @@ export class GamecastComponent {
 		this.foulDisplay = false;
 	}
 
-  async removeFromCourt (team: 'home' | 'away', player: Player, index:number) {
+  public async removeFromCourt (team: 'home' | 'away', player: Player, index:number) {
 		if (team == 'away') {
 			if (this.awayPlayerSelected == index) {
 				this.awayPlayerSelected = -1;
@@ -639,7 +588,7 @@ export class GamecastComponent {
 		this.plays?.unshift(play);
 	}
 
-  async addPoints(team: 'home' | 'away', points: number, missed: boolean = false) {
+  public async addPoints(team: 'home' | 'away', points: number, missed: boolean = false) {
 		let updatePlusOrMinus = false;
 		if (!this.timerRunning && !missed) {
 			updatePlusOrMinus = true;
@@ -730,7 +679,7 @@ export class GamecastComponent {
 		}
   }
 
-  async addFoul(team: 'home' | 'away') {
+  public async addFoul(team: 'home' | 'away') {
 		if (team == 'away') {
 			if (this.awayPlayerSelected != -1) {
 				await this.stopTimer();
@@ -765,7 +714,7 @@ export class GamecastComponent {
 		this.foulDisplay = true;
   }
 
-  async addTimeout(team: 'home' | 'away', partial: boolean) {
+  public async addTimeout(team: 'home' | 'away', partial: boolean) {
 		await this.stopTimer();
 		if (team == 'away') {
 			if (this.currentGame!.awayTeamTOL > 0) {
@@ -790,7 +739,7 @@ export class GamecastComponent {
 		await this.addPlay(team, partial ? GameActions.PartialTO : GameActions.FullTO);
   }
 
-	async addSteal(team: 'home' | 'away') {
+	public async addSteal(team: 'home' | 'away') {
 		if (team == 'away') {
 			if (this.awayPlayerSelected != -1) {
 				let player = this.awayPlayersOnCourt[this.awayPlayerSelected];
@@ -811,7 +760,7 @@ export class GamecastComponent {
 		this.stealDisplay = true;
 	}
 
-	async addAssist(team: 'home' | 'away') {
+	public async addAssist(team: 'home' | 'away') {
 		if (team == 'away') {
 			if (this.awayPlayerSelected != -1) {
 				let player = this.awayPlayersOnCourt[this.awayPlayerSelected];
@@ -831,14 +780,14 @@ export class GamecastComponent {
 		}
 	}
 
-	async addPassback(team: 'home' | 'away', made: boolean) {
+	public async addPassback(team: 'home' | 'away', made: boolean) {
 		await this.addRebound(team, true);
 		await this.addPoints(team, 2, !made);
 		this.reboundDisplay = false;
 		this.assistDisplay = false;
 	}
 
-	async addRebound(team: 'home' | 'away', offensive: boolean) {
+	public async addRebound(team: 'home' | 'away', offensive: boolean) {
 		if (team == 'away') {
 			if (this.awayPlayerSelected != -1) {
 				let player = this.awayPlayersOnCourt[this.awayPlayerSelected];
@@ -870,7 +819,7 @@ export class GamecastComponent {
 		}
 	}
 
-	async addBlock(team: 'home' | 'away') {
+	public async addBlock(team: 'home' | 'away') {
 		if (team == 'away') {
 			if (this.awayPlayerSelected != -1) {
 				let player = this.awayPlayersOnCourt[this.awayPlayerSelected];
@@ -892,7 +841,7 @@ export class GamecastComponent {
 		}
 	}
 
-	async addTurnover(team: 'home' | 'away') {
+	public async addTurnover(team: 'home' | 'away') {
 		if (team == 'away') {
 			if (this.awayPlayerSelected != -1) {
 				let player = this.awayPlayersOnCourt[this.awayPlayerSelected];
@@ -1329,7 +1278,7 @@ export class GamecastComponent {
 		}
 	}
 
-	async startStopTimer() {
+	public async startStopTimer() {
     if (this.timerRunning) {
       await this.stopTimer();
     } else {
@@ -1337,7 +1286,7 @@ export class GamecastComponent {
     }
   }
 
-  async startTimer() {
+  private async startTimer() {
 		if (this.currentGame!.clock == "00:00") {
 			if (this.currentGame!.period < (this.currentGame!.hasFourQuarters == 1 ? 4 : 2))
 				this.timerDuration = this.currentGame!.minutesPerPeriod! * 60;
@@ -1360,7 +1309,7 @@ export class GamecastComponent {
     });
   }
 
-	async resetTOs() {
+	private async resetTOs() {
 		if (this.currentGame!.resetTimeoutsEveryPeriod == 1) {
 			this.currentGame!.homeFullTOL = this.currentGame!.fullTimeoutsPerGame ?? 0;
 			this.currentGame!.awayFullTOL = this.currentGame!.fullTimeoutsPerGame ?? 0;
@@ -1370,7 +1319,7 @@ export class GamecastComponent {
 		}
 	}
 
-  async stopTimer() {
+  private async stopTimer() {
     this.timerRunning = false;
     if (this.timerSubscription) {
       this.timerSubscription.unsubscribe();
@@ -1397,12 +1346,12 @@ export class GamecastComponent {
 		this.awayTeamPlusOrMinus = this.currentGame!.awayFinal;
 	}
 
-	async changePeriod() {
+	public async changePeriod() {
 		await this.updateGame();
 		await this.resetTOs();
 	}
 
-  updateTimerDisplay() {
+  private updateTimerDisplay() {
     const minutes = Math.floor(this.timerDuration / 60);
     const seconds = this.timerDuration % 60;
     this.currentGame!.clock = `${minutes < 10 ? '0' + minutes : minutes}:${seconds < 10 ? '0' + seconds : seconds}`;

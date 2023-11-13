@@ -17,7 +17,7 @@
 		<ion-button id="color-trigger">
 			<ion-icon slot="icon-only" name="brush"></ion-icon>
 		</ion-button>
-		<ion-popover (didDismiss)="isHomeTeam == null" [showBackdrop]="false" trigger="color-trigger" triggerAction="click">
+		<ion-popover (didDismiss)="isHomeTeam = null" [showBackdrop]="false" trigger="color-trigger" triggerAction="click">
 			<ng-template>
 				<ion-content>
 				<ion-list class="ion-padding">
@@ -487,7 +487,7 @@
 								<ion-item *ngFor="let play of plays | slice:0:4">
 									<ion-label *ngIf="play.turboStatsData">{{play.turboStatsData}}</ion-label>
 									<ion-label *ngIf="!play.turboStatsData">
-										{{play.playOrder}} | {{play.teamName}} | {{play.playerNumber}} {{play.playerName}} | {{gameActions[play.action]}} | P{{play.period}} | {{play.score}} | {{play.gameClock}} | {{play.timeStamp | date: 'shortTime'}}
+										{{play.playOrder}} | {{play.teamName}} | {{play.playerNumber}} {{play.playerName}} | {{actions.get(play.action)}} | P{{play.period}} | {{play.score}} | {{play.gameClock}} | {{play.timeStamp | date: 'shortTime'}}
 									</ion-label>
 								</ion-item>
 							</ion-list>
@@ -580,7 +580,7 @@
 										</ion-popover>
 									</ion-col>
 									<ion-col>
-										<div id="actionTrigger{{play.playOrder}}">{{gameActions[play.action]}}</div>
+										<div id="actionTrigger{{play.playOrder}}">{{actions.get(play.action)}}</div>
 										<ion-popover class="scrollable" trigger="actionTrigger{{play.playOrder}}" [dismissOnSelect]="true">
 											<ng-template>
 												<ion-content>
@@ -589,8 +589,8 @@
 															Please verify the team and player before changing the action!
 														</ion-list-header>
 														<ion-radio-group (ionChange)="updatePlay(play)" [(ngModel)]="play.action">
-															<ion-item lines="full" *ngFor="let action of actions">
-																<ion-radio [value]="action.key">{{action.value}}</ion-radio>
+															<ion-item lines="full" *ngFor="let action of actions.keys()">
+																<ion-radio [value]="action">{{actions.get(action)}}</ion-radio>
 															</ion-item>
 														</ion-radio-group>
 													</ion-list>

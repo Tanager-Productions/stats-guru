@@ -239,3 +239,21 @@ export enum GameActions {
 	FullTO = 70,
 	PartialTO = 75
 }
+
+const GAME_ACTIONS_MAP = new Map<GameActions, string>();
+GAME_ACTIONS_MAP.set(GameActions.OffRebound, 'Offensive rebound');
+GAME_ACTIONS_MAP.set(GameActions.DefRebound, 'Defensive rebound');
+GAME_ACTIONS_MAP.set(GameActions.Assist, 'Assist');
+GAME_ACTIONS_MAP.set(GameActions.Block, 'Block');
+GAME_ACTIONS_MAP.set(GameActions.Steal, 'Steal');
+GAME_ACTIONS_MAP.set(GameActions.Foul, 'Foul');
+GAME_ACTIONS_MAP.set(GameActions.Turnover, 'Turnover');
+GAME_ACTIONS_MAP.set(GameActions.ShotMade, 'Shot made');
+GAME_ACTIONS_MAP.set(GameActions.ShotMissed, 'Shot missed');
+GAME_ACTIONS_MAP.set(GameActions.ThreeMade, 'Three made');
+GAME_ACTIONS_MAP.set(GameActions.ThreeMissed, 'Three missed');
+GAME_ACTIONS_MAP.set(GameActions.FreeThrowMissed, 'Free throw missed');
+GAME_ACTIONS_MAP.set(GameActions.FreeThrowMade, 'Free throw made');
+GAME_ACTIONS_MAP.set(GameActions.FullTO, 'Full timeout');
+GAME_ACTIONS_MAP.set(GameActions.PartialTO, 'Partial timeout');
+export { GAME_ACTIONS_MAP };
