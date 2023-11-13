@@ -17,60 +17,6 @@
 		<ion-button id="color-trigger">
 			<ion-icon slot="icon-only" name="brush"></ion-icon>
 		</ion-button>
-		<ion-popover (didDismiss)="isHomeTeam = null" [showBackdrop]="false" trigger="color-trigger" triggerAction="click">
-			<ng-template>
-				<ion-content>
-				<ion-list class="ion-padding">
-					<ion-radio-group>
-						<ion-row style="justify-content: space-evenly;">
-							<ion-radio (click)="isHomeTeam = true" value="home" labelPlacement="end">Home</ion-radio>
-							<ion-radio (click)="isHomeTeam = false" value="away" labelPlacement="end">Away</ion-radio>
-						</ion-row>
-					</ion-radio-group>
-					<ion-content>
-						<ion-row style="justify-content: space-evenly;">
-							<ion-button (click)="changeColor('blue')" id="blue" color="blue" fill="clear">
-								<ion-icon slot="icon-only" name="basketball" color="blue"></ion-icon>
-							</ion-button>
-							<ion-button (click)="changeColor('pink')" color="pink" id="pink" fill="clear">
-								<ion-icon slot="icon-only" name="basketball" color="pink"></ion-icon>
-							</ion-button>
-							<ion-button (click)="changeColor('purple')" color="purple" id="purple" fill="clear">
-								<ion-icon slot="icon-only" name="basketball" color="purple"></ion-icon>
-							</ion-button>
-							<ion-button (click)="changeColor('orange')" color="orange" id="orange" fill="clear">
-								<ion-icon slot="icon-only" name="basketball" color="orange"></ion-icon>
-							</ion-button>
-							<ion-button (click)="changeColor('grey')" color="grey" id="grey" fill="clear">
-								<ion-icon slot="icon-only" name="basketball" color="grey"></ion-icon>
-							</ion-button>
-							<ion-button (click)="changeColor('navy')" color="navy" id="navy" fill="clear">
-								<ion-icon slot="icon-only" name="basketball" color="navy"></ion-icon>
-							</ion-button>
-							<ion-button (click)="changeColor('coral')" color="coral" id="coral" fill="clear">
-								<ion-icon slot="icon-only" name="basketball" color="coral"></ion-icon>
-							</ion-button>
-							<ion-button (click)="changeColor('lilac')" color="lilac" id="lilac" fill="clear">
-								<ion-icon slot="icon-only" name="basketball" color="lilac"></ion-icon>
-							</ion-button>
-							<ion-button (click)="changeColor('green')" color="green" id="green" fill="clear">
-								<ion-icon slot="icon-only" name="basketball" color="green"></ion-icon>
-							</ion-button>
-							<ion-button (click)="changeColor('red')" color="red" id="red" fill="clear">
-								<ion-icon slot="icon-only" name="basketball" color="red"></ion-icon>
-							</ion-button>
-							<ion-button (click)="changeColor('gold')" color="gold" id="gold" fill="clear">
-								<ion-icon slot="icon-only" name="basketball" color="gold"></ion-icon>
-							</ion-button>
-							<ion-button (click)="changeColor('teal')" color="teal" id="teal" fill="clear">
-								<ion-icon slot="icon-only" name="basketball" color="teal"></ion-icon>
-							</ion-button>
-						</ion-row>
-					</ion-content>
-				</ion-list>
-				</ion-content>
-			</ng-template>
-		</ion-popover>
 		<ion-button fill="solid" color="success" (click)='toggleGameComplete()' *ngIf="currentGame?.complete">Complete</ion-button>
 		<ion-button fill="solid" color="warning" (click)='toggleGameComplete()' *ngIf="!currentGame?.complete">Live</ion-button>
 	</ion-buttons>
@@ -720,4 +666,58 @@
 			</ion-content>
 		</ng-template>
 	</ion-modal>
+	<ion-popover (didDismiss)="isHomeTeam = null" [showBackdrop]="false" trigger="color-trigger" triggerAction="click">
+		<ng-template>
+			<ion-content>
+			<ion-list class="ion-padding">
+				<ion-radio-group>
+					<ion-row style="justify-content: space-evenly;">
+						<ion-radio (click)="isHomeTeam = true" value="home" labelPlacement="end">Home</ion-radio>
+						<ion-radio (click)="isHomeTeam = false" value="away" labelPlacement="end">Away</ion-radio>
+					</ion-row>
+				</ion-radio-group>
+				<ion-content>
+					<ion-row style="justify-content: space-evenly;">
+						<ion-button (click)="changeColor('blue')" id="blue" color="blue" fill="clear">
+							<ion-icon slot="icon-only" name="basketball" color="blue"></ion-icon>
+						</ion-button>
+						<ion-button (click)="changeColor('pink')" color="pink" id="pink" fill="clear">
+							<ion-icon slot="icon-only" name="basketball" color="pink"></ion-icon>
+						</ion-button>
+						<ion-button (click)="changeColor('purple')" color="purple" id="purple" fill="clear">
+							<ion-icon slot="icon-only" name="basketball" color="purple"></ion-icon>
+						</ion-button>
+						<ion-button (click)="changeColor('orange')" color="orange" id="orange" fill="clear">
+							<ion-icon slot="icon-only" name="basketball" color="orange"></ion-icon>
+						</ion-button>
+						<ion-button (click)="changeColor('grey')" color="grey" id="grey" fill="clear">
+							<ion-icon slot="icon-only" name="basketball" color="grey"></ion-icon>
+						</ion-button>
+						<ion-button (click)="changeColor('navy')" color="navy" id="navy" fill="clear">
+							<ion-icon slot="icon-only" name="basketball" color="navy"></ion-icon>
+						</ion-button>
+						<ion-button (click)="changeColor('coral')" color="coral" id="coral" fill="clear">
+							<ion-icon slot="icon-only" name="basketball" color="coral"></ion-icon>
+						</ion-button>
+						<ion-button (click)="changeColor('lilac')" color="lilac" id="lilac" fill="clear">
+							<ion-icon slot="icon-only" name="basketball" color="lilac"></ion-icon>
+						</ion-button>
+						<ion-button (click)="changeColor('green')" color="green" id="green" fill="clear">
+							<ion-icon slot="icon-only" name="basketball" color="green"></ion-icon>
+						</ion-button>
+						<ion-button (click)="changeColor('red')" color="red" id="red" fill="clear">
+							<ion-icon slot="icon-only" name="basketball" color="red"></ion-icon>
+						</ion-button>
+						<ion-button (click)="changeColor('gold')" color="gold" id="gold" fill="clear">
+							<ion-icon slot="icon-only" name="basketball" color="gold"></ion-icon>
+						</ion-button>
+						<ion-button (click)="changeColor('teal')" color="teal" id="teal" fill="clear">
+							<ion-icon slot="icon-only" name="basketball" color="teal"></ion-icon>
+						</ion-button>
+					</ion-row>
+				</ion-content>
+			</ion-list>
+			</ion-content>
+		</ng-template>
+	</ion-popover>
 </ion-content>

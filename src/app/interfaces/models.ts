@@ -163,6 +163,33 @@ export interface Stat {
 	syncState: SyncState;
 }
 
+export const DEFAULT_STAT: Stat = {
+	id: 0,
+	gameId: 0,
+	playerId: 0,
+	steals: 0,
+	assists: 0,
+	rebounds: 0,
+	offensiveRebounds: 0,
+	plusOrMinus: 0,
+	technicalFouls: 0,
+	threesAttempted: 0,
+	threesMade: 0,
+	fieldGoalsAttempted: 0,
+	fieldGoalsMade: 0,
+	freeThrowsAttempted: 0,
+	fouls: 0,
+	freeThrowsMade: 0,
+	minutes: 0,
+	defensiveRebounds: 0,
+	blocks: 0,
+	turnovers: 0,
+	syncState: SyncState.Unchanged,
+	points: 0,
+	eff: 0,
+	onCourt: null
+};
+
 export interface Season {
 	year: number;
 	createdOn: string;
