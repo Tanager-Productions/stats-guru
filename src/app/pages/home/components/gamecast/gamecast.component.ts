@@ -133,7 +133,7 @@ export class GamecastComponent {
 					this.fetchData()
 						.then(() => {
 							if (this.sync.online) {
-								this.interval = setInterval(() => this.send(), 15000);
+								this.interval = setInterval(async () => await this.send(), 15000);
 							}
 						});
 				});
