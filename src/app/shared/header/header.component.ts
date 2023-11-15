@@ -8,8 +8,10 @@ import { SyncService } from 'src/app/services/sync/sync.service';
 import { ColDef } from 'ag-grid-community';
 import { appWindow } from '@tauri-apps/api/window'
 import { os, window } from '@tauri-apps/api';
-import { DatePipe } from "@angular/common";
+import { DatePipe, NgIf, NgTemplateOutlet } from "@angular/common";
 import { ValueFormatterParams } from "ag-grid-community";
+import { AgGridModule } from 'ag-grid-angular';
+import { IonicModule } from '@ionic/angular';
 
 function getDate(params:ValueFormatterParams) {
   const date:Date = new Date(params.value);
@@ -18,9 +20,11 @@ function getDate(params:ValueFormatterParams) {
 }
 
 @Component({
-  selector: 'app-header',
-  templateUrl: './header.component.html',
-  styleUrls: ['./header.component.scss']
+	selector: 'app-header',
+	templateUrl: './header.component.html',
+	styleUrls: ['./header.component.scss'],
+	standalone: true,
+	imports: [NgIf, IonicModule, NgTemplateOutlet, AgGridModule, DatePipe]
 })
 export class HeaderComponent implements OnInit {
   public isWin: boolean = true;

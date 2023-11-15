@@ -8,8 +8,8 @@ describe('EditPlayerComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [EditPlayerComponent]
-    });
+    imports: [EditPlayerComponent]
+});
     fixture = TestBed.createComponent(EditPlayerComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
 import { SqlService } from 'src/app/services/sql/sql.service';
 import { SyncState } from 'src/app/interfaces/syncState.enum';
@@ -11,6 +11,14 @@ import { SyncMode } from 'src/app/interfaces/sync.interface';
 import { SyncResult } from 'src/app/interfaces/syncResult.interface';
 import { SyncService } from 'src/app/services/sync/sync.service';
 import { Game, Player, Stat, Play, GameActions, DEFAULT_PLAYER, GAME_ACTIONS_MAP, DEFAULT_STAT } from 'src/app/interfaces/models';
+import { EditPeriodTotalComponent } from '../../../../shared/edit-period-total/edit-period-total.component';
+import { AddPlayerComponent } from '../../../../shared/add-player/add-player.component';
+import { AgGridModule } from 'ag-grid-angular';
+import { GamecastDetailComponent } from '../../../../shared/gamecast-detail/gamecast-detail.component';
+import { FormsModule } from '@angular/forms';
+import { EditPlayerComponent } from '../../../../shared/edit-player/edit-player.component';
+import { NgIf, NgFor, NgClass, SlicePipe, DatePipe } from '@angular/common';
+import { IonicModule } from '@ionic/angular';
 
 const playerSort = (a:Player, b:Player) => {
 	if (a.number == b.number)
@@ -44,9 +52,25 @@ type StatsRow =  {
 }
 
 @Component({
-  selector: 'app-gamecast',
-  templateUrl: './gamecast.component.html',
-  styleUrls: ['./gamecast.component.scss'],
+	selector: 'app-gamecast',
+	templateUrl: './gamecast.component.html',
+	styleUrls: ['./gamecast.component.scss'],
+	standalone: true,
+	imports: [
+		IonicModule,
+		NgIf,
+		RouterLink,
+		NgFor,
+		EditPlayerComponent,
+		NgClass,
+		FormsModule,
+		GamecastDetailComponent,
+		AgGridModule,
+		AddPlayerComponent,
+		EditPeriodTotalComponent,
+		SlicePipe,
+		DatePipe,
+	],
 })
 export class GamecastComponent {
 	public isHomeTeam: boolean|null = null;

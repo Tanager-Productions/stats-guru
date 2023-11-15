@@ -1,17 +1,18 @@
 import { Component } from '@angular/core';
-import { Platform } from '@ionic/angular';
+import { Platform, IonicModule } from '@ionic/angular';
 import { SqlService } from './services/sql/sql.service';
 import { AuthService } from './services/auth/auth.service';
+import { HeaderComponent } from './shared/header/header.component';
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+    selector: 'app-root',
+    templateUrl: './app.component.html',
+    styleUrls: ['./app.component.scss'],
+    standalone: true,
+    imports: [IonicModule, HeaderComponent]
 })
 export class AppComponent {
-  constructor(platform: Platform, sqlite:SqlService, public auth:AuthService) {
-    platform.ready().then(async () => {
-      await sqlite.init();
-    });
+  constructor(sqlite:SqlService, public auth:AuthService) {
+    sqlite.init();
   }
 }

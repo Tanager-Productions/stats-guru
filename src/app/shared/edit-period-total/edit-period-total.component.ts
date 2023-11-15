@@ -1,12 +1,15 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { ModalController } from '@ionic/angular';
+import { ModalController, IonicModule } from '@ionic/angular';
 import { Game } from 'src/app/interfaces/models';
-import { GamecastComponent } from 'src/app/pages/home/components/gamecast/gamecast.component';
+import { FormsModule } from '@angular/forms';
+import { NgIf } from '@angular/common';
 
 @Component({
-  selector: 'app-edit-period-total',
-  templateUrl: './edit-period-total.component.html',
-  styleUrls: ['./edit-period-total.component.scss']
+	selector: 'app-edit-period-total',
+	templateUrl: './edit-period-total.component.html',
+	styleUrls: ['./edit-period-total.component.scss'],
+	standalone: true,
+	imports: [NgIf, IonicModule, FormsModule]
 })
 export class EditPeriodTotalComponent {
 	@Input() team!: 'home' | 'away';

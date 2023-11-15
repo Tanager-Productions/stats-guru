@@ -1,15 +1,18 @@
 import { Component } from '@angular/core';
-import { ToastController } from '@ionic/angular';
+import { ToastController, IonicModule } from '@ionic/angular';
 import { AuthService, Credentials } from '../../services/auth/auth.service';
 import { ApiService } from '../../services/api/api.service';
 import { Router } from '@angular/router';
 import { SyncService } from 'src/app/services/sync/sync.service';
-
+import { FormsModule } from '@angular/forms';
+import { NgIf } from '@angular/common';
 
 @Component({
-  selector: 'app-login',
-  templateUrl: './login.page.html',
-  styleUrls: ['./login.page.scss']
+	selector: 'app-login',
+	templateUrl: './login.page.html',
+	styleUrls: ['./login.page.scss'],
+	standalone: true,
+	imports: [IonicModule, NgIf, FormsModule]
 })
 export class LoginPage {
   loading:boolean = false;

@@ -1,11 +1,16 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { DEFAULT_PLAYER, Game, Player, Positions } from 'src/app/interfaces/models';
 import { SyncState } from 'src/app/interfaces/syncState.enum';
+import { FormsModule } from '@angular/forms';
+import { IonicModule } from '@ionic/angular';
+import { NgIf, NgFor } from '@angular/common';
 
 @Component({
-  selector: 'app-add-player',
-  templateUrl: './add-player.component.html',
-  styleUrls: ['./add-player.component.scss']
+	selector: 'app-add-player',
+	templateUrl: './add-player.component.html',
+	styleUrls: ['./add-player.component.scss'],
+	standalone: true,
+	imports: [NgIf, IonicModule, FormsModule, NgFor]
 })
 export class AddPlayerComponent {
 	tab:"add"|"hide" = "add";
