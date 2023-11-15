@@ -103,6 +103,7 @@ export class GamecastComponent {
 	public actions = GAME_ACTIONS_MAP;
 	public homeStatGridApi!: GridApi<StatsRow>;
 	public awayStatGridApi!: GridApi<StatsRow>;
+	public selectedPlayerStat?:Stat;
 
 	//Displaying Auto-Complete Options:
 	public reboundDisplay: boolean = false;
@@ -417,15 +418,19 @@ export class GamecastComponent {
 		if (team == 'away') {
 			if (this.awayPlayerSelected == index) {
 				this.awayPlayerSelected = -1;
+				this.selectedPlayerStat = undefined;
 			} else {
 				this.awayPlayerSelected = index;
+				this.selectedPlayerStat = this.stats?.find(t => t.playerId == this.awayPlayersOnCourt[index].id);
 				this.homePlayerSelected = -1;
 			}
 		} else {
 			if (this.homePlayerSelected == index) {
 				this.homePlayerSelected = -1;
+				this.selectedPlayerStat = undefined;
 			} else {
 				this.homePlayerSelected = index;
+				this.selectedPlayerStat = this.stats?.find(t => t.playerId == this.homePlayersOnCourt[index].id);
 				this.awayPlayerSelected = -1;
 			}
 		}
@@ -1354,4 +1359,11 @@ export class GamecastComponent {
 		this.sync.gameCastInProgress = false;
   }
 
+	public get selectedPlayer() {
+		if (this.homePlayerSelected != -1) {
+			return this.homePlayersOnCourt[this.homePlayerSelected];
+		} else {
+			return this.awayPlayersOnCourt[this.awayPlayerSelected];
+		}
+	}
 }
