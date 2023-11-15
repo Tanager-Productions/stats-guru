@@ -114,10 +114,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "stats-guru:build:production"
+              "buildTarget": "stats-guru:build:production"
             },
             "development": {
-              "browserTarget": "stats-guru:build:development"
+              "buildTarget": "stats-guru:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -125,7 +125,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "stats-guru:build"
+            "buildTarget": "stats-guru:build"
           }
         },
         "test": {
