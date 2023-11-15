@@ -1,10 +1,15 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Player } from 'src/app/interfaces/models';
+import { NgIf } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { IonicModule } from '@ionic/angular';
 
 @Component({
-  selector: 'app-edit-player',
-  templateUrl: './edit-player.component.html',
-  styleUrls: ['./edit-player.component.scss']
+	selector: 'app-edit-player',
+	templateUrl: './edit-player.component.html',
+	styleUrls: ['./edit-player.component.scss'],
+	standalone: true,
+	imports: [IonicModule, FormsModule, NgIf]
 })
 export class EditPlayerComponent {
 	@Input() player!:Player;

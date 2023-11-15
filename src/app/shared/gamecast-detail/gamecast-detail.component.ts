@@ -1,11 +1,15 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Game } from 'src/app/interfaces/models';
 import { SqlService } from 'src/app/services/sql/sql.service';
+import { FormsModule } from '@angular/forms';
+import { IonicModule } from '@ionic/angular';
 
 @Component({
-  selector: 'app-gamecast-detail',
-  templateUrl: './gamecast-detail.component.html',
-  styleUrls: ['./gamecast-detail.component.scss']
+	selector: 'app-gamecast-detail',
+	templateUrl: './gamecast-detail.component.html',
+	styleUrls: ['./gamecast-detail.component.scss'],
+	standalone: true,
+	imports: [IonicModule, FormsModule]
 })
 export class GamecastDetailComponent {
 	@Input() game!:Game;

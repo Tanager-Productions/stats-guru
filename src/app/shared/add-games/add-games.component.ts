@@ -3,11 +3,16 @@ import { SqlService } from 'src/app/services/sql/sql.service';
 import { SyncState } from 'src/app/interfaces/syncState.enum';
 import { CommonService } from 'src/app/services/common/common.service';
 import { Team, Event, Game, DEFAULT_GAME } from 'src/app/interfaces/models';
+import { NgFor } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { IonicModule } from '@ionic/angular';
 
 @Component({
-  selector: 'app-add-games',
-  templateUrl: './add-games.component.html',
-  styleUrls: ['./add-games.component.scss']
+	selector: 'app-add-games',
+	templateUrl: './add-games.component.html',
+	styleUrls: ['./add-games.component.scss'],
+	standalone: true,
+	imports: [IonicModule, FormsModule, NgFor]
 })
 export class AddGamesComponent {
 	teams?: Team[];

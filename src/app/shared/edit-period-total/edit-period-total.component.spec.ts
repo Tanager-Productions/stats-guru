@@ -8,8 +8,8 @@ describe('EditPeriodTotalComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [EditPeriodTotalComponent]
-    });
+    imports: [EditPeriodTotalComponent]
+});
     fixture = TestBed.createComponent(EditPeriodTotalComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
