@@ -163,6 +163,33 @@ export interface Stat {
 	syncState: SyncState;
 }
 
+export const DEFAULT_STAT: Stat = {
+	id: 0,
+	gameId: 0,
+	playerId: 0,
+	steals: 0,
+	assists: 0,
+	rebounds: 0,
+	offensiveRebounds: 0,
+	plusOrMinus: 0,
+	technicalFouls: 0,
+	threesAttempted: 0,
+	threesMade: 0,
+	fieldGoalsAttempted: 0,
+	fieldGoalsMade: 0,
+	freeThrowsAttempted: 0,
+	fouls: 0,
+	freeThrowsMade: 0,
+	minutes: 0,
+	defensiveRebounds: 0,
+	blocks: 0,
+	turnovers: 0,
+	syncState: SyncState.Unchanged,
+	points: 0,
+	eff: 0,
+	onCourt: null
+};
+
 export interface Season {
 	year: number;
 	createdOn: string;
@@ -239,3 +266,21 @@ export enum GameActions {
 	FullTO = 70,
 	PartialTO = 75
 }
+
+const GAME_ACTIONS_MAP = new Map<GameActions, string>();
+GAME_ACTIONS_MAP.set(GameActions.OffRebound, 'Offensive rebound');
+GAME_ACTIONS_MAP.set(GameActions.DefRebound, 'Defensive rebound');
+GAME_ACTIONS_MAP.set(GameActions.Assist, 'Assist');
+GAME_ACTIONS_MAP.set(GameActions.Block, 'Block');
+GAME_ACTIONS_MAP.set(GameActions.Steal, 'Steal');
+GAME_ACTIONS_MAP.set(GameActions.Foul, 'Foul');
+GAME_ACTIONS_MAP.set(GameActions.Turnover, 'Turnover');
+GAME_ACTIONS_MAP.set(GameActions.ShotMade, 'Shot made');
+GAME_ACTIONS_MAP.set(GameActions.ShotMissed, 'Shot missed');
+GAME_ACTIONS_MAP.set(GameActions.ThreeMade, 'Three made');
+GAME_ACTIONS_MAP.set(GameActions.ThreeMissed, 'Three missed');
+GAME_ACTIONS_MAP.set(GameActions.FreeThrowMissed, 'Free throw missed');
+GAME_ACTIONS_MAP.set(GameActions.FreeThrowMade, 'Free throw made');
+GAME_ACTIONS_MAP.set(GameActions.FullTO, 'Full timeout');
+GAME_ACTIONS_MAP.set(GameActions.PartialTO, 'Partial timeout');
+export { GAME_ACTIONS_MAP };
