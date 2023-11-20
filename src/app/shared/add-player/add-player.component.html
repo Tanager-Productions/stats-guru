@@ -2,14 +2,14 @@
 	<ion-toolbar [color]="color">
 		<ion-title>Roster</ion-title>
 		<ion-buttons slot="end">
-			<ion-button *ngIf="tab == 'add'" (click)="addToTeam()" [disabled]="!newPlayerNumber">Submit</ion-button>
+			<ion-button *ngIf="tab == 'add'" (click)="addToTeam()" [disabled]="!newPlayerFirstName || !newPlayerLastName">Submit</ion-button>
 			<ion-button (click)="dismiss.emit()">
 				<ion-icon slot="icon-only" name="close"></ion-icon>
 			</ion-button>
 		</ion-buttons>
 	</ion-toolbar>
 	<ion-toolbar>
-		<ion-segment mode="md" [(ngModel)]="tab">
+		<ion-segment [color]="color" mode="md" [(ngModel)]="tab">
 			<ion-segment-button value="add">Add</ion-segment-button>
 			<ion-segment-button value="hide">Hide</ion-segment-button>
 		</ion-segment>
@@ -49,14 +49,14 @@
 			<ion-col size="1"></ion-col>
 			<ion-col size="10">
 				<ion-list>
-					<ion-item *ngFor="let player of players">
+					<ion-item *ngFor="let player of players" [hidden]="player.teamId != teamId">
 						<ion-thumbnail slot="start">
 							<img *ngIf="player.picture == null" src="assets/default.png">
 							<img *ngIf="player.picture != null" [src]="player.picture">
 						</ion-thumbnail>
 						<ion-label>{{player.number}} {{player.firstName}} {{player.lastName}}</ion-label>
-						<ion-button slot="end" fill="clear" *ngIf="isHidden(player)" (click)="playerUnhidden.emit(player)">Unhide</ion-button>
-						<ion-button slot="end" fill="clear" *ngIf="!isHidden(player)" (click)="playerHidden.emit(player)">Hide</ion-button>
+						<ion-button color="tertiary" slot="end" fill="clear" *ngIf="isHidden(player)" (click)="playerUnhidden.emit(player)">Unhide</ion-button>
+						<ion-button color="tertiary" slot="end" fill="clear" *ngIf="!isHidden(player)" (click)="playerHidden.emit(player)">Hide</ion-button>
 					</ion-item>
 				</ion-list>
 			</ion-col>

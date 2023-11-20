@@ -14,7 +14,7 @@ import { NgIf, NgFor } from '@angular/common';
 })
 export class AddPlayerComponent {
 	tab:"add"|"hide" = "add";
-	newPlayerNumber!: number;
+	newPlayerNumber: number = 0;
 	newPlayerFirstName!: string;
 	newPlayerLastName!: string;
 	@Input() team!: 'home' | 'away';

@@ -23,11 +23,11 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content *ngIf="plays && currentGame && homeTeamPlayers && awayTeamPlayers" class="ion-no-padding" color="light">
+<ion-content *ngIf="plays && currentGame" class="ion-no-padding" color="light">
 	<ion-grid style="height: 100%; width: 100%">
 		<ion-row>
 			<ion-col class="ion-no-padding ion-text-center" size="1">
-				<div *ngFor="let player of homeTeamPlayers; let i = index" [hidden]="hiddenPlayerIds.includes(player.id.toString())">
+				<div *ngFor="let player of homeTeamPlayers(); let i = index" [hidden]="hiddenPlayerIds().includes(player.id)">
 					<ion-button
 						*ngIf="player.number != -1;"
 						[fill]="this.homePlayersOnCourt.includes(player) ? 'outline' : 'clear'"
@@ -57,24 +57,24 @@
 														<ion-button
 															*ngIf="player.number != -1"
 															style="border-radius: 50px; --padding-start: 0px; --padding-end: 0px;"
-															[ngClass]="{'selectedButton':homePlayerSelected == i}"
+															[ngClass]="{'selectedButton':selectedPlayerId() == player.id}"
 															color="{{homeColor}}"
 															fill="clear"
 															shape="round"
 															expand="block"
-															(tap)="selectPlayer('home', i)"
-															(doubleTap)="removeFromCourt('home', player, i)">
+															(tap)="selectPlayer('home', player.id)"
+															(doubleTap)="removeFromCourt('home', player)">
 															<ion-label>{{player.number}}</ion-label>
 														</ion-button>
 														<ion-button
 															*ngIf="player.number == -1"
 															style="border-radius: 50px; --padding-start: 0px; --padding-end: 0px;"
-															[ngClass]="{'selectedButton':homePlayerSelected == i}"
+															[ngClass]="{'selectedButton':selectedPlayerId() == player.id}"
 															color="{{homeColor}}"
 															fill="clear"
 															shape="round"
 															expand="block"
-															(tap)="selectPlayer('home', i)">
+															(tap)="selectPlayer('home', player.id)">
 															<ion-label>T</ion-label>
 														</ion-button>
 													</ion-col>
@@ -244,32 +244,32 @@
 											<ion-row>
 												<ion-col size="2"></ion-col>
 												<ion-col class="ion-text-center" size="8">
-													<ion-card *ngIf="homePlayerSelected != -1 || awayPlayerSelected != -1">
+													<ion-card *ngIf="selectedPlayerId() != null">
 														<ion-card-header>
-														  	<ion-card-title>{{ selectedPlayer.firstName }}  {{selectedPlayer.lastName}}</ion-card-title>
+														  	<ion-card-title>{{ selectedPlayer()?.firstName }}  {{selectedPlayer()?.lastName}}</ion-card-title>
 														</ion-card-header>
 
 														<ion-card-content>
 															<ion-row>
 																<ion-col>
-																	FOULS:{{this.selectedPlayerStat?.fouls}}
+																	FOULS:{{selectedPlayerStat()?.fouls}}
 																</ion-col>
 																<ion-col>
-																	PTS:{{this.selectedPlayerStat?.points}}
+																	PTS:{{selectedPlayerStat()?.points}}
 																</ion-col>
 																<ion-col>
-																	RB:{{this.selectedPlayerStat?.rebounds}}
+																	RB:{{selectedPlayerStat()?.rebounds}}
 																</ion-col>
 															</ion-row>
 															<ion-row>
 																<ion-col>
-																	AST:{{this.selectedPlayerStat?.assists}}
+																	AST:{{selectedPlayerStat()?.assists}}
 																</ion-col>
 																<ion-col>
-																	STL:{{this.selectedPlayerStat?.steals}}
+																	STL:{{selectedPlayerStat()?.steals}}
 																</ion-col>
 																<ion-col>
-																	BLK:{{this.selectedPlayerStat?.blocks}}
+																	BLK:{{selectedPlayerStat()?.blocks}}
 																</ion-col>
 															</ion-row>
 														</ion-card-content>
@@ -334,22 +334,22 @@
 														<ion-button
 															*ngIf="player.number != -1"
 															style="border-radius: 50px; --padding-start: 0px; --padding-end: 0px;"
-															[ngClass]="{'selectedButton':awayPlayerSelected == i}"
+															[ngClass]="{'selectedButton':selectedPlayerId() == player.id}"
 															color="{{awayColor}}" fill="clear"
 															shape="round"
 															expand="block"
-															(tap)="selectPlayer('away', i)"
-															(doubleTap)="removeFromCourt('away', player, i)">
+															(tap)="selectPlayer('away', player.id)"
+															(doubleTap)="removeFromCourt('away', player)">
 															<ion-label>{{player.number}}</ion-label>
 														</ion-button>
 														<ion-button
 															*ngIf="player.number == -1"
 															style="border-radius: 50px; --padding-start: 0px; --padding-end: 0px;"
-															[ngClass]="{'selectedButton':awayPlayerSelected == i}"
+															[ngClass]="{'selectedButton':selectedPlayerId() == player.id}"
 															color="{{awayColor}}" fill="clear"
 															shape="round"
 															expand="block"
-															(tap)="selectPlayer('away', i)">
+															(tap)="selectPlayer('away', player.id)">
 															<ion-label>T</ion-label>
 														</ion-button>
 													</ion-col>
@@ -478,7 +478,7 @@
 				</ion-grid>
 			</ion-col>
 			<ion-col class="ion-no-padding ion-text-center" size="1">
-				<div *ngFor="let player of awayTeamPlayers; let i = index" [hidden]="hiddenPlayerIds.includes(player.id.toString())">
+				<div *ngFor="let player of awayTeamPlayers(); let i = index" [hidden]="hiddenPlayerIds().includes(player.id)">
 					<ion-button
 						*ngIf="player.number != -1;"
 						[fill]="this.awayPlayersOnCourt.includes(player) ? 'outline' : 'clear'"
@@ -550,10 +550,11 @@
 														<ion-item lines="full">
 															<ion-radio [value]="null">Null</ion-radio>
 														</ion-item>
-														<ion-item [hidden]="play.teamName == awayTeamName" lines="full" *ngFor="let item of homeTeamPlayers">
-															<ion-radio [value]="item">{{item.number}} {{item.firstName}} {{item.lastName}}</ion-radio>
-														</ion-item>
-														<ion-item [hidden]="play.teamName == homeTeamName" lines="full" *ngFor="let item of awayTeamPlayers">
+														<ion-item
+															[hidden]="(play.teamName == awayTeamName && item.teamId == currentGame.awayTeamId) ||
+																(play.teamName == homeTeamName && item.teamId == currentGame.homeTeamId)"
+															lines="full"
+															*ngFor="let item of players()">
 															<ion-radio [value]="item">{{item.number}} {{item.firstName}} {{item.lastName}}</ion-radio>
 														</ion-item>
 													</ion-radio-group>
@@ -651,9 +652,9 @@
 				team="home"
 				[teamId]="currentGame.homeTeamId"
 				[isMale]="isMale"
-				[players]="homeTeamPlayers"
+				[players]="players()!"
 				[settings]="currentGame!"
-				(playerAdded)="addPlayer(true, $event)"
+				(playerAdded)="addPlayer($event)"
 				(playerHidden)="hidePlayer($event)"
 				(playerUnhidden)="unhidePlayer($event)"
 				[color]="homeColor"
@@ -668,9 +669,9 @@
 				team="away"
 				[teamId]="currentGame.awayTeamId"
 				[isMale]="isMale"
-				[players]="awayTeamPlayers"
+				[players]="players()!"
 				[settings]="currentGame!"
-				(playerAdded)="addPlayer(false, $event)"
+				(playerAdded)="addPlayer($event)"
 				(playerHidden)="hidePlayer($event)"
 				(playerUnhidden)="unhidePlayer($event)"
 				[color]="awayColor"
