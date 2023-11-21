@@ -464,7 +464,7 @@
 						</ion-col>
 					</ion-row>
 					<ion-row class="ion-justify-content-center">
-						<ion-col id="playsModalTrigger" size="10">
+						<ion-col class="clickable" id="playsModalTrigger" size="10">
 							<ion-list inset="true" lines="full">
 								<ion-item *ngFor="let play of plays | slice:0:4">
 									<ion-label *ngIf="play.turboStatsData">{{play.turboStatsData}}</ion-label>
@@ -524,7 +524,7 @@
 							<ion-grid class="ion-text-center">
 								<ion-row class="ion-align-items-center playsRow">
 									<ion-col>{{play.playOrder}}</ion-col>
-									<ion-col size="2">
+									<ion-col class="clickable" size="2">
 										<div id="teamNameTrigger{{play.playOrder}}">{{play.teamName}}</div>
 										<ion-popover trigger="teamNameTrigger{{play.playOrder}}" [dismissOnSelect]="true">
 											<ng-template>
@@ -541,7 +541,7 @@
 											</ng-template>
 										</ion-popover>
 									</ion-col>
-									<ion-col size="2">
+									<ion-col class="clickable" size="2">
 										<div id="playerTrigger{{play.playOrder}}">{{play.playerName != null ? play.playerNumber + ' ' + play.playerName : 'Null'}}</div>
 										<ion-popover class="scrollable" trigger="playerTrigger{{play.playOrder}}" [dismissOnSelect]="true">
 											<ng-template>
@@ -551,8 +551,8 @@
 															<ion-radio [value]="null">Null</ion-radio>
 														</ion-item>
 														<ion-item
-															[hidden]="(play.teamName == awayTeamName && item.teamId == currentGame.awayTeamId) ||
-																(play.teamName == homeTeamName && item.teamId == currentGame.homeTeamId)"
+															[hidden]="(play.teamName == awayTeamName && item.teamId != currentGame.awayTeamId) ||
+																(play.teamName == homeTeamName && item.teamId != currentGame.homeTeamId)"
 															lines="full"
 															*ngFor="let item of players()">
 															<ion-radio [value]="item">{{item.number}} {{item.firstName}} {{item.lastName}}</ion-radio>
@@ -562,7 +562,7 @@
 											</ng-template>
 										</ion-popover>
 									</ion-col>
-									<ion-col>
+									<ion-col class="clickable">
 										<div id="actionTrigger{{play.playOrder}}">{{actions.get(play.action)}}</div>
 										<ion-popover class="scrollable" trigger="actionTrigger{{play.playOrder}}" [dismissOnSelect]="true">
 											<ng-template>

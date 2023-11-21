@@ -1,295 +1,77 @@
-  .small-number-container {
-    display: flex;
-    text-align: center;
-    width: 5.5rem;
-    height: 2rem;
-    border-radius: 5px;
-    font-size: 14px;
-    color: grey;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid grey;
-    font-weight: bold;
-  }
-
-	.edit-points-modal {
-		--height: 65%;
-		--width: 45%;
-	}
-
-	.selectedButton {
-		background: white;
-	}
-
-	ion-card {
-		margin: 4px 0;
-	}
-
-	ion-input {
-		color: var(--ion-color-base);
-	}
-
-  .team-container {
-    height: auto;
-    width: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 10px;
-    margin: 0 10px;
-    border-radius: 10px;
-  }
-
-  .top-width {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    margin: auto;
-    margin-bottom: 10px;
-  }
-
-  .court-container {
-    text-align: center;
-    width: 350px;
-    height: 67px;
-    border-radius: 10px;
-    margin: 10px;
-    font-weight: bold;
-    align-items: center;
-  }
-
-	.home-court {
-		background-color: #dbd4fa;
-	}
-
-	.away-court {
-		background-color: #fec3c3;
-	}
-
-  #home-court-container {
-    background-color: #dbd4fa;
-  }
-
-  #away-court-container {
-    background-color: #fec3c3;
-  }
-
-  #default-color {
-    color: grey;
-  }
-
-  #players-text {
-    text-align: center;
-  }
-
-  #court-container {
-    border: 2px solid grey;
-  }
-
-  h2 {
-    margin-bottom: 15px;
-    color: black;
-  }
-
-  #school-title {
-    font-weight: bold;
-    font-size: 25px;
-  }
-
-  .team-score {
-    font-size: 50px;
-    font-weight: bold;
-    line-height: 1;
-    margin-bottom: 5px;
-  }
-
-  .digital-number {
-    font-family: 'Digital-7', monospace;
-  }
-
-  .button-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 15px;
-  }
-
-  .game-info {
-    align-items: center;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    margin: auto;
-  }
-
-  ion-card-content {
-    position: relative;
-  }
-
-  .timer-reset-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1em;
-  }
-
-  .reset-button {
-    position: absolute;
-    bottom: 1em;
-    right: 1em;
-  }
-
-  .bottom-button-container {
-    padding-top: .5rem;
-    width: 76%;
-    justify-content: space-between;
-    align-items: center;
-    display: flex;
-    margin: auto;
-  }
-
-  .second-bottom-button-container {
-    padding-top: .5rem;
-    vertical-align: middle;
-    justify-content: space-between;
-    display: flex;
-    margin: auto;
-  }
-
-  .timer-style {
-    font-size: 50px;
-		height: 50px;
-    font-weight: bold;
-  }
-
-  button {
-    text-align: center;
-    color: white;
-    padding: 10px;
-    margin: 5px;
-    font-size: 18px;
-    font-weight: bold;
-    border-radius: 10px;
-    transition: all 1s;
-  }
-
-  .number-button {
-    width: 3.5rem;
-    height: 2.5rem;
-    font-size: 18px;
-    font-weight: bolder;
-    transition: all 1s;
-  }
-
-  .other-button {
-    font-size: 14px;
-    font-weight: bold;
-    width: 3rem;
-    height: 2rem;
-    transition: all 1s;
-  }
-
-  .bottom-number-button {
-    font-size: 14px;
-    font-weight: bold;
-    width: 4.5rem;
-    height: 2rem;
-  }
-
-  .small-button {
-    font-size: 10px;
-    font-weight: bold;
-    width: 2.5rem;
-    height: 1.5rem;
-    transition: all 1s;
-  }
-
-  .icon-button {
-    font-weight: bold;
-    width: 2.8rem;
-    height: 2.8rem;
-  }
-
-  ion-icon {
-    font-size: 18px;
-    opacity: 1;
-  }
-
-	ion-row.playsRow {
-		ion-col {
-			padding: 0px;
-			border-right: black solid 1px;
-		}
-	}
-
-  .period-button {
-    height: auto;
-    width: 2.8rem;
-  }
-
-  .normal-button {
-    font-weight: bold;
-    font-size: 22px;
-    width: 11rem;
-    height: 2.5rem;
-    border-radius: 10x;
-  }
-
-  p {
-    font-size: 16px;
-  }
-
-  #start-timer {
-    font-size: 30px;
-    font-weight: 400;
-  }
-
-	.input-div {
-		display: flex;
-    flex-direction: row;
-    justify-content: center;
-	}
-
-	.input-partialTO {
-		min-width: min-content;
-		margin:5px;
-	}
-
-	.input {
-		min-width: min-content;
-		white-space: nowrap;
-		margin:5px;
-		justify-content: center;
-	}
-
-	.input-box {
-		font-size: 20px;
-	}
-
-	#playId {
-    --placeholder-opacity: 1;
-	}
-
-	.native-input {
-		width: fit-content;
-	}
-
-	.no-spinner::ng-deep input[type=number]::-webkit-inner-spin-button,
-	input[type=number]::-webkit-outer-spin-button {
-	-webkit-appearance: none;
-	 margin: 0;
+.edit-points-modal {
+	--height: 65%;
+	--width: 45%;
 }
 
-.legacy-input {
-	--padding-start: 4px;
+.selectedButton {
+	background: white;
 }
 
-.playerNumberLabel,
-.periodLabel {
-	min-width: 3% !important;
-	max-width: 3% !important;
+ion-card {
+	margin: 4px 0;
+}
+
+ion-input {
+	color: var(--ion-color-base);
+}
+
+h2 {
+	margin-bottom: 15px;
+	color: black;
+}
+
+.team-score {
+	font-size: 50px;
+	font-weight: bold;
+	line-height: 1;
+	margin-bottom: 5px;
+}
+
+.digital-number {
+	font-family: 'Digital-7', monospace;
+}
+
+ion-card-content {
+	position: relative;
+}
+
+.timer-style {
+	font-size: 50px;
+	height: 50px;
+	font-weight: bold;
+}
+
+ion-icon {
+	font-size: 18px;
+	opacity: 1;
+}
+
+ion-row.playsRow {
+	ion-col {
+		padding: 0px;
+		border-right: black solid 1px;
+	}
+}
+
+p {
+	font-size: 16px;
+}
+
+.input-div {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+}
+
+.input {
+	min-width: min-content;
+	white-space: nowrap;
+	margin:5px;
+	justify-content: center;
+}
+
+.input-box {
+	font-size: 20px;
 }
 
 .teamName {
@@ -297,7 +79,6 @@
 	overflow-x: auto;
 }
 
-.slide{
-	min-width: 2% !important;
-	max-width: 2% !important;
+.clickable {
+	cursor: pointer;
 }

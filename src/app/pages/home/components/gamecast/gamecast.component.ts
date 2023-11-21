@@ -18,7 +18,7 @@ import { GamecastDetailComponent } from '../../../../shared/gamecast-detail/game
 import { FormsModule } from '@angular/forms';
 import { EditPlayerComponent } from '../../../../shared/edit-player/edit-player.component';
 import { NgIf, NgFor, NgClass, SlicePipe, DatePipe, AsyncPipe } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, LoadingController } from '@ionic/angular';
 
 const playerSort = (a:Player, b:Player) => {
 	if (a.number == b.number)
@@ -161,7 +161,8 @@ export class GamecastComponent {
 		private route: ActivatedRoute,
 		private sql: SqlService,
 		private api:ApiService,
-		private sync: SyncService) {}
+		private sync: SyncService,
+		private loadingCtrl: LoadingController) {}
 
   ngOnInit() {
 		this.initSub = this.sql.isReady().subscribe(ready => {
@@ -233,13 +234,20 @@ export class GamecastComponent {
   }
 
 	public async setPrevPlays() {
-		this.prevPlays = await this.sql.rawQuery(`
-			SELECT 		*
-			FROM 			Plays
-			WHERE 		gameId = '${this.gameId}'
-			AND				syncState != 3
-			ORDER BY	playOrder DESC
-		`);
+		const loader = await this.loadingCtrl.create({message: 'Fetching plays...'});
+		await loader.present();
+		try {
+			this.prevPlays = await this.sql.rawQuery(`
+				SELECT 		*
+				FROM 			Plays
+				WHERE 		gameId = '${this.gameId}'
+				AND				syncState != 3
+				ORDER BY	playOrder DESC
+			`);
+		} catch(error) {
+			console.log('Something went wrong while opening the plays modal', error);
+		}
+		await loader.dismiss();
 	}
 
 	public async addPlayer(player:Player, fetch:boolean = true) {
@@ -412,7 +420,11 @@ export class GamecastComponent {
 
 	public selectPlayer(team: 'home' | 'away', playerId: number) {
 		this.previousPlayerWasHome = this.players()?.find(t => t.id == this.selectedPlayerId())?.teamId == this.currentGame?.homeTeamId;
-		this.selectedPlayerId.set(playerId);
+		if (this.selectedPlayerId() == playerId) {
+			this.selectedPlayerId.set(null);
+		} else {
+			this.selectedPlayerId.set(playerId);
+		}
 
 		//auto complete
 		if (this.stealDisplay) {
