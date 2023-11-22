@@ -90,18 +90,14 @@ export class GamecastComponent {
 	public awayPlayersOnCourt: Player[] = [];
 	public hiddenPlayerIds: WritableSignal<number[]> = signal([]);
 	public selectedPlayerId: WritableSignal<number|null> = signal(null);
-	public selectedPlayerStat = computed(() => {
-		return this.stats?.find(t => t.playerId == this.selectedPlayerId() ?? 0);
-	});
-	public selectedPlayer = computed(() => {
-		return this.players()?.find(t => t.id == this.selectedPlayerId() ?? 0);
-	});
-	public homeTeamPlayers = computed(() => {
-		return this.players()?.filter(t => t.teamId == this.currentGame?.homeTeamId).sort(playerSort);
-	});
-	public awayTeamPlayers = computed(() => {
-		return this.players()?.filter(t => t.teamId == this.currentGame?.awayTeamId).sort(playerSort);
-	});
+	public selectedPlayerStat = computed(() =>
+		this.stats?.find(t => t.playerId == this.selectedPlayerId() ?? 0));
+	public selectedPlayer = computed(() =>
+		this.players()?.find(t => t.id == this.selectedPlayerId() ?? 0));
+	public homeTeamPlayers = computed(() =>
+		this.players()?.filter(t => t.teamId == this.currentGame?.homeTeamId).sort(playerSort));
+	public awayTeamPlayers = computed(() =>
+		this.players()?.filter(t => t.teamId == this.currentGame?.awayTeamId).sort(playerSort));
 
 	//database values
 	private stats?: Stat[];
@@ -117,24 +113,24 @@ export class GamecastComponent {
 	public awayTeamStats!: StatsRow[];
 	public teamStats: ColDef[] = [
 		{field: 'number', headerName: 'NUM', pinned: true, editable: false},
-		{field: 'name', editable: false},
-		{field: 'assists', headerName: 'AST', width: 80},
+		{field: 'name', editable: false, pinned: true},
+		{field: 'points', headerName: 'PTS', width: 80, editable: false},
 		{field: 'rebounds', headerName: 'REB', width: 80, editable: false},
-		{field: 'defensiveRebounds', headerName: 'DREB', width: 90},
-		{field: 'offensiveRebounds', headerName: 'OREB', width: 90},
+		{field: 'assists', headerName: 'AST', width: 80},
+		{field: 'steals', headerName: 'STL', width: 80},
+		{field: 'blocks', headerName: 'BLK', width: 80},
 		{field: 'fieldGoalsMade', headerName: 'FGM', width: 90},
 		{field: 'fieldGoalsAttempted', headerName: 'FGA', width: 80},
-		{field: 'blocks', headerName: 'BLK', width: 80},
-		{field: 'steals', headerName: 'STL', width: 80},
 		{field: 'threesMade', headerName: '3FGM', width: 90},
 		{field: 'threesAttempted', headerName: '3FGA', width: 90},
 		{field: 'freeThrowsMade', headerName: 'FTM', width: 80},
 		{field: 'freeThrowsAttempted', headerName: 'FTA', width: 80},
-		{field: 'points', headerName: 'PTS', width: 80, editable: false},
+		{field: 'offensiveRebounds', headerName: 'OREB', width: 90},
+		{field: 'defensiveRebounds', headerName: 'DREB', width: 90},
 		{field: 'turnovers', headerName: 'TO', width: 80},
 		{field: 'fouls', headerName: 'FOUL', width: 90},
-		{field: 'technicalFouls', headerName: 'TECH', width: 90},
 		{field: 'plusOrMinus', headerName: '+/-', width: 80},
+		{field: 'technicalFouls', headerName: 'TECH', width: 90},
 	];
 
 	//Displaying Auto-Complete Options:
@@ -384,6 +380,28 @@ export class GamecastComponent {
 			AND				s.gameId = '${this.gameId}'
 			ORDER BY 	p.number;
 		`);
+	}
+
+	public async setTotals(team: 'home'|'away') {
+		let totals = await this.sql.rawQuery(`
+			SELECT		0 as number, 'Totals' as name, 0 as playerId, SUM(s.assists) as assists, SUM(s.rebounds) as rebounds,
+								SUM(s.defensiveRebounds) as defensiveRebounds, SUM(s.offensiveRebounds) as offensiveRebounds,
+								SUM(s.fieldGoalsMade) as fieldGoalsMade, SUM(s.fieldGoalsAttempted) as fieldGoalsAttempted,
+								SUM(s.blocks) as blocks, SUM(s.steals) as steals, SUM(s.threesMade) as threesMade,
+								SUM(s.threesAttempted) as threesAttempted, SUM(s.freeThrowsMade) as freeThrowsMade,
+								SUM(s.freeThrowsAttempted) as freeThrowsAttempted, SUM(s.points) as points, SUM(s.turnovers) as turnovers,
+								SUM(s.fouls) as fouls, SUM(COALESCE(s.technicalFouls, 0)) as technicalFouls, SUM(s.plusOrMinus) as plusOrMinus
+			FROM			stats s
+			JOIN			players p ON s.playerId = p.id
+			WHERE 		p.teamId = '${team == 'home' ? this.currentGame?.homeTeamId : this.currentGame?.awayTeamId}'
+			AND				s.gameId = '${this.gameId}'
+		`);
+		console.log(totals);
+		if (team == 'home') {
+			this.homeStatGridApi.setPinnedBottomRowData(totals);
+		} else {
+			this.awayStatGridApi.setPinnedBottomRowData(totals);
+		}
 	}
 
 	/** Used by the app-edit-player component */

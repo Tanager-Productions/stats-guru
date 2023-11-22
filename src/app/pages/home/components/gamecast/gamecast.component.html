@@ -627,7 +627,7 @@
 					[pagination]="true"
 					[suppressCellFocus]="true"
 					(cellEditingStopped)="editingStopped($event)"
-					(gridReady)="homeStatGridApi = $event.api">
+					(gridReady)="homeStatGridApi = $event.api; setTotals('home')">
 				</ag-grid-angular>
 				<ag-grid-angular
 					*ngIf="statsTab == 'away'"
@@ -640,7 +640,7 @@
 					[pagination]="true"
 					[suppressCellFocus]="true"
 					(cellEditingStopped)="editingStopped($event)"
-					(gridReady)="awayStatGridApi = $event.api">
+					(gridReady)="awayStatGridApi = $event.api; setTotals('away')">
 				</ag-grid-angular>
 			</ion-content>
 		</ng-template>
