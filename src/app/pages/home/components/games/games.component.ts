@@ -25,11 +25,9 @@ import { IonicModule } from '@ionic/angular';
 	],
 })
 export class GamesComponent implements OnInit {
-  public games?: HomePageGame[];
-  public events?: Event[];
-  filterEventId:number = 0;
+  filterEventId:number|null = 0;
 
-  constructor(private sql:SqlService, private sync:SyncService, private common:CommonService) {}
+  constructor(private sql:SqlService, private sync:SyncService, public common:CommonService) {}
 
   ngOnInit() {
 		this.sql.isReady().subscribe(async ready => {
@@ -39,18 +37,6 @@ export class GamesComponent implements OnInit {
 				} else {
 					this.common.initializeService();
 				}
-
-				this.common.getGames().subscribe(games => {
-					if (games != null) {
-						this.games = games;
-					}
-				});
-
-				this.common.getEvents().subscribe(events => {
-					if (events != null) {
-						this.events = events;
-					}
-				});
 			}
 		});
   }
