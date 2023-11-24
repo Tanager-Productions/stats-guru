@@ -86,12 +86,14 @@ export class GamecastComponent {
 	public actions = GAME_ACTIONS_MAP;
 
 	//only used in ui
-	public homePlayersOnCourt: Player[] = [];
-	public awayPlayersOnCourt: Player[] = [];
+	public homePlayersOnCourt = computed(() =>
+		this.players()!.filter(t => t.teamId == this.currentGame!.homeTeamId && this.stats().find(s => s.playerId == t.id)?.onCourt === 1));
+	public awayPlayersOnCourt = computed(() =>
+		this.players()!.filter(t => t.teamId == this.currentGame!.awayTeamId && this.stats().find(s => s.playerId == t.id)?.onCourt === 1));
 	public hiddenPlayerIds: WritableSignal<number[]> = signal([]);
 	public selectedPlayerId: WritableSignal<number|null> = signal(null);
 	public selectedPlayerStat = computed(() =>
-		this.stats?.find(t => t.playerId == this.selectedPlayerId() ?? 0));
+		this.stats().find(t => t.playerId == this.selectedPlayerId() ?? 0));
 	public selectedPlayer = computed(() =>
 		this.players()?.find(t => t.id == this.selectedPlayerId() ?? 0));
 	public homeTeamPlayers = computed(() =>
@@ -100,7 +102,7 @@ export class GamecastComponent {
 		this.players()?.filter(t => t.teamId == this.currentGame?.awayTeamId).sort(playerSort));
 
 	//database values
-	private stats?: Stat[];
+	private stats: WritableSignal<Stat[]> = signal([]);
 	public plays?: Play[];
   public currentGame?: Game;
 	public players: WritableSignal<Player[]|null> = signal(null);
@@ -183,7 +185,7 @@ export class GamecastComponent {
 			version: currentDatabaseVersion,
 			overwrite: null,
 			mode: SyncMode.Full,
-			stats: this.stats!,
+			stats: this.stats(),
 			players: this.players()!,
 			plays: this.plays!
 		}
@@ -266,10 +268,11 @@ export class GamecastComponent {
 		this.awayTeamName = (await this.sql.rawQuery(`select name from teams where id = ${this.currentGame!.awayTeamId}`))[0].name;
 		this.homeTeamPlusOrMinus = this.currentGame!.homeFinal;
 		this.awayTeamPlusOrMinus = this.currentGame!.awayFinal;
-		this.stats = await this.sql.query({
+		let stats = await this.sql.query({
 			table: 'stats',
 			where: { gameId: this.gameId }
 		});
+		this.stats.set(stats);
 		this.plays = await this.sql.rawQuery(`
 			SELECT 		*
 			FROM 			plays
@@ -278,13 +281,13 @@ export class GamecastComponent {
 			ORDER BY	playOrder DESC
 		`);
 		let homeCount = await this.sql.rawQuery(`
-			select 	count(id)
+			select 	count(id) as count
 			from 		players p
 			where 	p.firstName = 'team'
 			and 		p.lastName = 'team'
 			and 		p.teamId == ${this.currentGame!.homeTeamId}
 		`);
-		if (homeCount[0] == 0) {
+		if (homeCount[0].count == 0) {
 			let teamPlayer = DEFAULT_PLAYER;
 			teamPlayer.firstName = 'team';
 			teamPlayer.lastName = 'team';
@@ -295,13 +298,13 @@ export class GamecastComponent {
 			await this.addPlayer(teamPlayer, false);
 		}
 		let awayCount = await this.sql.rawQuery(`
-			select 	count(id)
+			select 	count(id) as count
 			from 		players p
 			where 	p.firstName = 'team'
 			and 		p.lastName = 'team'
 			and 		p.teamId == ${this.currentGame!.awayTeamId}
 		`);
-		if (awayCount[0] == 0) {
+		if (awayCount[0].count == 0) {
 			let teamPlayer = DEFAULT_PLAYER;
 			teamPlayer.firstName = 'team';
 			teamPlayer.lastName = 'team';
@@ -325,13 +328,18 @@ export class GamecastComponent {
 	}
 
 	private async fetchPlayersOnCourt() {
-		this.homePlayersOnCourt = this.players()!.filter(t => t.teamId == this.currentGame!.homeTeamId && this.stats!.find(s => s.playerId == t.id)?.onCourt);
-		this.awayPlayersOnCourt = this.players()!.filter(t => t.teamId == this.currentGame!.awayTeamId && this.stats!.find(s => s.playerId == t.id)?.onCourt);
-		if (this.homePlayersOnCourt.find(t => t.firstName == 'team' && t.lastName == 'team') == undefined) {
-			this.homePlayersOnCourt.push(this.homeTeamPlayers()!.find(t => t.firstName == 'team' && t.lastName == 'team')!)
+		let homeTeamPlayer = this.players()!.find(t => t.firstName == 'team' && t.lastName == 'team' && t.number == -1 && t.teamId == this.currentGame!.homeTeamId)!;
+		let awayTeamPlayer = this.players()!.find(t => t.firstName == 'team' && t.lastName == 'team' && t.number == -1 && t.teamId == this.currentGame!.awayTeamId)!;
+
+		if (this.homePlayersOnCourt().find(t => t.id == homeTeamPlayer.id) == undefined) {
+			let stat = await this.getStat(homeTeamPlayer.id);
+			stat.onCourt = 1;
+			await this.updateStat(stat);
 		}
-		if (this.awayPlayersOnCourt.find(t => t.firstName == 'team' && t.lastName == 'team') == undefined) {
-			this.awayPlayersOnCourt.push(this.awayTeamPlayers()!.find(t => t.firstName == 'team' && t.lastName == 'team')!)
+		if (this.awayPlayersOnCourt().find(t => t.id == awayTeamPlayer.id) == undefined) {
+			let stat = await this.getStat(awayTeamPlayer.id);
+			stat.onCourt = 1;
+			await this.updateStat(stat);
 		}
 	}
 
@@ -396,7 +404,6 @@ export class GamecastComponent {
 			WHERE 		p.teamId = '${team == 'home' ? this.currentGame?.homeTeamId : this.currentGame?.awayTeamId}'
 			AND				s.gameId = '${this.gameId}'
 		`);
-		console.log(totals);
 		if (team == 'home') {
 			this.homeStatGridApi.setPinnedBottomRowData(totals);
 		} else {
@@ -422,18 +429,18 @@ export class GamecastComponent {
 
 	public async addToCourt(team: 'home' | 'away', player: Player) {
 		if (team == 'home') {
-			if (this.homePlayersOnCourt.length < 6 && !this.homePlayersOnCourt.find(t => t.id == player.id)) {
-				this.homePlayersOnCourt.push(player);
+			if (this.homePlayersOnCourt.length < 6 && !this.homePlayersOnCourt().find(t => t.id == player.id)) {
+				let stat = await this.getStat(player.id);
+				stat.onCourt = 1;
+				await this.updateStat(stat);
 			}
 		} else {
-			if (this.awayPlayersOnCourt.length < 6 && !this.awayPlayersOnCourt.find(t => t.id == player.id)) {
-				this.awayPlayersOnCourt.push(player);
+			if (this.awayPlayersOnCourt.length < 6 && !this.awayPlayersOnCourt().find(t => t.id == player.id)) {
+				let stat = await this.getStat(player.id);
+				stat.onCourt = 1;
+				await this.updateStat(stat);
 			}
 		}
-		let stat = await this.getStat(player.id);
-		stat.onCourt = 1;
-		await this.updateStat(stat);
-		await this.updateGame();
 	}
 
 	public selectPlayer(team: 'home' | 'away', playerId: number) {
@@ -476,15 +483,9 @@ export class GamecastComponent {
 		if (this.selectedPlayerId() == player.id) {
 			this.selectedPlayerId.set(null);
 		}
-		if (team == 'away') {
-			this.awayPlayersOnCourt.splice(this.awayPlayersOnCourt.indexOf(player), 1);
-		} else {
-			this.homePlayersOnCourt.splice(this.homePlayersOnCourt.indexOf(player), 1);
-		}
 		let stat = await this.getStat(player.id);
 		stat.onCourt = 0;
 		await this.updateStat(stat);
-		await this.updateGame();
   }
 
 	public updatePlayerPlay($event:any, play:Play) {
@@ -499,18 +500,19 @@ export class GamecastComponent {
 	}
 
 	private async getStat(playerId:number) {
-		let stat = this.stats!.find(t => t.playerId == playerId);
+		let stat = this.stats().find(t => t.playerId == playerId);
 		if (stat == undefined) {
 			let newStat:Stat = DEFAULT_STAT;
 			newStat.gameId = this.gameId;
 			newStat.playerId = playerId;
 			newStat.syncState = SyncState.Added;
 			await this.sql.save("stats", newStat);
-			this.stats = await this.sql.query({
+			let stats = await this.sql.query({
 				table: 'stats',
 				where: { gameId: this.gameId }
 			});
-			return this.stats!.find(t => t.playerId == playerId)!;
+			this.stats.set(stats);
+			return this.stats().find(t => t.playerId == playerId)!;
 		} else {
 			return stat;
 		}
@@ -1219,8 +1221,8 @@ export class GamecastComponent {
 	private async calculatePlusOrMinus() {
 		let homePlusOrMinusToAdd = (this.currentGame!.homeFinal - this.homeTeamPlusOrMinus) - (this.currentGame!.awayFinal - this.awayTeamPlusOrMinus);
 		let awayPlusOrMinusToAdd = homePlusOrMinusToAdd * -1;
-		let homePlayers = this.homePlayersOnCourt.slice(0);
-		let awayPlayers = this.awayPlayersOnCourt.slice(0);
+		let homePlayers = this.homePlayersOnCourt().slice(0);
+		let awayPlayers = this.awayPlayersOnCourt().slice(0);
 		for (let item of homePlayers) {
 			let stat = await this.getStat(item.id);
 			stat.plusOrMinus += homePlusOrMinusToAdd;

@@ -23,14 +23,14 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content *ngIf="plays && currentGame" class="ion-no-padding" color="light">
+<ion-content *ngIf="plays && currentGame && players()" class="ion-no-padding" color="light">
 	<ion-grid style="height: 100%; width: 100%">
 		<ion-row>
 			<ion-col class="ion-no-padding ion-text-center" size="1">
 				<div *ngFor="let player of homeTeamPlayers(); let i = index" [hidden]="hiddenPlayerIds().includes(player.id)">
 					<ion-button
 						*ngIf="player.number != -1;"
-						[fill]="this.homePlayersOnCourt.includes(player) ? 'outline' : 'clear'"
+						[fill]="this.homePlayersOnCourt().includes(player) ? 'outline' : 'clear'"
 						id="context-menu-trigger{{i}}"
 						color="{{homeColor}}"
 						(click)="addToCourt('home', player)">
@@ -52,7 +52,7 @@
 									<ion-col>
 										<ion-grid style="background-color: #eaeaea; border-radius: 5px; width: 100%; padding: 5px;">
 											<ion-row>
-												<ng-container *ngFor="let player of homePlayersOnCourt; let i = index">
+												<ng-container *ngFor="let player of homePlayersOnCourt(); let i = index">
 													<ion-col id="context-menu-trigger-homeCourt{{i}}">
 														<ion-button
 															*ngIf="player.number != -1"
@@ -329,7 +329,7 @@
 									<ion-col>
 										<ion-grid style="border-radius: 5px; background-color: #eaeaea; width: 100%; padding: 5px;">
 											<ion-row>
-												<ng-container *ngFor="let player of awayPlayersOnCourt; let i = index">
+												<ng-container *ngFor="let player of awayPlayersOnCourt(); let i = index">
 													<ion-col id="context-menu-trigger-awayCourt{{i}}">
 														<ion-button
 															*ngIf="player.number != -1"
@@ -481,7 +481,7 @@
 				<div *ngFor="let player of awayTeamPlayers(); let i = index" [hidden]="hiddenPlayerIds().includes(player.id)">
 					<ion-button
 						*ngIf="player.number != -1;"
-						[fill]="this.awayPlayersOnCourt.includes(player) ? 'outline' : 'clear'"
+						[fill]="this.awayPlayersOnCourt().includes(player) ? 'outline' : 'clear'"
 						color="{{awayColor}}"
 						id="context-menu-trigger-away{{i}}"
 						(click)="addToCourt('away', player)">
