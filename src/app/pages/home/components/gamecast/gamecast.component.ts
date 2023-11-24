@@ -1,4 +1,4 @@
-import { Component, WritableSignal, computed, signal } from '@angular/core';
+import { Component, WritableSignal, computed, importProvidersFrom, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
 import { SqlService } from 'src/app/services/sql/sql.service';
@@ -19,6 +19,7 @@ import { FormsModule } from '@angular/forms';
 import { EditPlayerComponent } from '../../../../shared/edit-player/edit-player.component';
 import { NgIf, NgFor, NgClass, SlicePipe, DatePipe, AsyncPipe } from '@angular/common';
 import { IonicModule, LoadingController } from '@ionic/angular';
+import { HammerModule } from '@angular/platform-browser';
 
 const playerSort = (a:Player, b:Player) => {
 	if (a.number == b.number)
@@ -428,18 +429,12 @@ export class GamecastComponent {
 	}
 
 	public async addToCourt(team: 'home' | 'away', player: Player) {
-		if (team == 'home') {
-			if (this.homePlayersOnCourt.length < 6 && !this.homePlayersOnCourt().find(t => t.id == player.id)) {
-				let stat = await this.getStat(player.id);
-				stat.onCourt = 1;
-				await this.updateStat(stat);
-			}
-		} else {
-			if (this.awayPlayersOnCourt.length < 6 && !this.awayPlayersOnCourt().find(t => t.id == player.id)) {
-				let stat = await this.getStat(player.id);
-				stat.onCourt = 1;
-				await this.updateStat(stat);
-			}
+		let homePlayerIsNotOnCourt = team == 'home' && this.homePlayersOnCourt().length < 6 && !this.homePlayersOnCourt().find(t => t.id == player.id);
+		let awayPlayerIsNotOnCourt = team == 'away' && this.awayPlayersOnCourt().length < 6 && !this.awayPlayersOnCourt().find(t => t.id == player.id);
+		if (homePlayerIsNotOnCourt || awayPlayerIsNotOnCourt) {
+			let stat = await this.getStat(player.id);
+			stat.onCourt = 1;
+			await this.updateStat(stat);
 		}
 	}
 
@@ -522,6 +517,7 @@ export class GamecastComponent {
 		stat.syncState = stat.syncState == SyncState.Added ? SyncState.Added : SyncState.Modified;
 		await this.sql.save("stats", stat, {"playerId": stat.playerId, "gameId": this.gameId});
 		stat = (await this.sql.rawQuery(`select * from stats where playerId = '${stat.playerId}' and gameId = '${stat.gameId}'`))[0];
+		this.stats.update(stats => stats.map(value => value.id == stat.id ? stat : value));
 	}
 
 	private async updatePeriodTotal(team: 'home' | 'away', points:number) {
