@@ -1,6 +1,6 @@
-<ion-header>
+<ion-header *ngIf="currentGame !== undefined">
   <ion-toolbar color="primary">
-    <ion-breadcrumbs *ngIf="currentGame">
+    <ion-breadcrumbs>
       <ion-breadcrumb routerLink="/home/games">Games</ion-breadcrumb>
       <ion-breadcrumb>Gamecast: {{ homeTeamName }} VS {{ awayTeamName }} ({{isMale == 1 ? 'Mens' : 'Womens'}})</ion-breadcrumb>
     </ion-breadcrumbs>
@@ -17,17 +17,17 @@
 		<ion-button id="color-trigger">
 			<ion-icon slot="icon-only" name="brush"></ion-icon>
 		</ion-button>
-		<ion-button fill="solid" color="success" (click)='toggleGameComplete()' *ngIf="currentGame?.complete">Complete</ion-button>
-		<ion-button fill="solid" color="warning" (click)='toggleGameComplete()' *ngIf="!currentGame?.complete">Live</ion-button>
+		<ion-button fill="solid" color="success" (click)='toggleGameComplete()' *ngIf="currentGame().complete">Complete</ion-button>
+		<ion-button fill="solid" color="warning" (click)='toggleGameComplete()' *ngIf="!currentGame().complete">Live</ion-button>
 	</ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content *ngIf="plays && currentGame && players()" class="ion-no-padding" color="light">
+<ion-content *ngIf="plays && currentGame !== undefined" class="ion-no-padding" color="light">
 	<ion-grid style="height: 100%; width: 100%">
 		<ion-row>
 			<ion-col class="ion-no-padding ion-text-center" size="1">
-				<div *ngFor="let player of homeTeamPlayers(); let i = index" [hidden]="hiddenPlayerIds().includes(player.id)">
+				<div *ngFor="let player of homeTeamPlayers(); let i = index" [hidden]="hiddenPlayerIds()?.includes(player.id)">
 					<ion-button
 						*ngIf="player.number != -1;"
 						[fill]="this.homePlayersOnCourt().includes(player) ? 'outline' : 'clear'"
@@ -87,7 +87,7 @@
 													{{ homeTeamName }}
 												</ion-card-title>
 												<ion-label class="ion-margin-top ion-text-center">
-													<ion-button id="editHomePeriod" fill="clear" color="{{homeColor}}" class="team-score digital-number">{{ currentGame.homeFinal }}</ion-button>
+													<ion-button id="editHomePeriod" fill="clear" color="{{homeColor}}" class="team-score digital-number">{{ currentGame().homeFinal }}</ion-button>
 													<div class="home-font">
 														<div class="input-div">
 															<div class="input">
@@ -98,7 +98,7 @@
 																			id ="homeCurrentFouls"
 																			(ionChange)="updateGame()"
 																			[placeholder]="0"
-																			[(ngModel)]="this.currentGame!.homeCurrentFouls">
+																			[(ngModel)]="this.currentGame().homeCurrentFouls">
 																</ion-input>
 															</div>
 															<div class="input">
@@ -109,7 +109,7 @@
 																			id ="homePartialTOL"
 																			(ionChange)="updateGame()"
 																			[placeholder]="0"
-																			[(ngModel)]="this.currentGame!.homePartialTOL">
+																			[(ngModel)]="this.currentGame().homePartialTOL">
 																</ion-input>
 															</div>
 															<div class="input">
@@ -120,7 +120,7 @@
 																			id ="homeFullTOL"
 																			(ionChange)="updateGame()"
 																			[placeholder]="0"
-																			[(ngModel)]="this.currentGame!.homeFullTOL">
+																			[(ngModel)]="this.currentGame().homeFullTOL">
 																</ion-input>
 															</div>
 														</div>
@@ -199,14 +199,14 @@
 														class="ion-text-center"
 														fill="clear"
 														style="color: grey; font-size: xx-large; font-weight: bolder; margin-bottom: 4px;"
-														[(ngModel)]="currentGame.clock"
+														[(ngModel)]="currentGame().clock"
 														(ionChange)="updateGame()"
 													></ion-input>
 													<ion-input
 														style="color: grey"
 														label="Period:"
 														fill="outline"
-														[(ngModel)]="currentGame.period"
+														[(ngModel)]="currentGame().period"
 														(ionChange)="changePeriod()"
 														type="number"
 													></ion-input>
@@ -231,11 +231,11 @@
 												<ion-col size="8">
 													<ion-item [button]="true" (click)="switchPossession()" color="light" class="ion-text-center" lines="none">
 														<ion-button color="warning" slot="start" fill="clear">
-															<ion-icon name="radio-button-{{currentGame.homeHasPossession ? 'on' : 'off'}}" slot="icon-only"></ion-icon>
+															<ion-icon name="radio-button-{{currentGame().homeHasPossession ? 'on' : 'off'}}" slot="icon-only"></ion-icon>
 														</ion-button>
 														<ion-label>POSS</ion-label>
 														<ion-button color="warning" slot="end" fill="clear">
-															<ion-icon name="radio-button-{{!currentGame.homeHasPossession ? 'on' : 'off'}}" slot="icon-only"></ion-icon>
+															<ion-icon name="radio-button-{{!currentGame().homeHasPossession ? 'on' : 'off'}}" slot="icon-only"></ion-icon>
 														</ion-button>
 													</ion-item>
 												</ion-col>
@@ -362,7 +362,7 @@
 													{{ awayTeamName }}
 												</ion-card-title>
 												<ion-label class="ion-margin-top ion-text-center">
-													<ion-button id="editAwayPeriod" fill="clear" color="{{awayColor}}" class="team-score digital-number">{{ currentGame.awayFinal }}</ion-button>
+													<ion-button id="editAwayPeriod" fill="clear" color="{{awayColor}}" class="team-score digital-number">{{ currentGame().awayFinal }}</ion-button>
 													<div class="away-font">
 														<div class="input-div">
 															<div class="input">
@@ -373,7 +373,7 @@
 																			id ="awayCurrentFouls"
 																			(ionChange)="updateGame()"
 																			[placeholder]="0"
-																			[(ngModel)]="this.currentGame!.awayCurrentFouls">
+																			[(ngModel)]="this.currentGame().awayCurrentFouls">
 																</ion-input>
 															</div>
 															<div class="input">
@@ -384,7 +384,7 @@
 																			id ="awayPartialTOL"
 																			(ionChange)="updateGame()"
 																			[placeholder]="0"
-																			[(ngModel)]="this.currentGame!.awayPartialTOL">
+																			[(ngModel)]="this.currentGame().awayPartialTOL">
 																</ion-input>
 															</div>
 															<div class="input">
@@ -395,7 +395,7 @@
 																			id ="awayFullTOL"
 																			(ionChange)="updateGame()"
 																			[placeholder]="0"
-																			[(ngModel)]="this.currentGame!.awayFullTOL">
+																			[(ngModel)]="this.currentGame().awayFullTOL">
 																</ion-input>
 															</div>
 														</div>
@@ -478,7 +478,7 @@
 				</ion-grid>
 			</ion-col>
 			<ion-col class="ion-no-padding ion-text-center" size="1">
-				<div *ngFor="let player of awayTeamPlayers(); let i = index" [hidden]="hiddenPlayerIds().includes(player.id)">
+				<div *ngFor="let player of awayTeamPlayers(); let i = index" [hidden]="hiddenPlayerIds()?.includes(player.id)">
 					<ion-button
 						*ngIf="player.number != -1;"
 						[fill]="this.awayPlayersOnCourt().includes(player) ? 'outline' : 'clear'"
@@ -499,7 +499,7 @@
 
 	<ion-popover trigger="detailModal" #settingsModal>
 		<ng-template>
-			<app-gamecast-detail [game]="currentGame"></app-gamecast-detail>
+			<app-gamecast-detail [game]="currentGame()"></app-gamecast-detail>
 		</ng-template>
 	</ion-popover>
 	<ion-modal (willPresent)="setPrevPlays()" [backdropDismiss]="false" #playsModal trigger="playsModalTrigger">
@@ -551,8 +551,8 @@
 															<ion-radio [value]="null">Null</ion-radio>
 														</ion-item>
 														<ion-item
-															[hidden]="(play.teamName == awayTeamName && item.teamId != currentGame.awayTeamId) ||
-																(play.teamName == homeTeamName && item.teamId != currentGame.homeTeamId)"
+															[hidden]="(play.teamName == awayTeamName && item.teamId != currentGame().awayTeamId) ||
+																(play.teamName == homeTeamName && item.teamId != currentGame().homeTeamId)"
 															lines="full"
 															*ngFor="let item of players()">
 															<ion-radio [value]="item">{{item.number}} {{item.firstName}} {{item.lastName}}</ion-radio>
@@ -650,10 +650,10 @@
 			<app-add-player
 				style="height: 100%;"
 				team="home"
-				[teamId]="currentGame.homeTeamId"
+				[teamId]="currentGame().homeTeamId"
 				[isMale]="isMale"
 				[players]="players()!"
-				[settings]="currentGame!"
+				[settings]="currentGame()"
 				(playerAdded)="addPlayer($event)"
 				(playerHidden)="hidePlayer($event)"
 				(playerUnhidden)="unhidePlayer($event)"
@@ -667,10 +667,10 @@
 			<app-add-player
 				style="height: 100%;"
 				team="away"
-				[teamId]="currentGame.awayTeamId"
+				[teamId]="currentGame().awayTeamId"
 				[isMale]="isMale"
 				[players]="players()!"
-				[settings]="currentGame!"
+				[settings]="currentGame()"
 				(playerAdded)="addPlayer($event)"
 				(playerHidden)="hidePlayer($event)"
 				(playerUnhidden)="unhidePlayer($event)"
@@ -685,7 +685,7 @@
 				<app-edit-period-total
 					team="home"
 					[color]="homeColor"
-					[game]="currentGame"
+					[game]="currentGame()"
 					(update)="updateGame()"
 				></app-edit-period-total>
 			</ion-content>
@@ -697,7 +697,7 @@
 				<app-edit-period-total
 					team="away"
 					[color]="awayColor"
-					[game]="currentGame"
+					[game]="currentGame()"
 					(update)="updateGame()"
 				></app-edit-period-total>
 			</ion-content>
