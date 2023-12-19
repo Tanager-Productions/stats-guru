@@ -4,7 +4,6 @@ import { GamecastDto } from 'src/app/interfaces/gamecastDto.interface';
 import { SyncDto } from 'src/app/interfaces/sync.interface';
 import { environment } from 'src/environments/environment';
 
-
 @Injectable({
   providedIn: 'root'
 })

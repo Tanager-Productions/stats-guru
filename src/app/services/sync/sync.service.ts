@@ -44,16 +44,7 @@ export class SyncService {
 	) { }
 
   public async beginSync(isInitial:boolean = false) {
-		let user = this.authService.getUser();
-		const appDataDirPath = await appDataDir();
-		const filePath = await join(appDataDirPath, 'logs/Stats Guru.log');
-		const langDe = await readTextFile(filePath);
-		var blob = new Blob([langDe], { type: 'text/plain' });
-		const current = new Date();
-		const timestamp = current.getTime();
-		var file = new File([blob], timestamp + "_log.txt", {type: "text/plain"});
-		const formData = new FormData();
-		formData.append(file.name, file);
+		await this.sendLogsToServer();
 		if (!this.gameCastInProgress) {
 			this.syncing = true;
 			this.syncingMessage = 'Syncing with server...';
@@ -68,9 +59,6 @@ export class SyncService {
 					plays: await this.sqlService.query({table: "plays"})
 				}
 				let httpResponse = await this.api.postSync(res);
-				if (user != null) {
-					let log = await this.api.postLog(formData, user.userId);
-				}
 				if (httpResponse.status == 200) {
 					let res: SyncResult = httpResponse.data;
 					let history: SyncHistory = {
@@ -106,6 +94,22 @@ export class SyncService {
 			this.common.initializeService();
 		}
   }
+
+	private async sendLogsToServer() {
+		let user = this.authService.getUser();
+		const appDataDirPath = await appDataDir();
+		const filePath = await join(appDataDirPath, 'logs/Stats Guru.log');
+		const langDe = await readTextFile(filePath);
+		var blob = new Blob([langDe], { type: 'text/plain' });
+		const current = new Date();
+		const timestamp = current.getTime();
+		var file = new File([blob], timestamp + "_log.txt", {type: "text/plain"});
+		const formData = new FormData();
+		formData.append("logFile", file);
+		if (user != null) {
+			await this.api.postLog(formData, user.userId);
+		}
+	}
 
   public syncComplete() {
     return this.initialSyncComplete.asObservable();
