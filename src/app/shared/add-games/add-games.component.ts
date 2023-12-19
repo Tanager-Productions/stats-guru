@@ -3,7 +3,7 @@ import { SqlService } from 'src/app/services/sql/sql.service';
 import { SyncState } from 'src/app/interfaces/syncState.enum';
 import { CommonService } from 'src/app/services/common/common.service';
 import { Team, Event, Game, DEFAULT_GAME } from 'src/app/interfaces/models';
-import { NgFor } from '@angular/common';
+import { NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 
@@ -12,11 +12,10 @@ import { IonicModule } from '@ionic/angular';
 	templateUrl: './add-games.component.html',
 	styleUrls: ['./add-games.component.scss'],
 	standalone: true,
-	imports: [IonicModule, FormsModule, NgFor]
+	imports: [IonicModule, FormsModule, NgFor, NgIf]
 })
 export class AddGamesComponent {
 	teams?: Team[];
-	events?: Event[];
 	isMale: number = 1;
 	date: string = new Date().toJSON();
 	homeTeamId:number = 0;
@@ -24,11 +23,10 @@ export class AddGamesComponent {
 	event:number | null = null;
 	@Output() dismiss: EventEmitter<void> = new EventEmitter<void>();
 
-  constructor(private crud: SqlService, private common: CommonService) {}
+  constructor(private crud: SqlService, public common: CommonService) {}
 
 	async ngOnInit() {
-    this.teams = await this.crud.query({table: 'teams'});
-    this.events = await this.crud.query({table: 'events'});
+    this.teams = await this.crud.query({table: 'teams', orderByColumn: 'name'});
 	}
 
 	async addGame() {

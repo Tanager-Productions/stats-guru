@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, WritableSignal, signal } from '@angular/core';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { SqlService } from '../sql/sql.service';
 import { Game, Play, Player, Stat, Team, Event } from 'src/app/interfaces/models';
@@ -17,8 +17,8 @@ export type HomePageGame = {
   providedIn: 'root'
 })
 export class CommonService {
-  private gamesSubject: BehaviorSubject<HomePageGame[] | null> = new BehaviorSubject<HomePageGame[] | null>(null);
-  private eventsSubject: BehaviorSubject<Event[] | null> = new BehaviorSubject<Event[] | null>(null);
+  public homePageGames: WritableSignal<HomePageGame[]> = signal([]);
+  public events: WritableSignal<Event[]> = signal([]);
 
   constructor(private sql:SqlService) { }
 
@@ -48,11 +48,7 @@ export class CommonService {
 			ORDER BY
 				g.gameDate DESC;
 		`);
-    this.gamesSubject.next(games);
-  }
-
-  public getGames() {
-    return this.gamesSubject.asObservable();
+    this.homePageGames.set(games);
   }
 
   public async fetchEvents() {
@@ -61,10 +57,6 @@ export class CommonService {
 			orderByColumn: "title",
 			orderDirection: "asc"
 		});
-    this.eventsSubject.next(events);
-  }
-
-  public getEvents() {
-    return this.eventsSubject.asObservable();
+    this.events.set(events);
   }
 }
