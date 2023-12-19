@@ -8,6 +8,10 @@ import { BehaviorSubject, Observable, Subscription, finalize, interval, map, rep
 import { SyncHistory } from 'src/app/interfaces/syncHistory.interface';
 import { CommonService } from '../common/common.service';
 import { DataDto } from 'src/app/interfaces/dataDto.interface';
+import { info } from "tauri-plugin-log-api";
+import { appDataDir, join } from '@tauri-apps/api/path';
+import { readTextFile } from '@tauri-apps/api/fs'
+import { AuthService } from '../auth/auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -32,9 +36,24 @@ export class SyncService {
 	public online:boolean = false;
 	public syncingMessage = '';
 
-  constructor(private api:ApiService, private sqlService:SqlService, private common:CommonService) { }
+  constructor(
+		private api:ApiService,
+		private sqlService:SqlService,
+		private common:CommonService,
+		private authService: AuthService
+	) { }
 
   public async beginSync(isInitial:boolean = false) {
+		let user = this.authService.getUser();
+		const appDataDirPath = await appDataDir();
+		const filePath = await join(appDataDirPath, 'logs/Stats Guru.log');
+		const langDe = await readTextFile(filePath);
+		var blob = new Blob([langDe], { type: 'text/plain' });
+		const current = new Date();
+		const timestamp = current.getTime();
+		var file = new File([blob], timestamp + "_log.txt", {type: "text/plain"});
+		const formData = new FormData();
+		formData.append(file.name, file);
 		if (!this.gameCastInProgress) {
 			this.syncing = true;
 			this.syncingMessage = 'Syncing with server...';
@@ -49,6 +68,9 @@ export class SyncService {
 					plays: await this.sqlService.query({table: "plays"})
 				}
 				let httpResponse = await this.api.postSync(res);
+				if (user != null) {
+					let log = await this.api.postLog(formData, user.userId);
+				}
 				if (httpResponse.status == 200) {
 					let res: SyncResult = httpResponse.data;
 					let history: SyncHistory = {
@@ -73,6 +95,7 @@ export class SyncService {
 				}
 			} catch (error) {
 				console.log(error);
+				info(error as string);
 			}
 			this.syncingMessage = '';
 			if (isInitial) {

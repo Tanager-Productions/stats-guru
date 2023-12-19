@@ -30,6 +30,15 @@ export class ApiService {
     return await CapacitorHttp.post(options);
   }
 
+	public async postLog(log:FormData, admin:string) {
+    let options: HttpOptions = {
+      url: `${this.serverUrl}/StatsGuru/SyncLog`,
+      data: log,
+      headers: {"X-ACCESS-TOKEN": this.getApiToken(), "Content-Type": "multipart/form-data", "ADMIN_ID": admin}
+    };
+    return await CapacitorHttp.post(options);
+  }
+
   public async getData() {
     let options: HttpOptions = {
       url: `${this.serverUrl}/StatsGuru/GetData`,

@@ -5,6 +5,7 @@ import Database from "tauri-plugin-sql-api";
 import { SyncHistory } from 'src/app/interfaces/syncHistory.interface';
 import { Play, Player, Game, Stat } from 'src/app/interfaces/models';
 import { appDataDir } from '@tauri-apps/api/path';
+import { info } from "tauri-plugin-log-api";
 
 export type Table = 'games' | 'plays' | 'stats' | 'players' | 'events' | 'syncHistory' | 'seasons' | 'teams';
 export type Model = Play | Player | Game | Stat | SyncHistory;
@@ -30,14 +31,17 @@ export class SqlService {
 	public async init() {
 		const appDataDirPath = await appDataDir();
 		console.log(appDataDirPath);
+		info(appDataDirPath);
 		this.db = await Database.load(databaseName);
 		for (let item of upgrades.upgrade) {
 			console.log(`Running version ${item.toVersion} upgrades`);
+			info(`Running version ${item.toVersion} upgrades`);
 			for (let stmt of item.statements) {
 				try {
 					await this.db.execute(stmt);
 				} catch (error) {
 					console.error(error);
+					info(error as string);
 				}
 			}
 		}

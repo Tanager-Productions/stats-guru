@@ -19,6 +19,7 @@ import { FormsModule } from '@angular/forms';
 import { EditPlayerComponent } from '../../../../shared/edit-player/edit-player.component';
 import { NgIf, NgFor, NgClass, SlicePipe, DatePipe, AsyncPipe } from '@angular/common';
 import { IonicModule, LoadingController } from '@ionic/angular';
+import { info } from "tauri-plugin-log-api";
 
 const playerSort = (a:Player, b:Player) => {
 	if (a.number == b.number)
@@ -190,8 +191,10 @@ export class GamecastComponent {
 		let response = await this.api.GameCast(dto);
 		let result:SyncResult = response.data;
 		console.log(result);
+		info(result.toString());
 		if (result.errorMessages.length > 0) {
 			console.error("GameCast had errors!", result.errorMessages);
+			info("GameCast had errors! "+ result.errorMessages);
 		}
 	}
 
@@ -242,6 +245,7 @@ export class GamecastComponent {
 			`);
 		} catch(error) {
 			console.log('Something went wrong while opening the plays modal', error);
+			info('Something went wrong while opening the plays modal ' + error);
 		}
 		await loader.dismiss();
 	}
@@ -397,6 +401,7 @@ export class GamecastComponent {
 			AND				s.gameId = '${this.gameId}'
 		`);
 		console.log(totals);
+		info(totals.toString());
 		if (team == 'home') {
 			this.homeStatGridApi.setPinnedBottomRowData(totals);
 		} else {
