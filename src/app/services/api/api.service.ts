@@ -31,7 +31,7 @@ export class ApiService {
 
 	public async postLog(log:FormData, admin:string) {
     let options: HttpOptions = {
-      url: `${this.serverUrl}/StatsGuru/SyncLog`,
+      url: `${this.serverUrl}/Logs`,
       data: log,
       headers: {"X-ACCESS-TOKEN": this.getApiToken(), "Content-Type": "multipart/form-data", "ADMIN_ID": admin}
     };

@@ -181,6 +181,7 @@ export class GamecastComponent {
   }
 
 	private async send() {
+		await this.sync.sendLogsToServer(this.gameId);
 		let dto: GamecastDto = {
 			game: this.currentGame(),
 			version: currentDatabaseVersion,
@@ -193,10 +194,8 @@ export class GamecastComponent {
 		let response = await this.api.GameCast(dto);
 		let result:SyncResult = response.data;
 		console.log(result);
-		info(result.toString());
 		if (result.errorMessages.length > 0) {
 			console.error("GameCast had errors!", result.errorMessages);
-			info("GameCast had errors! "+ result.errorMessages);
 		}
 	}
 
@@ -247,7 +246,6 @@ export class GamecastComponent {
 			`);
 		} catch(error) {
 			console.log('Something went wrong while opening the plays modal', error);
-			info('Something went wrong while opening the plays modal ' + error);
 		}
 		await loader.dismiss();
 	}
@@ -406,7 +404,6 @@ export class GamecastComponent {
 			WHERE 		p.teamId = '${team == 'home' ? this.currentGame().homeTeamId : this.currentGame().awayTeamId}'
 			AND				s.gameId = '${this.gameId}'
 		`);
-		info(totals.toString());
 		if (team == 'home') {
 			this.homeStatGridApi.setPinnedBottomRowData(totals);
 		} else {

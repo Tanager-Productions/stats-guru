@@ -31,17 +31,14 @@ export class SqlService {
 	public async init() {
 		const appDataDirPath = await appDataDir();
 		console.log(appDataDirPath);
-		info(appDataDirPath);
 		this.db = await Database.load(databaseName);
 		for (let item of upgrades.upgrade) {
 			console.log(`Running version ${item.toVersion} upgrades`);
-			info(`Running version ${item.toVersion} upgrades`);
 			for (let stmt of item.statements) {
 				try {
 					await this.db.execute(stmt);
 				} catch (error) {
 					console.error(error);
-					info(error as string);
 				}
 			}
 		}
