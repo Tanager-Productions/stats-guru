@@ -416,9 +416,9 @@ export class GamecastComponent {
 			AND				s.gameId = '${this.gameId}'
 		`);
 		if (team == 'home') {
-			this.homeStatGridApi.setPinnedBottomRowData(totals);
+			this.homeStatGridApi.setGridOption('pinnedBottomRowData', totals);
 		} else {
-			this.awayStatGridApi.setPinnedBottomRowData(totals);
+			this.awayStatGridApi.setGridOption('pinnedBottomRowData', totals);
 		}
 	}
 

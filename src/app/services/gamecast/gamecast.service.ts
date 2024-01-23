@@ -1,99 +1,108 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Signal, WritableSignal, computed, effect, inject, signal, untracked } from '@angular/core';
 import { Game, Play, Player, Stat } from 'src/app/interfaces/models';
 import { SqlService } from '../sql/sql.service';
 import { SyncState } from 'src/app/interfaces/syncState.enum';
+
+const playerSort = (a:Player, b:Player) => {
+	if (a.number == b.number)
+		return 0;
+	else if (a.number < b.number)
+		return -1;
+	else
+		return 1;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class GamecastService {
-	/*private players!: Player[];
-	private stats!: Stat[];
-	private plays!: Play[];
-	private game!: Game;
-	private isMale!:boolean;
-	private homeTeamName!:string;
-	private awayTeamName!:string;
+	private sql = inject(SqlService);
 
-  constructor(private sql: SqlService) { }
+	private statsSrc: WritableSignal<Stat[]> = signal([]);
+	public stats = this.statsSrc.asReadonly();
 
-	public send() {
+	private playsSrc: WritableSignal<Play[]> = signal([]);
+	public plays = this.playsSrc.asReadonly();
 
-	}
+	private playersSrc: WritableSignal<Player[]> = signal([]);
+	public players = this.playersSrc.asReadonly();
+	public homeTeamPlayers = computed(() => {
+		const players = this.players();
+		const game = untracked(this.game);
+		return players.filter(t => t.teamId == game?.homeTeamId).sort(playerSort);
+	});
+	public awayTeamPlayers = computed(() => {
+		const players = this.players();
+		const game = untracked(this.game);
+		return players.filter(t => t.teamId == game?.awayTeamId).sort(playerSort);
+	});
 
-	public async fetchData(gameId:number) {
-		this.game = (await this.sql.query({table: 'games', where: { id: gameId }}))[0];
-		this.isMale = (await this.sql.rawQuery(`select isMale from teams where id = ${this.game!.homeTeamId}`))[0].isMale;
-		this.homeTeamName = (await this.sql.rawQuery(`select name from teams where id = ${this.game!.homeTeamId}`))[0].name;
-		this.awayTeamName = (await this.sql.rawQuery(`select name from teams where id = ${this.game!.awayTeamId}`))[0].name;
-		this.homeTeamPlusOrMinus = this.game!.homeFinal;
-		this.awayTeamPlusOrMinus = this.game!.awayFinal;
-    this.homeTeamPlayers = await this.sql.query({
-			table: 'players',
-			where: { teamId: this.game!.homeTeamId },
-			orderByColumn: 'number'
+	private gameSrc: WritableSignal<Game|null> = signal(null);
+	public game = this.gameSrc.asReadonly();
+	private gameEffect = effect(async () => {
+		const game = this.game();
+		if (game) {
+			game.syncState = game.syncState == SyncState.Added ? SyncState.Added : SyncState.Modified;
+			await this.sql.save('games', game, { "id": game.id });
+		}
+	});
+
+	private selectedPlayerId:WritableSignal<number|null> = signal(null);
+	public selectedPlayer = computed(() => {
+		const players = this.players();
+		const playerId = this.selectedPlayerId();
+		return players.find(t => t.id === playerId);
+	});
+	public selectedPlayerStat = computed(() => {
+		const stats = this.stats();
+		const playerId = this.selectedPlayerId();
+		return stats.find(t => t.playerId == playerId);
+	});
+
+	public homePlayersOnCourt = computed(() => {
+		const players = this.players();
+		const stats = this.stats();
+		const game = untracked(this.game);
+		return players.filter(t => t.teamId == game?.homeTeamId && stats.find(s => s.playerId == t.id)?.onCourt === 1);
+	});
+	public awayPlayersOnCourt = computed(() => {
+		const players = this.players();
+		const stats = this.stats();
+		const game = untracked(this.game);
+		return players.filter(t => t.teamId == game?.awayTeamId && stats.find(s => s.playerId == t.id)?.onCourt === 1);
+	});
+
+	public hiddenPlayerIds = computed(() => {
+		const game = this.game();
+		return game?.hiddenPlayers?.split(',').map(t => Number(t));
+	});
+
+	public async fetchData(gameId: number) {
+		const game = await this.sql.query({
+			table: 'games',
+			where: { id: gameId }
 		});
-    this.awayTeamPlayers = await this.sql.query({
-			table: 'players',
-			where: { teamId: this.game!.awayTeamId },
-			orderByColumn: 'number'
-		});
-		this.stats = await this.sql.query({
+		this.gameSrc.set(game[0]);
+
+		const stats = await this.sql.query({
 			table: 'stats',
 			where: { gameId: gameId }
 		});
-		this.plays = await this.sql.rawQuery(`
+		this.statsSrc.set(stats);
+
+		const plays = await this.sql.rawQuery(`
 			SELECT 		*
 			FROM 			plays
 			WHERE 		gameId = ${gameId}
 			AND				syncState != 3
 			ORDER BY	playOrder DESC
 		`);
-		if (this.homeTeamPlayers.find(t => t.firstName == 'team' && t.lastName == 'team') == undefined) {
-			this.addHomePlayer = true;
-			await this.addPlayer({
-				id:0,
-				picture: null,
-				firstName: 'team',
-				lastName: 'team',
-				isMale: this.isMale,
-				teamId: this.game!.homeTeamId,
-				socialMediaString: null,
-				weight: null,
-				age: null,
-				number: -1,
-				position: null,
-				height: null,
-				homeState: null,
-				homeTown: null,
-				syncState: SyncState.Unchanged,
-				infoString: null
-			});
-		}
-		if (this.awayTeamPlayers.find(t => t.firstName == 'team' && t.lastName == 'team') == undefined) {
-			this.addHomePlayer = false;
-			await this.addPlayer({
-				id: 0,
-				picture: null,
-				firstName: 'team',
-				lastName: 'team',
-				isMale: this.isMale,
-				teamId: this.game!.awayTeamId,
-				socialMediaString: null,
-				weight: null,
-				age: null,
-				number: -1,
-				position: null,
-				height: null,
-				homeState: null,
-				homeTown: null,
-				syncState: SyncState.Unchanged,
-				infoString: null
-			});
-		}
-		if (this.game!.hiddenPlayers != null && this.game!.hiddenPlayers != "") {
-			this.hiddenPlayerIds = this.game!.hiddenPlayers.split(',');
-		}
-		await this.fetchPlayersOnCourt();
-	}*/
+		this.playsSrc.set(plays);
+
+
+	}
+
+	public setSelectedPlayer(playerId: number) {
+		this.selectedPlayerId.set(playerId);
+	}
 }
