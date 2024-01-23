@@ -18,7 +18,7 @@ import { GamecastDetailComponent } from '../../../../shared/gamecast-detail/game
 import { FormsModule } from '@angular/forms';
 import { EditPlayerComponent } from '../../../../shared/edit-player/edit-player.component';
 import { NgIf, NgFor, NgClass, SlicePipe, DatePipe } from '@angular/common';
-import { IonicModule, LoadingController } from '@ionic/angular';
+import { IonPopover, IonicModule, LoadingController } from '@ionic/angular';
 import { info } from "tauri-plugin-log-api";
 
 const playerSort = (a:Player, b:Player) => {
@@ -85,6 +85,7 @@ export class GamecastComponent {
   public timerRunning: boolean = false;
 	private initSub?:Subscription;
 	public actions = GAME_ACTIONS_MAP;
+	public sendingLogs = false;
 
 	//only used in ui
 	public selectedPlayerId: WritableSignal<number|null> = signal(null);
@@ -161,7 +162,7 @@ export class GamecastComponent {
 	private route = inject(ActivatedRoute);
 	private sql = inject(SqlService);
 	private api = inject(ApiService);
-	private sync = inject(SyncService);
+	protected sync = inject(SyncService);
 	private loadingCtrl = inject(LoadingController);
 	private injector = inject(Injector);
 
@@ -181,7 +182,6 @@ export class GamecastComponent {
   }
 
 	private async send() {
-		await this.sync.sendLogsToServer(this.gameId);
 		let dto: GamecastDto = {
 			game: this.currentGame(),
 			version: currentDatabaseVersion,
@@ -197,6 +197,17 @@ export class GamecastComponent {
 		if (result.errorMessages.length > 0) {
 			console.error("GameCast had errors!", result.errorMessages);
 		}
+	}
+
+	public async sendLogs(po: IonPopover) {
+		this.sendingLogs = true;
+		try {
+			await this.sync.sendLogsToServer(this.gameId);
+		} catch (error) {
+			console.error('Failed to submit logs', error)
+		}
+		this.sendingLogs = false;
+		po.dismiss();
 	}
 
 	public changeColor(selectedColor: string) {

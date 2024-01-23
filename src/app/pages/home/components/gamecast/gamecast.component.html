@@ -17,6 +17,23 @@
 		<ion-button id="color-trigger">
 			<ion-icon slot="icon-only" name="brush"></ion-icon>
 		</ion-button>
+		<ion-button id="logsButton">
+			<ion-icon name="help" slot="icon-only"></ion-icon>
+		</ion-button>
+		<ion-popover trigger="logsButton" #popover>
+			<ng-template>
+				<ion-content class="ion-padding">
+					<ion-label>If you're experiencing issues, send the games error logs to the server.</ion-label>
+					<ion-button expand="block" (click)="sendLogs(popover)">
+						@if (sendingLogs) {
+							<ion-spinner name="dots"></ion-spinner>
+						} @else {
+							Send logs to server
+						}
+					</ion-button>
+				</ion-content>
+			</ng-template>
+		</ion-popover>
 		<ion-button fill="solid" color="success" (click)='toggleGameComplete()' *ngIf="currentGame().complete">Complete</ion-button>
 		<ion-button fill="solid" color="warning" (click)='toggleGameComplete()' *ngIf="!currentGame().complete">Live</ion-button>
 	</ion-buttons>
