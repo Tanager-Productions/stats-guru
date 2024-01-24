@@ -1,4 +1,4 @@
-import { Component, Injector, WritableSignal, computed, effect, inject, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Injector, WritableSignal, computed, effect, inject, signal, untracked } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
 import { SqlService } from 'src/app/services/sql/sql.service';
@@ -20,6 +20,7 @@ import { EditPlayerComponent } from '../../../../shared/edit-player/edit-player.
 import { NgIf, NgFor, NgClass, SlicePipe, DatePipe } from '@angular/common';
 import { IonPopover, IonicModule, LoadingController } from '@ionic/angular';
 import { info } from "tauri-plugin-log-api";
+import { GamecastService } from 'src/app/services/gamecast/gamecast.service';
 
 const playerSort = (a:Player, b:Player) => {
 	if (a.number == b.number)
@@ -75,10 +76,7 @@ type StatsRow =  {
 })
 export class GamecastComponent {
 	//config
-  private gameId!: number;
-	public isMale = 1;
-	public homeTeamName:string = '';
-	public awayTeamName:string = '';
+	private gameId!:number;
 	private prevPlays?: Play[];
   private timerSubscription?: Subscription;
   private timerDuration!: number;
@@ -86,29 +84,6 @@ export class GamecastComponent {
 	private initSub?:Subscription;
 	public actions = GAME_ACTIONS_MAP;
 	public sendingLogs = false;
-
-	//only used in ui
-	public selectedPlayerId: WritableSignal<number|null> = signal(null);
-	public homePlayersOnCourt = computed(() =>
-		this.players().filter(t => t.teamId == untracked(this.currentGame).homeTeamId && this.stats().find(s => s.playerId == t.id)?.onCourt === 1));
-	public awayPlayersOnCourt = computed(() =>
-		this.players().filter(t => t.teamId == untracked(this.currentGame).awayTeamId && this.stats().find(s => s.playerId == t.id)?.onCourt === 1));
-	public selectedPlayerStat = computed(() =>
-		this.stats().find(t => t.playerId == this.selectedPlayerId() ?? 0));
-	public selectedPlayer = computed(() =>
-		this.players().find(t => t.id == this.selectedPlayerId() ?? 0));
-	public homeTeamPlayers = computed(() =>
-		this.players().filter(t => t.teamId == untracked(this.currentGame).homeTeamId).sort(playerSort));
-	public awayTeamPlayers = computed(() =>
-		this.players().filter(t => t.teamId == untracked(this.currentGame).awayTeamId).sort(playerSort));
-	public hiddenPlayerIds = computed(() =>
-		this.currentGame().hiddenPlayers?.split(',').map(t => Number(t)));
-
-	//database values
-	private stats: WritableSignal<Stat[]> = signal([]);
-	public plays?: Play[];
-  public currentGame!: WritableSignal<Game>;
-	public players: WritableSignal<Player[]> = signal([]);
 
 	//boxscore modal
 	public statsTab: 'home' | 'away' = 'home';
@@ -165,6 +140,7 @@ export class GamecastComponent {
 	protected sync = inject(SyncService);
 	private loadingCtrl = inject(LoadingController);
 	private injector = inject(Injector);
+	protected dataService = inject(GamecastService);
 
   ngOnInit() {
 		this.initSub = this.sql.isReady().subscribe(ready => {
@@ -172,7 +148,7 @@ export class GamecastComponent {
 				this.sync.gameCastInProgress = true;
 				this.route.params.subscribe(async params => {
 					this.gameId = params['gameId'];
-					await this.fetchData();
+					await this.dataService.fetchData(this.gameId);
 					if (this.sync.online) {
 						this.interval = setInterval(async () => await this.send(), 15000);
 					}
@@ -183,13 +159,13 @@ export class GamecastComponent {
 
 	private async send() {
 		let dto: GamecastDto = {
-			game: this.currentGame(),
+			game: this.dataService.game()!,
 			version: currentDatabaseVersion,
 			overwrite: null,
 			mode: SyncMode.Full,
-			stats: this.stats(),
-			players: this.players(),
-			plays: this.plays!
+			stats: this.dataService.stats(),
+			players: this.dataService.players(),
+			plays: this.dataService.plays()
 		}
 		let response = await this.api.GameCast(dto);
 		let result:SyncResult = response.data;
@@ -224,7 +200,7 @@ export class GamecastComponent {
 	}
 
 	public async editingStopped(event: CellEditingStoppedEvent<StatsRow>) {
-		let statToUpdate = await this.getStat(event.data!.playerId);
+		let statToUpdate = await this.dataService.getStat(event.data!.playerId);
 		statToUpdate.assists = event.data!.assists;
 		statToUpdate.offensiveRebounds = event.data!.offensiveRebounds;
 		statToUpdate.defensiveRebounds = event.data!.defensiveRebounds;
@@ -241,7 +217,7 @@ export class GamecastComponent {
 		statToUpdate.plusOrMinus = event.data!.plusOrMinus;
 		statToUpdate.fouls = event.data!.fouls;
 		statToUpdate.syncState = SyncState.Modified;
-		await this.updateStat(statToUpdate);
+		await this.dataService.updateStat(statToUpdate);
   }
 
 	public async setPrevPlays() {
@@ -261,121 +237,6 @@ export class GamecastComponent {
 		await loader.dismiss();
 	}
 
-	public async addPlayer(player:Player, fetch:boolean = true) {
-		await this.sql.save('players', player);
-		if (fetch) {
-			let players = await this.sql.rawQuery(`
-				SELECT 		*
-				FROM 			players
-				WHERE 		teamId = ${this.currentGame().homeTeamId}
-				OR				teamId = ${this.currentGame().awayTeamId}
-			`);
-			this.players.set(players);
-		}
-	}
-
-	private async fetchData() {
-		this.currentGame = signal((await this.sql.query({table: 'games', where: { id: this.gameId }}))[0]);
-		effect(async () => {
-			let game = this.currentGame();
-			game.syncState = game.syncState == SyncState.Added ? SyncState.Added : SyncState.Modified;
-			await this.sql.save('games', game, { "id": this.gameId });
-		}, {injector: this.injector});
-		const game = this.currentGame();
-		this.isMale = (await this.sql.rawQuery(`select isMale from teams where id = ${game.homeTeamId}`))[0].isMale;
-		this.homeTeamName = (await this.sql.rawQuery(`select name from teams where id = ${game.homeTeamId}`))[0].name;
-		this.awayTeamName = (await this.sql.rawQuery(`select name from teams where id = ${game.awayTeamId}`))[0].name;
-		this.homeTeamPlusOrMinus = game.homeFinal;
-		this.awayTeamPlusOrMinus = game.awayFinal;
-		let stats = await this.sql.query({
-			table: 'stats',
-			where: { gameId: this.gameId }
-		});
-		this.stats.set(stats);
-		this.plays = await this.sql.rawQuery(`
-			SELECT 		*
-			FROM 			plays
-			WHERE 		gameId = ${this.gameId}
-			AND				syncState != 3
-			ORDER BY	playOrder DESC
-		`);
-		let homeCount = await this.sql.rawQuery(`
-			select 	count(id) as count
-			from 		players p
-			where 	p.firstName = 'team'
-			and 		p.lastName = 'team'
-			and 		p.teamId == ${game.homeTeamId}
-		`);
-		if (homeCount[0].count == 0) {
-			let teamPlayer = DEFAULT_PLAYER;
-			teamPlayer.firstName = 'team';
-			teamPlayer.lastName = 'team';
-			teamPlayer.number = -1;
-			teamPlayer.syncState = SyncState.Added;
-			teamPlayer.isMale = this.isMale;
-			teamPlayer.teamId = game.homeTeamId;
-			await this.addPlayer(teamPlayer, false);
-		}
-		let awayCount = await this.sql.rawQuery(`
-			select 	count(id) as count
-			from 		players p
-			where 	p.firstName = 'team'
-			and 		p.lastName = 'team'
-			and 		p.teamId == ${game.awayTeamId}
-		`);
-		if (awayCount[0].count == 0) {
-			let teamPlayer = DEFAULT_PLAYER;
-			teamPlayer.firstName = 'team';
-			teamPlayer.lastName = 'team';
-			teamPlayer.number = -1;
-			teamPlayer.syncState = SyncState.Added;
-			teamPlayer.isMale = this.isMale;
-			teamPlayer.teamId = game.awayTeamId;
-			await this.addPlayer(teamPlayer, false);
-		}
-		let players = await this.sql.rawQuery(`
-			SELECT 		*
-			FROM 			players
-			WHERE 		teamId = ${game.homeTeamId}
-			OR				teamId = ${game.awayTeamId}
-		`);
-		this.players.set(players);
-		await this.fetchPlayersOnCourt();
-	}
-
-	private async fetchPlayersOnCourt() {
-		let homeTeamPlayer = this.players().find(t => t.firstName == 'team' && t.lastName == 'team' && t.number == -1 && t.teamId == this.currentGame().homeTeamId)!;
-		let awayTeamPlayer = this.players().find(t => t.firstName == 'team' && t.lastName == 'team' && t.number == -1 && t.teamId == this.currentGame().awayTeamId)!;
-
-		if (this.homePlayersOnCourt().find(t => t.id == homeTeamPlayer.id) == undefined) {
-			let stat = await this.getStat(homeTeamPlayer.id);
-			stat.onCourt = 1;
-			await this.updateStat(stat);
-		}
-		if (this.awayPlayersOnCourt().find(t => t.id == awayTeamPlayer.id) == undefined) {
-			let stat = await this.getStat(awayTeamPlayer.id);
-			stat.onCourt = 1;
-			await this.updateStat(stat);
-		}
-	}
-
-	public async hidePlayer($event:Player) {
-		let hiddenPlayers = this.currentGame().hiddenPlayers?.split(',').map(t => Number(t)) ?? [];
-		hiddenPlayers.push($event.id);
-		this.currentGame.update(game => ({ ...game, hiddenPlayers: hiddenPlayers.toString() }));
-	}
-
-	public async unhidePlayer($event:Player) {
-		let hiddenPlayers = this.currentGame().hiddenPlayers?.split(',').map(t => Number(t)) ?? [];
-		let index = hiddenPlayers.findIndex(t => t == $event.id);
-		hiddenPlayers.splice(index, 1);
-		this.currentGame.update(game => ({ ...game, hiddenPlayers: hiddenPlayers.toString() }));
-	}
-
-	public async switchPossession() {
-		this.currentGame.update(game => ({...game, homeHasPossession: game.homeHasPossession == 1 ? 0 : 1}));
-	}
-
 	public async loadBoxScore() {
 		this.homeTeamStats = await this.sql.rawQuery(`
 			SELECT		p.number, p.firstName || ' ' || p.lastName as name, s.playerId, s.assists, s.rebounds,
@@ -384,7 +245,7 @@ export class GamecastComponent {
 								s.points, s.turnovers, s.fouls, s.technicalFouls, s.plusOrMinus
 			FROM			stats s
 			JOIN			players p ON s.playerId = p.id
-			WHERE 		p.teamId = '${this.currentGame().homeTeamId}'
+			WHERE 		p.teamId = '${this.dataService.game()?.homeTeamId}'
 			AND				s.gameId = '${this.gameId}'
 			ORDER BY 	p.number;
 		`);
@@ -395,7 +256,7 @@ export class GamecastComponent {
 								s.points, s.turnovers, s.fouls, s.technicalFouls, s.plusOrMinus
 			FROM			stats s
 			JOIN			players p ON s.playerId = p.id
-			WHERE 		p.teamId = '${this.currentGame().awayTeamId}'
+			WHERE 		p.teamId = '${this.dataService.game()?.awayTeamId}'
 			AND				s.gameId = '${this.gameId}'
 			ORDER BY 	p.number;
 		`);
@@ -412,7 +273,7 @@ export class GamecastComponent {
 								SUM(s.fouls) as fouls, SUM(COALESCE(s.technicalFouls, 0)) as technicalFouls, SUM(s.plusOrMinus) as plusOrMinus
 			FROM			stats s
 			JOIN			players p ON s.playerId = p.id
-			WHERE 		p.teamId = '${team == 'home' ? this.currentGame().homeTeamId : this.currentGame().awayTeamId}'
+			WHERE 		p.teamId = '${team == 'home' ? this.dataService.game()?.homeTeamId : this.dataService.game()?.awayTeamId}'
 			AND				s.gameId = '${this.gameId}'
 		`);
 		if (team == 'home') {
@@ -422,28 +283,17 @@ export class GamecastComponent {
 		}
 	}
 
-	/** Used by the app-edit-player component */
-	public async savePlayer(player: Player) {
-		player.syncState == SyncState.Added ? SyncState.Added : SyncState.Modified;
-		await this.sql.save("players", player, {"id": player.id});
-	}
-
-	public toggleGameComplete() {
-		this.currentGame.update(game => ({...game, complete: game.complete == 1 ? 0 : 1}));
-	}
-
 	public async addToCourt(team: 'home' | 'away', player: Player) {
-		let homePlayerIsNotOnCourt = team == 'home' && this.homePlayersOnCourt().length < 6 && !this.homePlayersOnCourt().find(t => t.id == player.id);
-		let awayPlayerIsNotOnCourt = team == 'away' && this.awayPlayersOnCourt().length < 6 && !this.awayPlayersOnCourt().find(t => t.id == player.id);
-		if (homePlayerIsNotOnCourt || awayPlayerIsNotOnCourt) {
-			let stat = await this.getStat(player.id);
+		const playersOnCourt = team == 'home' ? this.dataService.homePlayersOnCourt() : this.dataService.awayPlayersOnCourt();
+		if (playersOnCourt.length < 6 && !playersOnCourt.find(t => t.id == player.id)) {
+			let stat = await this.dataService.getStat(player.id);
 			stat.onCourt = 1;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 		}
 	}
 
 	public selectPlayer(team: 'home' | 'away', playerId: number) {
-		this.previousPlayerWasHome = this.players()?.find(t => t.id == this.selectedPlayerId())?.teamId == this.currentGame().homeTeamId;
+		this.previousPlayerWasHome = this.players()?.find(t => t.id == this.selectedPlayerId())?.teamId == this.dataService.game()?.homeTeamId;
 		if (this.selectedPlayerId() == playerId) {
 			this.selectedPlayerId.set(null);
 		} else {
@@ -472,19 +322,19 @@ export class GamecastComponent {
 	}
 
 	public async addTechnical() {
-		let stat = await this.getStat(this.selectedPlayerId()!);
+		let stat = await this.dataService.getStat(this.dataService.selectedPlayer()!.id);
 		stat.technicalFouls = stat.technicalFouls == null ? 1 : stat.technicalFouls + 1;
-		await this.updateStat(stat);
+		await this.dataService.updateStat(stat);
 		this.foulDisplay = false;
 	}
 
-  public async removeFromCourt(team: 'home' | 'away', player: Player) {
-		if (this.selectedPlayerId() == player.id) {
-			this.selectedPlayerId.set(null);
+  public async removeFromCourt(player: Player) {
+		if (this.dataService.selectedPlayer()?.id == player.id) {
+			this.dataService.setSelectedPlayer(null);
+			let stat = await this.dataService.getStat(player.id);
+			stat.onCourt = 0;
+			await this.dataService.updateStat(stat);
 		}
-		let stat = await this.getStat(player.id);
-		stat.onCourt = 0;
-		await this.updateStat(stat);
   }
 
 	public updatePlayerPlay($event:any, play:Play) {
@@ -498,34 +348,8 @@ export class GamecastComponent {
 		this.updatePlay(play);
 	}
 
-	private async getStat(playerId:number) {
-		let stat = this.stats().find(t => t.playerId == playerId);
-		if (stat == undefined) {
-			let newStat:Stat = DEFAULT_STAT;
-			newStat.gameId = this.gameId;
-			newStat.playerId = playerId;
-			newStat.syncState = SyncState.Added;
-			await this.sql.save("stats", newStat);
-			let stats = await this.sql.query({
-				table: 'stats',
-				where: { gameId: this.gameId }
-			});
-			this.stats.set(stats);
-			return this.stats().find(t => t.playerId == playerId)!;
-		} else {
-			return stat;
-		}
-	}
-
-	private async updateStat(stat:Stat) {
-		stat.syncState = stat.syncState == SyncState.Added ? SyncState.Added : SyncState.Modified;
-		await this.sql.save("stats", stat, {"playerId": stat.playerId, "gameId": this.gameId});
-		stat = (await this.sql.rawQuery(`select * from stats where playerId = '${stat.playerId}' and gameId = '${stat.gameId}'`))[0];
-		this.stats.update(stats => stats.map(value => value.id == stat.id ? stat : value));
-	}
-
 	private async updatePeriodTotal(team: 'home' | 'away', points:number) {
-		const game = { ...this.currentGame() };
+		const game = { ...this.dataService.game() };
 		if (team == 'away') {
 			if (game.period == 1) {
 				game.awayPointsQ1 += points;
@@ -563,14 +387,14 @@ export class GamecastComponent {
 			gameId: this.gameId!,
 			turboStatsData: null,
 			syncState: SyncState.Unchanged,
-			period: this.currentGame().period,
+			period: this.dataService.game()?.period,
 			playerName: player ? `${player.firstName} ${player.lastName}` : null,
 			playerNumber: player ? player.number : null,
-			score: `${this.currentGame().homeFinal} - ${this.currentGame().awayFinal}`,
+			score: `${this.dataService.game()?.homeFinal} - ${this.dataService.game()?.awayFinal}`,
 			teamName: team == 'home' ? this.homeTeamName : this.awayTeamName,
 			timeStamp: new Date().toJSON(),
 			action: action,
-			gameClock: this.currentGame().clock
+			gameClock: this.dataService.game()?.clock
 		}
 		let existingPlay = await this.sql.query({
 			table: 'plays',
@@ -590,10 +414,10 @@ export class GamecastComponent {
 		let updatePlusOrMinus = false;
 		if (!this.timerRunning && !missed) {
 			updatePlusOrMinus = true;
-			this.homeTeamPlusOrMinus = this.currentGame().homeFinal;
-			this.awayTeamPlusOrMinus = this.currentGame().awayFinal;
+			this.homeTeamPlusOrMinus = this.dataService.game()?.homeFinal;
+			this.awayTeamPlusOrMinus = this.dataService.game()?.awayFinal;
 		}
-		let stat = await this.getStat(this.selectedPlayerId()!);
+		let stat = await this.dataService.getStat(this.selectedPlayerId()!);
 		let player = this.selectedPlayer();
 		if (points == 1) {
 			stat.freeThrowsAttempted++;
@@ -629,7 +453,7 @@ export class GamecastComponent {
 				this.reboundDisplay = true;
 			}
 		}
-		await this.updateStat(stat);
+		await this.dataService.updateStat(stat);
 		if (!missed) {
 			await this.updatePeriodTotal(team, points);
 		}
@@ -639,13 +463,13 @@ export class GamecastComponent {
   }
 
   public async addFoul(team: 'home' | 'away') {
-		const game = { ...this.currentGame() };
+		const game = { ...this.dataService.game() };
 		let player = this.selectedPlayer();
 		if (player) {
 			await this.stopTimer();
-			let stat = await this.getStat(player.id);
+			let stat = await this.dataService.getStat(player.id);
 			stat.fouls++;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 			await this.addPlay(team, GameActions.Foul, player);
 			if (team == 'away') {
 				if (game.awayCurrentFouls == null) {
@@ -666,7 +490,7 @@ export class GamecastComponent {
   }
 
   public async addTimeout(team: 'home' | 'away', partial: boolean) {
-		const game = { ...this.currentGame() };
+		const game = { ...this.dataService.game() };
 		await this.stopTimer();
 		if (team == 'away') {
 			if (game.awayTeamTOL > 0) {
@@ -694,9 +518,9 @@ export class GamecastComponent {
 	public async addSteal(team: 'home' | 'away') {
 		let player = this.selectedPlayer();
 		if (player) {
-			let stat = await this.getStat(player.id);
+			let stat = await this.dataService.getStat(player.id);
 			stat.steals++;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 			await this.addPlay(team, GameActions.Steal, player);
 			this.stealDisplay = true;
 		}
@@ -705,9 +529,9 @@ export class GamecastComponent {
 	public async addAssist(team: 'home' | 'away') {
 		let player = this.selectedPlayer();
 		if (player) {
-			let stat = await this.getStat(player.id);
+			let stat = await this.dataService.getStat(player.id);
 			stat.assists++;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 			await this.addPlay(team, GameActions.Assist, player);
 		}
 	}
@@ -722,7 +546,7 @@ export class GamecastComponent {
 	public async addRebound(team: 'home' | 'away', offensive: boolean) {
 		let player = this.selectedPlayer();
 		if (player) {
-			let stat = await this.getStat(player.id);
+			let stat = await this.dataService.getStat(player.id);
 			stat.rebounds++;
 			if (offensive) {
 				stat.offensiveRebounds++;
@@ -731,16 +555,16 @@ export class GamecastComponent {
 				stat.defensiveRebounds++;
 				await this.addPlay(team, GameActions.DefRebound, player);
 			}
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 		}
 	}
 
 	public async addBlock(team: 'home' | 'away') {
 		let player = this.selectedPlayer();
 		if (player) {
-			let stat = await this.getStat(player.id);
+			let stat = await this.dataService.getStat(player.id);
 			stat.blocks++;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 			await this.addPlay(team, GameActions.Block, player);
 			this.missedDisplay = true;
 		}
@@ -749,9 +573,9 @@ export class GamecastComponent {
 	public async addTurnover(team: 'home' | 'away') {
 		let player = this.selectedPlayer();
 		if (player) {
-			let stat = await this.getStat(player.id);
+			let stat = await this.dataService.getStat(player.id);
 			stat.turnovers++;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 			await this.addPlay(team, GameActions.Turnover, player);
 		}
 	}
@@ -770,24 +594,24 @@ export class GamecastComponent {
 	}
 
 	public async undoAction(play:Play) {
-		const game = { ...this.currentGame() };
+		const game = { ...this.dataService.game() };
 		if (play.action == GameActions.Assist) {
-			let stat = await this.getStat(this.getPlayer(play)!.id);
+			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
 			stat.assists--;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 		} else if (play.action == GameActions.Block) {
-			let stat = await this.getStat(this.getPlayer(play)!.id);
+			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
 			stat.blocks--;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 		} else if (play.action == GameActions.DefRebound) {
-			let stat = await this.getStat(this.getPlayer(play)!.id);
+			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
 			stat.defensiveRebounds--;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 		} else if (play.action == GameActions.Foul) {
 			let player = this.getPlayer(play)!;
-			let stat = await this.getStat(player.id);
+			let stat = await this.dataService.getStat(player.id);
 			stat.fouls--;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 			if (player.teamId == game.homeTeamId) {
 				game.homeCurrentFouls!--;
 			} else {
@@ -795,10 +619,10 @@ export class GamecastComponent {
 			}
 		} else if (play.action == GameActions.FreeThrowMade) {
 			let player = this.getPlayer(play)!;
-			let stat = await this.getStat(player.id);
+			let stat = await this.dataService.getStat(player.id);
 			stat.freeThrowsMade--;
 			stat.freeThrowsAttempted--;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 			if (player.teamId == game.homeTeamId) {
 				if (play.period == 1) {
 					game.homePointsQ1--;
@@ -831,9 +655,9 @@ export class GamecastComponent {
 				game.awayFinal--;
 			}
 		} else if (play.action == GameActions.FreeThrowMissed) {
-			let stat = await this.getStat(this.getPlayer(play)!.id);
+			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
 			stat.freeThrowsAttempted--;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 		} else if (play.action == GameActions.FullTO) {
 			if (play.teamName == this.homeTeamName) {
 				game.homeTeamTOL++;
@@ -843,9 +667,9 @@ export class GamecastComponent {
 				game.awayFullTOL!++;
 			}
 		} else if (play.action == GameActions.OffRebound) {
-			let stat = await this.getStat(this.getPlayer(play)!.id);
+			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
 			stat.offensiveRebounds--;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 		} else if (play.action == GameActions.PartialTO) {
 			if (play.teamName == this.homeTeamName) {
 				game.homeTeamTOL++;
@@ -856,10 +680,10 @@ export class GamecastComponent {
 			}
 		} else if (play.action == GameActions.ShotMade) {
 			let player = this.getPlayer(play)!;
-			let stat = await this.getStat(player.id);
+			let stat = await this.dataService.getStat(player.id);
 			stat.fieldGoalsMade--;
 			stat.fieldGoalsAttempted--;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 			if (player.teamId == game.homeTeamId) {
 				if (play.period == 1) {
 					game.homePointsQ1 -= 2;
@@ -892,19 +716,19 @@ export class GamecastComponent {
 				game.awayFinal -= 2;
 			}
 		} else if (play.action == GameActions.ShotMissed) {
-			let stat = await this.getStat(this.getPlayer(play)!.id);
+			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
 			stat.fieldGoalsAttempted--;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 		} else if (play.action == GameActions.Steal) {
-			let stat = await this.getStat(this.getPlayer(play)!.id);
+			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
 			stat.steals--;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 		} else if (play.action == GameActions.ThreeMade) {
 			let player = this.getPlayer(play)!;
-			let stat = await this.getStat(player.id);
+			let stat = await this.dataService.getStat(player.id);
 			stat.threesMade--;
 			stat.threesAttempted--;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 			if (player.teamId == game.homeTeamId) {
 				if (play.period == 1) {
 					game.homePointsQ1 -= 3;
@@ -937,36 +761,36 @@ export class GamecastComponent {
 				game.awayFinal -= 3;
 			}
 		} else if (play.action == GameActions.ThreeMissed) {
-			let stat = await this.getStat(this.getPlayer(play)!.id);
+			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
 			stat.threesAttempted--;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 		} else if (play.action == GameActions.Turnover) {
-			let stat = await this.getStat(this.getPlayer(play)!.id);
+			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
 			stat.turnovers--;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 		}
 		this.currentGame.set(game);
 	}
 
 	public async redoAction(play:Play) {
-		const game = { ...this.currentGame() };
+		const game = { ...this.dataService.game() };
 		if (play.action == GameActions.Assist) {
-			let stat = await this.getStat(this.getPlayer(play)!.id);
+			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
 			stat.assists++;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 		} else if (play.action == GameActions.Block) {
-			let stat = await this.getStat(this.getPlayer(play)!.id);
+			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
 			stat.blocks++;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 		} else if (play.action == GameActions.DefRebound) {
-			let stat = await this.getStat(this.getPlayer(play)!.id);
+			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
 			stat.defensiveRebounds++;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 		} else if (play.action == GameActions.Foul) {
 			let player = this.getPlayer(play)!;
-			let stat = await this.getStat(player.id);
+			let stat = await this.dataService.getStat(player.id);
 			stat.fouls++;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 			if (player.teamId == game.homeTeamId) {
 				game.homeCurrentFouls!++;
 			} else {
@@ -974,10 +798,10 @@ export class GamecastComponent {
 			}
 		} else if (play.action == GameActions.FreeThrowMade) {
 			let player = this.getPlayer(play)!;
-			let stat = await this.getStat(player.id);
+			let stat = await this.dataService.getStat(player.id);
 			stat.freeThrowsMade++;
 			stat.freeThrowsAttempted++;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 			if (player.teamId == game.homeTeamId) {
 				if (play.period == 1) {
 					game.homePointsQ1++;
@@ -1010,9 +834,9 @@ export class GamecastComponent {
 				game.awayFinal++;
 			}
 		} else if (play.action == GameActions.FreeThrowMissed) {
-			let stat = await this.getStat(this.getPlayer(play)!.id);
+			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
 			stat.freeThrowsAttempted++;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 		} else if (play.action == GameActions.FullTO) {
 			if (play.teamName == this.homeTeamName) {
 				game.homeTeamTOL--;
@@ -1022,9 +846,9 @@ export class GamecastComponent {
 				game.awayFullTOL!--;
 			}
 		} else if (play.action == GameActions.OffRebound) {
-			let stat = await this.getStat(this.getPlayer(play)!.id);
+			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
 			stat.offensiveRebounds++;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 		} else if (play.action == GameActions.PartialTO) {
 			if (play.teamName == this.homeTeamName) {
 				game.homeTeamTOL--;
@@ -1035,10 +859,10 @@ export class GamecastComponent {
 			}
 		} else if (play.action == GameActions.ShotMade) {
 			let player = this.getPlayer(play)!;
-			let stat = await this.getStat(player.id);
+			let stat = await this.dataService.getStat(player.id);
 			stat.fieldGoalsMade++;
 			stat.fieldGoalsAttempted++;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 			if (player.teamId == game.homeTeamId) {
 				if (play.period == 1) {
 					game.homePointsQ1 += 2;
@@ -1071,19 +895,19 @@ export class GamecastComponent {
 				game.awayFinal += 2;
 			}
 		} else if (play.action == GameActions.ShotMissed) {
-			let stat = await this.getStat(this.getPlayer(play)!.id);
+			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
 			stat.fieldGoalsAttempted++;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 		} else if (play.action == GameActions.Steal) {
-			let stat = await this.getStat(this.getPlayer(play)!.id);
+			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
 			stat.steals++;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 		} else if (play.action == GameActions.ThreeMade) {
 			let player = this.getPlayer(play)!;
-			let stat = await this.getStat(player.id);
+			let stat = await this.dataService.getStat(player.id);
 			stat.threesMade++;
 			stat.threesAttempted++;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 			if (player.teamId == game.homeTeamId) {
 				if (play.period == 1) {
 					game.homePointsQ1 += 3;
@@ -1116,13 +940,13 @@ export class GamecastComponent {
 				game.awayFinal += 3;
 			}
 		} else if (play.action == GameActions.ThreeMissed) {
-			let stat = await this.getStat(this.getPlayer(play)!.id);
+			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
 			stat.threesAttempted++;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 		} else if (play.action == GameActions.Turnover) {
-			let stat = await this.getStat(this.getPlayer(play)!.id);
+			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
 			stat.turnovers++;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 		}
 		this.currentGame.set(game);
 	}
@@ -1140,7 +964,7 @@ export class GamecastComponent {
 		}
 		await this.undoAction(prevPlay);
 		await this.redoAction(play);
-		play.score = `${this.currentGame().homeFinal} - ${this.currentGame().awayFinal}`;
+		play.score = `${this.dataService.game()?.homeFinal} - ${this.dataService.game()?.awayFinal}`;
 		play.syncState = play.syncState == SyncState.Added ? SyncState.Added : SyncState.Modified;
 		await this.sql.save('plays', play, {playOrder: play.playOrder, "gameId": this.gameId});
 		await this.setPrevPlays();
@@ -1163,7 +987,7 @@ export class GamecastComponent {
   }
 
   private startTimer() {
-		const game = { ...this.currentGame() };
+		const game = { ...this.dataService.game() };
 		if (game.clock == "00:00") {
 			if (game.period < (game.hasFourQuarters == 1 ? 4 : 2))
 				this.timerDuration = game.minutesPerPeriod! * 60;
@@ -1187,7 +1011,7 @@ export class GamecastComponent {
   }
 
 	private resetTOs() {
-		const game = { ...this.currentGame() };
+		const game = { ...this.dataService.game() };
 		if (game.resetTimeoutsEveryPeriod == 1) {
 			game.homeFullTOL = game.fullTimeoutsPerGame ?? 0;
 			game.awayFullTOL = game.fullTimeoutsPerGame ?? 0;
@@ -1206,29 +1030,29 @@ export class GamecastComponent {
   }
 
 	private async calculatePlusOrMinus() {
-		let homePlusOrMinusToAdd = (this.currentGame().homeFinal - this.homeTeamPlusOrMinus) - (this.currentGame().awayFinal - this.awayTeamPlusOrMinus);
+		let homePlusOrMinusToAdd = (this.dataService.game()?.homeFinal - this.homeTeamPlusOrMinus) - (this.dataService.game()?.awayFinal - this.awayTeamPlusOrMinus);
 		let awayPlusOrMinusToAdd = homePlusOrMinusToAdd * -1;
 		let homePlayers = this.homePlayersOnCourt().slice(0);
 		let awayPlayers = this.awayPlayersOnCourt().slice(0);
 		for (let item of homePlayers) {
-			let stat = await this.getStat(item.id);
+			let stat = await this.dataService.getStat(item.id);
 			stat.plusOrMinus += homePlusOrMinusToAdd;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 		}
 		for (let item of awayPlayers) {
-			let stat = await this.getStat(item.id);
+			let stat = await this.dataService.getStat(item.id);
 			stat.plusOrMinus += awayPlusOrMinusToAdd;
-			await this.updateStat(stat);
+			await this.dataService.updateStat(stat);
 		}
-		this.homeTeamPlusOrMinus = this.currentGame().homeFinal;
-		this.awayTeamPlusOrMinus = this.currentGame().awayFinal;
+		this.homeTeamPlusOrMinus = this.dataService.game()?.homeFinal;
+		this.awayTeamPlusOrMinus = this.dataService.game()?.awayFinal;
 	}
 
 	public async updateGame() {
-		if (this.currentGame().syncState != SyncState.Added) {
-			this.currentGame().syncState = SyncState.Modified;
+		if (this.dataService.game()?.syncState != SyncState.Added) {
+			this.dataService.game()?.syncState = SyncState.Modified;
 		}
-		await this.sql.save('games', this.currentGame(), { "id": this.gameId });
+		await this.sql.save('games', this.dataService.game(), { "id": this.gameId });
 	}
 
 	public async changePeriod() {
@@ -1239,7 +1063,7 @@ export class GamecastComponent {
   private updateTimerDisplay() {
     const minutes = Math.floor(this.timerDuration / 60);
     const seconds = this.timerDuration % 60;
-    this.currentGame().clock = `${minutes < 10 ? '0' + minutes : minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+    this.dataService.game()?.clock = `${minutes < 10 ? '0' + minutes : minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
   }
 
   async ngOnDestroy() {
