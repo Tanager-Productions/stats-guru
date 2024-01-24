@@ -180,7 +180,7 @@ export class GamecastService {
 		}
 	}
 
-	public setSelectedPlayer(playerId: number|null) {
+	public setSelectedPlayer(playerId: number) {
 		this.selectedPlayerId.set(playerId);
 	}
 
@@ -265,5 +265,52 @@ export class GamecastService {
 		}
 	}
 
+	public async updatePeriodTotal(team: 'home' | 'away', points:number) {
+		const game = { ...this.game()! };
+		if (team == 'away') {
+			if (game.period == 1) {
+				game.awayPointsQ1 += points;
+			} else if (game.period == 2) {
+				game.awayPointsQ2 += points;
+			} else if (game.period == 3) {
+				game.awayPointsQ3 += points;
+			} else if (game.period == 4) {
+				game.awayPointsQ4 += points;
+			} else {
+				game.awayPointsOT += points;
+			}
+			game.awayFinal += points;
+		} else {
+			if (game.period == 1) {
+				game.homePointsQ1 += points;
+			} else if (game.period == 2) {
+				game.homePointsQ2 += points;
+			} else if (game.period == 3) {
+				game.homePointsQ3 += points;
+			} else if (game.period == 4) {
+				game.homePointsQ4 += points;
+			} else {
+				game.homePointsOT += points;
+			}
+			game.homeFinal += points;
+		}
+		this.gameSrc.set(game);
+	}
 
+	public resetTOs() {
+		const game = { ...this.game()! };
+		if (game.resetTimeoutsEveryPeriod == 1) {
+			game.homeFullTOL = game.fullTimeoutsPerGame ?? 0;
+			game.awayFullTOL = game.fullTimeoutsPerGame ?? 0;
+			game.homePartialTOL = game.partialTimeoutsPerGame ?? 0;
+			game.awayPartialTOL = game.partialTimeoutsPerGame ?? 0;
+			this.gameSrc.set(game);
+		}
+	}
+
+	public updateClock(duration: number) {
+    const minutes = Math.floor(duration / 60);
+    const seconds = duration % 60;
+    this.gameSrc()!.clock = `${minutes < 10 ? '0' + minutes : minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+  }
 }
