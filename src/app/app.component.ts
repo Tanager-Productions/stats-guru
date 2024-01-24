@@ -1,6 +1,5 @@
-import { Component } from '@angular/core';
-import { Platform, IonicModule } from '@ionic/angular';
-import { SqlService } from './services/sql/sql.service';
+import { Component, inject } from '@angular/core';
+import { IonicModule } from '@ionic/angular';
 import { AuthService } from './services/auth/auth.service';
 import { HeaderComponent } from './shared/header/header.component';
 
@@ -12,7 +11,5 @@ import { HeaderComponent } from './shared/header/header.component';
     imports: [IonicModule, HeaderComponent]
 })
 export class AppComponent {
-  constructor(sqlite:SqlService, public auth:AuthService) {
-    sqlite.init();
-  }
+	public auth = inject(AuthService);
 }

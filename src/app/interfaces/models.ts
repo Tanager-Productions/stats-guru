@@ -17,9 +17,9 @@ export interface Game {
 	awayPointsOT: number;
 	homeTeamTOL: number;
 	awayTeamTOL: number;
-	complete: number;
+	complete: 1 | 0;
 	clock: string;
-	hasFourQuarters: number | null;
+	hasFourQuarters: 1 | 0 | null;
 	homeFinal: number;
 	awayFinal: number;
 	period: number;
@@ -31,8 +31,8 @@ export interface Game {
 	awayFullTOL: number;
 	homeCurrentFouls: number | null;
 	awayCurrentFouls: number | null;
-	homeHasPossession: number | null;
-	resetTimeoutsEveryPeriod: number | null;
+	homeHasPossession: 1 | 0 | null;
+	resetTimeoutsEveryPeriod: 1 | 0 | null;
 	fullTimeoutsPerGame: number | null;
 	partialTimeoutsPerGame: number | null;
 	minutesPerPeriod: number | null;
@@ -106,7 +106,7 @@ export interface Player {
 	position: Positions | null;
 	teamId: number;
 	picture: string | null;
-	isMale: number;
+	isMale: 1 | 0;
 	height: string | null;
 	weight: number | null;
 	age: number | null;
@@ -159,7 +159,7 @@ export interface Stat {
 	plusOrMinus: number;
 	eff: number;
 	technicalFouls: number | null;
-	onCourt: number | null;
+	onCourt: 1 | 0 | null;
 	syncState: SyncState;
 }
 
@@ -210,7 +210,7 @@ export interface Event {
 export interface Team {
 	id: number;
 	name: string;
-	isMale: number;
+	isMale: 1 | 0;
 	seasonId: number;
 	city: string;
 	state: string;

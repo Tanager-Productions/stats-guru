@@ -18,9 +18,12 @@ import { GamecastDetailComponent } from '../../../../shared/gamecast-detail/game
 import { FormsModule } from '@angular/forms';
 import { EditPlayerComponent } from '../../../../shared/edit-player/edit-player.component';
 import { NgIf, NgFor, NgClass, SlicePipe, DatePipe } from '@angular/common';
-import { IonPopover, IonicModule, LoadingController } from '@ionic/angular';
+import { IonPopover, IonicModule, LoadingController, RadioGroupChangeEventDetail } from '@ionic/angular';
+import { IonRadioGroupCustomEvent } from '@ionic/core';
 import { info } from "tauri-plugin-log-api";
 import { GamecastService } from 'src/app/services/gamecast/gamecast.service';
+
+type RadioEvent = IonRadioGroupCustomEvent<RadioGroupChangeEventDetail<Player|null>>;
 
 const playerSort = (a:Player, b:Player) => {
 	if (a.number == b.number)
@@ -293,11 +296,12 @@ export class GamecastComponent {
 	}
 
 	public selectPlayer(team: 'home' | 'away', playerId: number) {
-		this.previousPlayerWasHome = this.players()?.find(t => t.id == this.selectedPlayerId())?.teamId == this.dataService.game()?.homeTeamId;
-		if (this.selectedPlayerId() == playerId) {
-			this.selectedPlayerId.set(null);
+		const { players, selectedPlayer, game } = this.dataService;
+		this.previousPlayerWasHome = players().find(t => t.id == selectedPlayer()?.id)?.teamId == game()?.homeTeamId;
+		if (selectedPlayer()?.id == playerId) {
+			this.dataService.setSelectedPlayer(null);
 		} else {
-			this.selectedPlayerId.set(playerId);
+			this.dataService.setSelectedPlayer(playerId);
 		}
 
 		//auto complete
@@ -337,74 +341,33 @@ export class GamecastComponent {
 		}
   }
 
-	public updatePlayerPlay($event:any, play:Play) {
-		if ($event.detail.value == null) {
-			play.playerNumber = null;
-			play.playerName = null;
-		} else {
-			play.playerNumber = $event.detail.value.number;
-			play.playerName = `${$event.detail.value.firstName} ${$event.detail.value.lastName}`;
-		}
-		this.updatePlay(play);
-	}
-
-	private async addPlay(team: 'home' | 'away', action: GameActions, player?: Player) {
-		let play: Play = {
-			id:0,
-			playOrder: this.dataService.plays().length + 1,
-			gameId: this.gameId,
-			turboStatsData: null,
-			syncState: SyncState.Unchanged,
-			period: this.dataService.game()!.period,
-			playerName: player ? `${player.firstName} ${player.lastName}` : null,
-			playerNumber: player ? player.number : null,
-			score: `${this.dataService.game()?.homeFinal} - ${this.dataService.game()?.awayFinal}`,
-			teamName: team == 'home' ? this.dataService.homeTeamName() : this.dataService.awayTeamName(),
-			timeStamp: new Date().toJSON(),
-			action: action,
-			gameClock: this.dataService.game()!.clock
-		}
-		let existingPlay = await this.sql.query({
-			table: 'plays',
-			where: {playOrder: play.playOrder, "gameId": this.gameId}
-		});
-		if (existingPlay.length == 1) {
-			play.syncState = existingPlay[0].SyncState == SyncState.Added ? SyncState.Added : SyncState.Modified;
-			await this.sql.save('plays', play, {playOrder: play.playOrder, "gameId": this.gameId});
-		} else {
-			play.syncState = SyncState.Added;
-			await this.sql.save('plays', play);
-		}
-		this.plays?.unshift(play);
-	}
-
   public async addPoints(team: 'home' | 'away', points: number, missed: boolean = false) {
 		let updatePlusOrMinus = false;
 		if (!this.timerRunning && !missed) {
 			updatePlusOrMinus = true;
-			this.homeTeamPlusOrMinus = this.dataService.game()?.homeFinal;
-			this.awayTeamPlusOrMinus = this.dataService.game()?.awayFinal;
+			this.homeTeamPlusOrMinus = this.dataService.game()!.homeFinal;
+			this.awayTeamPlusOrMinus = this.dataService.game()!.awayFinal;
 		}
-		let stat = await this.dataService.getStat(this.selectedPlayerId()!);
-		let player = this.dataService.selectedPlayer();
+		const player = this.dataService.selectedPlayer()!;
+		const stat = await this.dataService.getStat(player.id);
 		if (points == 1) {
 			stat.freeThrowsAttempted++;
 			if (!missed) {
 				stat.freeThrowsMade++;
 				stat.points++;
-				await this.addPlay(team, GameActions.FreeThrowMade, player);
+				await this.dataService.addPlay(team, GameActions.FreeThrowMade, player);
 			} else {
-				await this.addPlay(team, GameActions.FreeThrowMissed, player);
+				await this.dataService.addPlay(team, GameActions.FreeThrowMissed, player);
 			}
 		} else if (points == 2) {
 			stat.fieldGoalsAttempted++;
 			if (!missed) {
 				stat.fieldGoalsMade++;
 				stat.points += 2;
-				await this.addPlay(team, GameActions.ShotMade, player);
+				await this.dataService.addPlay(team, GameActions.ShotMade, player);
 				this.assistDisplay = true;
 			} else {
-				await this.addPlay(team, GameActions.ShotMissed, player);
+				await this.dataService.addPlay(team, GameActions.ShotMissed, player);
 				this.reboundDisplay = true;
 			}
 		} else {
@@ -414,16 +377,16 @@ export class GamecastComponent {
 				stat.fieldGoalsMade++;
 				stat.threesMade++;
 				stat.points += 3;
-				await this.addPlay(team, GameActions.ThreeMade, player);
+				await this.dataService.addPlay(team, GameActions.ThreeMade, player);
 				this.assistDisplay = true;
 			} else {
-				await this.addPlay(team, GameActions.ThreeMissed, player);
+				await this.dataService.addPlay(team, GameActions.ThreeMissed, player);
 				this.reboundDisplay = true;
 			}
 		}
 		await this.dataService.updateStat(stat);
 		if (!missed) {
-			await this.updatePeriodTotal(team, points);
+			await this.dataService.updatePeriodTotal(team, points);
 		}
 		if (updatePlusOrMinus) {
 			await this.calculatePlusOrMinus();
@@ -431,56 +394,22 @@ export class GamecastComponent {
   }
 
   public async addFoul(team: 'home' | 'away') {
-		const game = { ...this.dataService.game() };
 		let player = this.dataService.selectedPlayer();
 		if (player) {
-			await this.stopTimer();
-			let stat = await this.dataService.getStat(player.id);
+			this.stopTimer();
+			const stat = await this.dataService.getStat(player.id);
 			stat.fouls++;
 			await this.dataService.updateStat(stat);
-			await this.addPlay(team, GameActions.Foul, player);
-			if (team == 'away') {
-				if (game.awayCurrentFouls == null) {
-					game.awayCurrentFouls = 1;
-				} else {
-					game.awayCurrentFouls++;
-				}
-			} else {
-				if (game.homeCurrentFouls == null) {
-					game.homeCurrentFouls = 1;
-				} else {
-					game.homeCurrentFouls++;
-				}
-			}
-			this.currentGame.set(game);
+			await this.dataService.addPlay(team, GameActions.Foul, player);
+			this.dataService.addFoulToGame(team);
 		}
 		this.foulDisplay = true;
   }
 
   public async addTimeout(team: 'home' | 'away', partial: boolean) {
-		const game = { ...this.dataService.game()! };
 		this.stopTimer();
-		if (team == 'away') {
-			if (game.awayTeamTOL > 0) {
-				game.awayTeamTOL--;
-			}
-			if (partial && game.awayPartialTOL != null && game.awayPartialTOL > 0) {
-				game.awayPartialTOL--;
-			} else if (!partial && game.awayFullTOL != null && game.awayFullTOL > 0) {
-				game.awayFullTOL--;
-			}
-		} else {
-			if (game.homeTeamTOL > 0) {
-				game.homeTeamTOL--;
-			}
-			if (partial && game.homePartialTOL != null && game.homePartialTOL > 0) {
-				game.homePartialTOL--;
-			} else if (!partial && game.homeFullTOL != null && game.homeFullTOL > 0) {
-				game.homeFullTOL--;
-			}
-		}
-		this.currentGame.set(game);
-		await this.addPlay(team, partial ? GameActions.PartialTO : GameActions.FullTO);
+		this.dataService.addTimeoutToGame(team, partial);
+		await this.dataService.addPlay(team, partial ? GameActions.PartialTO : GameActions.FullTO);
   }
 
 	public async addSteal(team: 'home' | 'away') {
@@ -489,7 +418,7 @@ export class GamecastComponent {
 			let stat = await this.dataService.getStat(player.id);
 			stat.steals++;
 			await this.dataService.updateStat(stat);
-			await this.addPlay(team, GameActions.Steal, player);
+			await this.dataService.addPlay(team, GameActions.Steal, player);
 			this.stealDisplay = true;
 		}
 	}
@@ -500,7 +429,7 @@ export class GamecastComponent {
 			let stat = await this.dataService.getStat(player.id);
 			stat.assists++;
 			await this.dataService.updateStat(stat);
-			await this.addPlay(team, GameActions.Assist, player);
+			await this.dataService.addPlay(team, GameActions.Assist, player);
 		}
 	}
 
@@ -518,10 +447,10 @@ export class GamecastComponent {
 			stat.rebounds++;
 			if (offensive) {
 				stat.offensiveRebounds++;
-				await this.addPlay(team, GameActions.OffRebound, player);
+				await this.dataService.addPlay(team, GameActions.OffRebound, player);
 			} else {
 				stat.defensiveRebounds++;
-				await this.addPlay(team, GameActions.DefRebound, player);
+				await this.dataService.addPlay(team, GameActions.DefRebound, player);
 			}
 			await this.dataService.updateStat(stat);
 		}
@@ -533,7 +462,7 @@ export class GamecastComponent {
 			let stat = await this.dataService.getStat(player.id);
 			stat.blocks++;
 			await this.dataService.updateStat(stat);
-			await this.addPlay(team, GameActions.Block, player);
+			await this.dataService.addPlay(team, GameActions.Block, player);
 			this.missedDisplay = true;
 		}
 	}
@@ -544,8 +473,19 @@ export class GamecastComponent {
 			let stat = await this.dataService.getStat(player.id);
 			stat.turnovers++;
 			await this.dataService.updateStat(stat);
-			await this.addPlay(team, GameActions.Turnover, player);
+			await this.dataService.addPlay(team, GameActions.Turnover, player);
 		}
+	}
+
+	public async updatePlayerPlay($event:RadioEvent, play:Play) {
+		if ($event.detail.value == null) {
+			play.playerNumber = null;
+			play.playerName = null;
+		} else {
+			play.playerNumber = $event.detail.value.number;
+			play.playerName = `${$event.detail.value.firstName} ${$event.detail.value.lastName}`;
+		}
+		await this.updatePlay(play);
 	}
 
 	public async removeLastPlay() {
@@ -561,7 +501,7 @@ export class GamecastComponent {
 		}
 	}
 
-	public async undoAction(play:Play) {
+	private async undoAction(play:Play) {
 		const game = { ...this.dataService.game() };
 		if (play.action == GameActions.Assist) {
 			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
@@ -740,7 +680,7 @@ export class GamecastComponent {
 		this.currentGame.set(game);
 	}
 
-	public async redoAction(play:Play) {
+	private async redoAction(play:Play) {
 		const game = { ...this.dataService.game() };
 		if (play.action == GameActions.Assist) {
 			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
@@ -939,14 +879,15 @@ export class GamecastComponent {
 	}
 
 	public getPlayer(play:Play) {
-		if (play.teamName == this.dataService.homeTeamName()) {
-			return this.dataService.homeTeamPlayers().find(t => t.number == play.playerNumber && `${t.firstName} ${t.lastName}` == play.playerName);
+		const { homeTeamName, homeTeamPlayers, awayTeamPlayers } = this.dataService;
+		if (play.teamName == homeTeamName()) {
+			return homeTeamPlayers().find(t => t.number == play.playerNumber && `${t.firstName} ${t.lastName}` == play.playerName);
 		} else {
-			return this.dataService.awayTeamPlayers().find(t => t.number == play.playerNumber && `${t.firstName} ${t.lastName}` == play.playerName);
+			return awayTeamPlayers().find(t => t.number == play.playerNumber && `${t.firstName} ${t.lastName}` == play.playerName);
 		}
 	}
 
-	public startStopTimer() {
+	public toggleTimer() {
     if (this.timerRunning) {
       this.stopTimer();
     } else {
@@ -987,10 +928,12 @@ export class GamecastComponent {
   }
 
 	private async calculatePlusOrMinus() {
-		let homePlusOrMinusToAdd = (this.dataService.game()?.homeFinal - this.homeTeamPlusOrMinus) - (this.dataService.game()?.awayFinal - this.awayTeamPlusOrMinus);
-		let awayPlusOrMinusToAdd = homePlusOrMinusToAdd * -1;
-		let homePlayers = this.homePlayersOnCourt().slice(0);
-		let awayPlayers = this.awayPlayersOnCourt().slice(0);
+		const game = this.dataService.game()!;
+		const { homePlayersOnCourt, awayPlayersOnCourt } = this.dataService;
+		const homePlusOrMinusToAdd = (game.homeFinal - this.homeTeamPlusOrMinus) - (game.awayFinal - this.awayTeamPlusOrMinus);
+		const awayPlusOrMinusToAdd = homePlusOrMinusToAdd * -1;
+		const homePlayers = homePlayersOnCourt().slice(0);
+		const awayPlayers = awayPlayersOnCourt().slice(0);
 		for (let item of homePlayers) {
 			let stat = await this.dataService.getStat(item.id);
 			stat.plusOrMinus += homePlusOrMinusToAdd;
@@ -1001,8 +944,8 @@ export class GamecastComponent {
 			stat.plusOrMinus += awayPlusOrMinusToAdd;
 			await this.dataService.updateStat(stat);
 		}
-		this.homeTeamPlusOrMinus = this.dataService.game()?.homeFinal;
-		this.awayTeamPlusOrMinus = this.dataService.game()?.awayFinal;
+		this.homeTeamPlusOrMinus = game.homeFinal;
+		this.awayTeamPlusOrMinus = game.awayFinal;
 	}
 
   async ngOnDestroy() {
