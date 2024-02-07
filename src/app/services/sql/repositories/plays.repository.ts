@@ -70,7 +70,11 @@ export class PlaysRepository implements Repository<PlayEntityWithChildren, Play,
 
 	async find(id: { id: number; gameId: number }): Promise<Play> {
 		const plays = await this.db.select<PlayEntityWithChildren[]>(`
-			SELECT 			*
+			SELECT 			plays.*,
+									teams.name,
+									players.firstName,
+									players.lastName,
+									players.number
 			FROM 				plays
 			LEFT JOIN 	teams ON plays.teamId = teams.id
 			LEFT JOIN 	players ON plays.playerId = players.id
@@ -80,7 +84,15 @@ export class PlaysRepository implements Repository<PlayEntityWithChildren, Play,
 	}
 
 	async getAll(): Promise<Play[]> {
-		const plays = await this.db.select<PlayEntityWithChildren[]>('SELECT * FROM plays');
+		const plays = await this.db.select<PlayEntityWithChildren[]>(`
+			SELECT 			plays.*,
+									teams.name,
+									players.firstName,
+									players.lastName,
+									players.number
+			FROM 				plays
+			LEFT JOIN 	teams ON plays.teamId = teams.id
+			LEFT JOIN 	players ON plays.playerId = players.id`);
 		return plays.map(this.mapDbToDto);
 	}
 
