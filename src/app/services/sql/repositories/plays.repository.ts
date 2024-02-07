@@ -67,8 +67,7 @@ export class PlaysRepository implements Repository<sgPlay, number> {
 		const result = await this.db.execute(`
 			INSERT
 				into
-				plays (id,
-				order,
+				plays (order,
 				gameId,
 				turboStatsData,
 				sgLegacyData,
@@ -92,10 +91,9 @@ export class PlaysRepository implements Repository<sgPlay, number> {
 			$10,
 			$11,
 			$12,
-			$13)
+			$12)
 		`,
 			[
-				0,
 				model.play.order,
 				model.play.gameId,
 				model.play.turboStatsData,
@@ -150,8 +148,7 @@ export class PlaysRepository implements Repository<sgPlay, number> {
 		await this.db.execute(`
 				INSERT
 					into
-					plays (id,
-					order,
+					plays (order,
 					gameId,
 					turboStatsData,
 					sgLegacyData,
@@ -174,8 +171,7 @@ export class PlaysRepository implements Repository<sgPlay, number> {
 				$9,
 				$10,
 				$11,
-				$12,
-				$13)
+				$12)
 		`,
 			[ dbPlays ]
 		);

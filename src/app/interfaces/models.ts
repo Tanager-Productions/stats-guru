@@ -37,8 +37,6 @@ export interface Game {
 	partialTimeoutsPerGame: number | null;
 	minutesPerPeriod: number | null;
 	minutesPerOvertime: number | null;
-	hiddenPlayers: string | null;
-	syncState: SyncState;
 }
 
 export const DEFAULT_GAME: Game = {
@@ -77,9 +75,7 @@ export const DEFAULT_GAME: Game = {
 	fullTimeoutsPerGame: null,
 	partialTimeoutsPerGame: null,
 	minutesPerPeriod: null,
-	minutesPerOvertime: null,
-	hiddenPlayers: null,
-	syncState: SyncState.Unchanged
+	minutesPerOvertime: null
 }
 
 export interface Play {
