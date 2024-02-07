@@ -112,9 +112,8 @@ export interface Player {
 	age: number | null;
 	homeTown: string | null;
 	homeState: string | null;
-	socialMediaString: string | null;
-	infoString: string | null;
-	syncState: SyncState;
+	socialMedias: string | null;
+	generalInfo: string | null;
 }
 
 export const DEFAULT_PLAYER: Player = {
@@ -131,9 +130,8 @@ export const DEFAULT_PLAYER: Player = {
 	age: null,
 	homeTown: null,
 	homeState: null,
-	socialMediaString: null,
-	infoString: null,
-	syncState: SyncState.Unchanged
+	socialMedias: null,
+	generalInfo: null
 }
 
 export interface Stat {

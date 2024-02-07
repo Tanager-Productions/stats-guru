@@ -31,10 +31,10 @@ export class PlayersRepository implements Repository<sgPlayer, number> {
 									age: obj.age,
 									homeTown: obj.homeTown,
 									homeState: obj.homeState,
-									socialMedias: obj.socialMediaString != null ? JSON.parse(obj.socialMediaString) : null,
-									generalInfo: obj.infoString != null ? JSON.parse(obj.infoString) : null
+									socialMedias: obj.socialMedias != null ? JSON.parse(obj.socialMedias) : null,
+									generalInfo: obj.generalInfo != null ? JSON.parse(obj.generalInfo) : null
 								},
-			syncState: obj.syncState
+			syncState: SyncState.Unchanged
 		}
 	}
 
@@ -53,9 +53,8 @@ export class PlayersRepository implements Repository<sgPlayer, number> {
 			age: obj.player.age,
 			homeTown: obj.player.homeTown,
 			homeState: obj.player.homeState,
-			socialMediaString: obj.player.socialMedias != null ? JSON.stringify(obj.player.socialMedias) : null,
-			infoString: obj.player.generalInfo != null ? JSON.stringify(obj.player.generalInfo) : null,
-			syncState: SyncState.Unchanged
+			socialMedias: obj.player.socialMedias != null ? JSON.stringify(obj.player.socialMedias) : null,
+			generalInfo: obj.player.generalInfo != null ? JSON.stringify(obj.player.generalInfo) : null
 		}
 	}
 
@@ -198,7 +197,7 @@ export class PlayersRepository implements Repository<sgPlayer, number> {
 		$15,
 		$16)
 		`,
-				[dbPlayers]
+			[dbPlayers]
 		);
 	}
 
