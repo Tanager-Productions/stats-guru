@@ -74,8 +74,7 @@ export class StatsRepository implements Repository<StatEntity, Stat, {playerId: 
 			from 		stats
 			where 	playerId = ${id.playerId}
 			and 		gameId = ${id.gameId}`);
-		const stat = stats[0];
-		return this.mapDbToDto(stat);
+		return this.mapDbToDto(stats[0]);
 	}
 
 	async getAll(): Promise<Stat[]> {
@@ -135,8 +134,7 @@ export class StatsRepository implements Repository<StatEntity, Stat, {playerId: 
 				${entity.technicalFouls},
 				${entity.onCourt},
 				${entity.playerHidden},
-				${entity.syncState}
-			);`);
+				${entity.syncState});`);
 	}
 
 	async delete(id: {playerId: number, gameId: number}): Promise<void> {
@@ -183,7 +181,7 @@ export class StatsRepository implements Repository<StatEntity, Stat, {playerId: 
 
 	async bulkAdd(models: Stat[]): Promise<void> {
     if (models.length === 0) {
-        return;
+			return;
     }
 
     const entities = models.map(model => this.mapDtoToDb(model));
