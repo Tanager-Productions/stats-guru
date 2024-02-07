@@ -1,73 +1,94 @@
-import { Play as PlayEntity } from "src/app/interfaces/entities";
-import { Repository } from "./repository.interface";
+import { PlayEntity } from "src/app/interfaces/entities";
+import { Play } from "src/app/interfaces/sgDtos";
 import Database from "tauri-plugin-sql-api";
-import { Play } from "@tanager/tgs";
-import { SyncState } from "src/app/interfaces/syncState.enum";
+import { Repository } from "./repository.interface";
 
-type sgPlay = {
-	play: Play,
-	syncState: SyncState
+interface PlayEntityWithChildren extends PlayEntity {
+	//player
+	firstName: string;
+	lastName: string;
+	number: number;
+
+	//Team
+	name: string
 }
 
-export class PlaysRepository implements Repository<sgPlay, number> {
+export class PlaysRepository implements Repository<PlayEntityWithChildren, Play, { id: number; gameId: number }> {
 	private db: Database;
 
 	constructor(db: Database) {
 		this.db = db;
 	}
 
-	private mapDbToDto = (obj: PlayEntity): sgPlay => {
+	mapDbToDto = (entity: PlayEntityWithChildren): Play => {
 		return {
-			play : {
-									order: obj.order,
-									gameId: obj.gameId,
-									turboStatsData: obj.turboStatsData,
-									sgLegacyData: obj.sgLegacyData,
-									player: null,
-									team: null,
-									action: obj.action,
-									period: obj.period,
-									gameClock: obj.gameClock,
-									score: obj.score,
-									timeStamp: obj.timeStamp
-						  },
-			syncState: SyncState.Unchanged
-		}
+			order: entity.id,
+			gameId: entity.gameId,
+			turboStatsData: entity.turboStatsData,
+			sgLegacyData: entity.sgLegacyData,
+			team: !entity.teamId ? null : {
+				teamId: entity.teamId,
+				name: entity.name
+			},
+			player: !entity.playerId ? null : {
+				playerId: entity.playerId,
+				firstName: entity.firstName,
+				lastName: entity.lastName,
+				number: entity.number
+			},
+			action: entity.action,
+			period: entity.period,
+			gameClock: entity.gameClock,
+			timeStamp: entity.timeStamp,
+			score: entity.score,
+			syncState: entity.syncState
+		};
 	}
 
-	private mapDtoToDb = (obj: sgPlay): PlayEntity => {
+	mapDtoToDb = (dto: Play): PlayEntityWithChildren => {
 		return {
-			id: 0,
-			order: obj.play.order,
-			gameId: obj.play.gameId,
-			turboStatsData: obj.play.turboStatsData,
-			sgLegacyData: obj.play.sgLegacyData,
-			playerId: obj.play.player?.playerId!,
-			teamId: obj.play.team?.teamId!,
-			action: obj.play.action,
-			period: obj.play.period,
-			gameClock: obj.play.gameClock,
-			score: obj.play.score,
-			timeStamp: obj.play.timeStamp
-		}
+			id: dto.order,
+			gameId: dto.gameId,
+			turboStatsData: dto.turboStatsData,
+			sgLegacyData: dto.sgLegacyData,
+			teamId: dto.team ? dto.team.teamId : null,
+			playerId: dto.player ? dto.player.playerId : null,
+			action: dto.action,
+			period: dto.period,
+			gameClock: dto.gameClock,
+			timeStamp: dto.timeStamp,
+			score: dto.score,
+			syncState: dto.syncState,
+
+			//don't need children
+			firstName: null!,
+			lastName: null!,
+			number: null!,
+			name: null!
+		};
 	}
 
-	async find(id: number): Promise<sgPlay> {
-		const result = (await this.db.select<PlayEntity[]>(`select * from plays where id = '${id}'`));
-		const play = result[0];
-		return this.mapDbToDto(play);
+	async find(id: { id: number; gameId: number }): Promise<Play> {
+		const plays = await this.db.select<PlayEntityWithChildren[]>(`
+			SELECT 			*
+			FROM 				plays
+			LEFT JOIN 	teams ON plays.teamId = teams.id
+			LEFT JOIN 	players ON plays.playerId = players.id
+			WHERE 			id = ${id.id}
+			AND 				gameId = ${id.gameId}`);
+		return this.mapDbToDto(plays[0]);
 	}
 
-	async getAll(): Promise<sgPlay[]> {
-		const plays = (await this.db.select<PlayEntity[]>(`select * from plays`));
+	async getAll(): Promise<Play[]> {
+		const plays = await this.db.select<PlayEntityWithChildren[]>('SELECT * FROM plays');
 		return plays.map(this.mapDbToDto);
 	}
 
-	async add(model: sgPlay): Promise<void> {
-		const result = await this.db.execute(`
-			INSERT
-				into
-				plays (order,
+	async add(model: Play): Promise<void> {
+		const entity = this.mapDtoToDb(model);
+		await this.db.execute(`
+			INSERT INTO plays (
+				id,
 				gameId,
 				turboStatsData,
 				sgLegacyData,
@@ -77,114 +98,83 @@ export class PlaysRepository implements Repository<sgPlay, number> {
 				period,
 				gameClock,
 				score,
-				timeStamp,
-				syncState)
-			VALUES ($1,
-			$2,
-			$3,
-			$4,
-			$5,
-			$6,
-			$7,
-			$8,
-			$9,
-			$10,
-			$11,
-			$12,
-			$12)
-		`,
-			[
-				model.play.order,
-				model.play.gameId,
-				model.play.turboStatsData,
-				model.play.sgLegacyData,
-				model.play.team?.teamId,
-				model.play.player?.playerId,
-				model.play.action,
-				model.play.period,
-				model.play.gameClock,
-				model.play.score,
-				model.play.timeStamp,
-				SyncState.Added
-			]
-	 );
-	 //model.play. = result.lastInsertId;
-
+				timeStamp
+			) VALUES (
+				${entity.id},
+				${entity.gameId},
+				${entity.turboStatsData},
+				${entity.sgLegacyData},
+				${entity.teamId},
+				${entity.playerId},
+				${entity.action},
+				${entity.period},
+				${entity.gameClock},
+				${entity.score},
+				${entity.timeStamp}
+			);`);
 	}
 
-	async delete(id: number): Promise<void> {
+	async delete(id: { id: number; gameId: number }): Promise<void> {
 		await this.db.execute(`
-			DELETE		*
-			FROM	plays
-			WHERE id = '${id}'
-		`);
+			DELETE FROM plays
+			WHERE id = ${id.id}
+			AND gameId = ${id.gameId}`);
 	}
 
-	async update(model: sgPlay): Promise<void> {
-		await this.db.execute(`
-				UPDATE
-					plays
-				SET
-					turboStatsData = $1,
-					sgLegacyData = $2,
-					teamId = $3,
-					playerId = $4,
-					action = $5,
-					period = $6,
-					gameClock = $7,
-					score = $8,
-					timeStamp = $9,
-					syncState = $10
-				WHERE
-					order = $11
-					and gameId = $12
-		`,
-			[ model.play.turboStatsData, model.play.sgLegacyData, model.play.team?.teamId, model.play.player?.playerId, model.play.action, model.play.period, model.play.gameClock, model.play.score, model.play.timeStamp, SyncState.Modified, model.play.order, model.play.gameId ]
-		);
+	async update(model: Play): Promise<void> {
+    const entity = this.mapDtoToDb(model);
+
+    await this.db.execute(`
+			UPDATE plays
+			SET
+				id = ${entity.id},
+				gameId = ${entity.gameId},
+				turboStatsData = ${entity.turboStatsData},
+				sgLegacyData = ${entity.sgLegacyData},
+				teamId = ${entity.teamId},
+				playerId = ${entity.playerId},
+				action = ${entity.action},
+				period = ${entity.period},
+				gameClock = ${entity.gameClock},
+				score = ${entity.score},
+				timeStamp = ${entity.timeStamp}
+			WHERE
+				id = ${entity.id} AND gameId = ${entity.gameId}`);
 	}
 
-	async bulkAdd(models: sgPlay[]): Promise<void> {
-		const dbPlays: PlayEntity[] = models.map(this.mapDtoToDb);
-		await this.db.execute(`
-				INSERT
-					into
-					plays (order,
-					gameId,
-					turboStatsData,
-					sgLegacyData,
-					teamId,
-					playerId,
-					action,
-					period,
-					gameClock,
-					score,
-					timeStamp,
-					syncState)
-				VALUES ($1,
-				$2,
-				$3,
-				$4,
-				$5,
-				$6,
-				$7,
-				$8,
-				$9,
-				$10,
-				$11,
-				$12)
-		`,
-			[ dbPlays ]
-		);
-	}
+	async bulkAdd(models: Play[]): Promise<void> {
+    if (models.length === 0) {
+			return;
+    }
 
-	async getByGame(gameId: number): Promise<sgPlay[]> {
-		var dbPlays: PlayEntity[] = await this.db.select<PlayEntity[]>(`
-			SELECT 		*
-			FROM 			plays
-			WHERE 		gameId = ${gameId}
-			AND				syncState != 3
-			ORDER BY	order DESC
-		`);
-		return dbPlays.map(this.mapDbToDto);
+    const entities = models.map(model => this.mapDtoToDb(model));
+
+    const valuesClause = entities.map(entity => `(
+			${entity.id},
+			${entity.gameId},
+			${entity.turboStatsData},
+			${entity.sgLegacyData},
+			${entity.teamId},
+			${entity.playerId},
+			${entity.action},
+			${entity.period},
+			${entity.gameClock},
+			${entity.score},
+			${entity.timeStamp})`).join(', ');
+
+    await this.db.execute(`
+			INSERT INTO plays (
+				id,
+				gameId,
+				turboStatsData,
+				sgLegacyData,
+				teamId,
+				playerId,
+				action,
+				period,
+				gameClock,
+				score,
+				timeStamp
+			) VALUES ${valuesClause};`);
 	}
 }
