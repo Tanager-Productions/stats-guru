@@ -1,115 +1,194 @@
-import { Play as dbPlay } from "src/app/interfaces/models";
+import { Play as PlayEntity } from "src/app/interfaces/models";
 import { Repository } from "./repository.interface";
 import Database from "tauri-plugin-sql-api";
 import { Play } from "@tanager/tgs";
 import { SyncState } from "src/app/interfaces/syncState.enum";
-export class PlaysRepository implements Repository<Play, number> {
+
+type sgPlay = {
+	play: Play,
+	syncState: SyncState
+}
+
+export class PlaysRepository implements Repository<sgPlay, number> {
 	private db: Database;
 
 	constructor(db: Database) {
 		this.db = db;
 	}
 
-	async find(id: number): Promise<Play> {
-		var dbPlay: dbPlay[] = (await this.db.select(`select * from plays where id = '${id}'`));
-		var play: Play = {
-			order: dbPlay[0].playOrder,
-			gameId: dbPlay[0].gameId,
-			turboStatsData: dbPlay[0].turboStatsData,
-			sgLegacyData: null, //
-			player: null, //
-			team: null,
-			action: dbPlay[0].action,
-			period: dbPlay[0].period,
-			gameClock: dbPlay[0].gameClock,
-			score: dbPlay[0].score,
-			timeStamp: dbPlay[0].timeStamp,
+	private mapDbToDto = (obj: PlayEntity): sgPlay => {
+		return {
+			play : {
+									order: obj.order,
+									gameId: obj.gameId,
+									turboStatsData: obj.turboStatsData,
+									sgLegacyData: obj.sgLegacyData,
+									player: null,
+									team: null,
+									action: obj.action,
+									period: obj.period,
+									gameClock: obj.gameClock,
+									score: obj.score,
+									timeStamp: obj.timeStamp
+						  },
+			syncState: SyncState.Unchanged
 		}
-		return play;
 	}
 
-	async getAll(): Promise<Play[]> {
-		var dbPlays:dbPlay[] = (await this.db.select(`select * from plays`));
-		return dbPlays.map(obj => ({
-		  order: obj.playOrder,
-  		gameId: obj.gameId,
-  		turboStatsData: obj.turboStatsData,
-  		sgLegacyData: null, //
-  		player: null, //
-  		team: null,
-  		action: obj.action,
-  		period: obj.period,
- 		  gameClock: obj.gameClock,
-  		score: obj.score,
-  		timeStamp: obj.timeStamp,
-		}));
+	private mapDtoToDb = (obj: sgPlay): PlayEntity => {
+		return {
+			id: 0,
+			order: obj.play.order,
+			gameId: obj.play.gameId,
+			turboStatsData: obj.play.turboStatsData,
+			sgLegacyData: obj.play.sgLegacyData,
+			playerId: obj.play.player?.playerId!,
+			teamId: obj.play.team?.teamId!,
+			action: obj.play.action,
+			period: obj.play.period,
+			gameClock: obj.play.gameClock,
+			score: obj.play.score,
+			timeStamp: obj.play.timeStamp
+		}
 	}
 
-	async add(model: Play): Promise<number> {
-		const result = await this.db.execute(
-			"INSERT into plays (id, playOrder, gameId, turboStatsData, teamName, playerName, playerNumber, action, period, gameClock, score, timeStamp, syncState) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
+	async find(id: number): Promise<sgPlay> {
+		const result = (await this.db.select<PlayEntity[]>(`select * from plays where id = '${id}'`));
+		const play = result[0];
+		return this.mapDbToDto(play);
+	}
+
+	async getAll(): Promise<sgPlay[]> {
+		const plays = (await this.db.select<PlayEntity[]>(`select * from plays`));
+		return plays.map(this.mapDbToDto);
+	}
+
+	async add(model: sgPlay): Promise<void> {
+		const result = await this.db.execute(`
+			INSERT
+				into
+				plays (id,
+				order,
+				gameId,
+				turboStatsData,
+				sgLegacyData,
+				teamId,
+				playerId,
+				action,
+				period,
+				gameClock,
+				score,
+				timeStamp,
+				syncState)
+			VALUES ($1,
+			$2,
+			$3,
+			$4,
+			$5,
+			$6,
+			$7,
+			$8,
+			$9,
+			$10,
+			$11,
+			$12,
+			$13)
+		`,
 			[
 				0,
-				model.order,
-				model.gameId,
-				model.turboStatsData,
-				model.team?.name,
-				model.player?.firstName + " " + model.player?.lastName,
-				model.player?.number,
-				model.action,
-				model.period,
-				model.gameClock,
-				model.score,
-				model.timeStamp,
+				model.play.order,
+				model.play.gameId,
+				model.play.turboStatsData,
+				model.play.sgLegacyData,
+				model.play.team?.teamId,
+				model.play.player?.playerId,
+				model.play.action,
+				model.play.period,
+				model.play.gameClock,
+				model.play.score,
+				model.play.timeStamp,
 				SyncState.Added
 			]
 	 );
-	 return result.rowsAffected;
+	 //model.play. = result.lastInsertId;
+
 	}
 
-	delete(id: number): Promise<void> {
-		const result = this.db.execute(`delete * from players where id = '${id}'`);
-		return result.then(res => console.log(res));
+	async delete(id: number): Promise<void> {
+		await this.db.execute(`
+			DELETE		*
+			FROM	plays
+			WHERE id = '${id}'
+		`);
 	}
 
-	update(model: Play): Promise<void> {
-		const result = this.db.execute(
-			"UPDATE todos SET turboStatsData = $1, teamName = $2, playerName = $3, playerNumber = $4, action = $5, period = $6, gameClock = $7, score = $8, timeStamp = $9, syncState = $10 WHERE playOrder = $11 and gameId = $12",
-			[ model.turboStatsData, model.team?.name, model.player?.firstName + " " + model.player?.lastName, model.player?.number, model.action, model.period, model.gameClock, model.score, model.timeStamp, SyncState.Modified, model.order, model.gameId ]
+	async update(model: sgPlay): Promise<void> {
+		await this.db.execute(`
+				UPDATE
+					plays
+				SET
+					turboStatsData = $1,
+					sgLegacyData = $2,
+					teamId = $3,
+					playerId = $4,
+					action = $5,
+					period = $6,
+					gameClock = $7,
+					score = $8,
+					timeStamp = $9,
+					syncState = $10
+				WHERE
+					order = $11
+					and gameId = $12
+		`,
+			[ model.play.turboStatsData, model.play.sgLegacyData, model.play.team?.teamId, model.play.player?.playerId, model.play.action, model.play.period, model.play.gameClock, model.play.score, model.play.timeStamp, SyncState.Modified, model.play.order, model.play.gameId ]
 		);
-		return result.then(res => console.log(res));
 	}
 
-	async bulkAdd(models: Play[]): Promise<void> {
-		for(const model of models) {
-		await this.db.execute(
-			"INSERT into plays (id, playOrder, gameId, turboStatsData, teamName, playerName, playerNumber, action, period, gameClock, score, timeStamp, syncState) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
-			[
-				0,
-				model.order,
-				model.gameId,
-				model.turboStatsData,
-				model.team?.name,
-				model.player?.firstName + " " + model.player?.lastName,
-				model.player?.number,
-				model.action,
-				model.period,
-				model.gameClock,
-				model.score,
-				model.timeStamp,
-				SyncState.Added
-			]
-		 );
-		}
+	async bulkAdd(models: sgPlay[]): Promise<void> {
+		const dbPlays: PlayEntity[] = models.map(this.mapDtoToDb);
+		await this.db.execute(`
+				INSERT
+					into
+					plays (id,
+					order,
+					gameId,
+					turboStatsData,
+					sgLegacyData,
+					teamId,
+					playerId,
+					action,
+					period,
+					gameClock,
+					score,
+					timeStamp,
+					syncState)
+				VALUES ($1,
+				$2,
+				$3,
+				$4,
+				$5,
+				$6,
+				$7,
+				$8,
+				$9,
+				$10,
+				$11,
+				$12,
+				$13)
+		`,
+			[ dbPlays ]
+		);
 	}
 
-	getByGame(gameId: number): Promise<Play[]> {
-		return this.db.select<Play[]>(`
+	async getByGame(gameId: number): Promise<sgPlay[]> {
+		var dbPlays: PlayEntity[] = await this.db.select<PlayEntity[]>(`
 			SELECT 		*
 			FROM 			plays
 			WHERE 		gameId = ${gameId}
 			AND				syncState != 3
-			ORDER BY	playOrder DESC
+			ORDER BY	order DESC
 		`);
+		return dbPlays.map(this.mapDbToDto);
 	}
 }

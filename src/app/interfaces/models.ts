@@ -84,18 +84,17 @@ export const DEFAULT_GAME: Game = {
 
 export interface Play {
 	id: number;
-	playOrder: number;
+	order: number;
 	gameId: number;
 	turboStatsData: string | null;
-	teamName: string | null;
-	playerName: string | null;
-	playerNumber: number | null;
+	sgLegacyData: string | null;
+	playerId: number | null;
+	teamId: number | null;
 	action: GameActions;
 	period: number | null;
 	gameClock: string | null;
 	score: string | null;
 	timeStamp: string | null;
-	syncState: SyncState;
 }
 
 export interface Player {

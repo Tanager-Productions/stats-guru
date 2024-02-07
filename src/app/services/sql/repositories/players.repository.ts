@@ -71,7 +71,9 @@ export class PlayersRepository implements Repository<sgPlayer, number> {
 
 	async add(model: sgPlayer): Promise<void> {
 		const result = await this.db.execute(`
-			INSERT into players (id,
+			INSERT
+			  into
+			  players (id,
 				firstName,
 				lastName,
 				number,
@@ -135,26 +137,27 @@ export class PlayersRepository implements Repository<sgPlayer, number> {
 
 	async update(model: sgPlayer): Promise<void> {
 		await this.db.execute(`
-			UPDATE
-				players
-			SET
-				firstName = $1,
-				lastName = $2,
-				number = $3,
-				position = $4,
-				teamId = $5,
-				picture = $6,
-				isMale = $7,
-				height = $8,
-				weight = $9,
-				age = $10,
-				homeTown = $11,
-				homeState = $12,
-				socialMediaString = $13,
-				infoString = $14,
-				syncState = $15
-			WHERE
-				id = $16`,
+				UPDATE
+					players
+				SET
+					firstName = $1,
+					lastName = $2,
+					number = $3,
+					position = $4,
+					teamId = $5,
+					picture = $6,
+					isMale = $7,
+					height = $8,
+					weight = $9,
+					age = $10,
+					homeTown = $11,
+					homeState = $12,
+					socialMediaString = $13,
+					infoString = $14,
+					syncState = $15
+				WHERE
+					id = $16
+		`,
 			[model.player.firstName, model.player.lastName, model.player.number, model.player.position, model.player.teamId, model.player.picture, model.player.isMale, model.player.height, model.player.weight, model.player.age, model.player.homeTown, model.player.homeState, model.player.socialMedias, model.player.generalInfo, SyncState.Modified, model.player.id]
 		);
 	}
@@ -162,40 +165,40 @@ export class PlayersRepository implements Repository<sgPlayer, number> {
 	async bulkAdd(models: sgPlayer[]): Promise<void> {
 		const dbPlayers: PlayerEntity[] = models.map(this.mapDtoToDb);
 		await this.db.execute(`
-		INSERT
-			into
-			players (id,
-			firstName,
-			lastName,
-			number,
-			position,
-			teamId,
-			picture,
-			isMale,
-			height,
-			weight,
-			age,
-			homeTown,
-			homeState,
-			socialMediaString,
-			infoString,
-			syncState)
-		VALUES ($1,
-		$2,
-		$3,
-		$4,
-		$5,
-		$6,
-		$7,
-		$8,
-		$9,
-		$10,
-		$11,
-		$12,
-		$13,
-		$14,
-		$15,
-		$16)
+				INSERT
+					into
+					players (id,
+					firstName,
+					lastName,
+					number,
+					position,
+					teamId,
+					picture,
+					isMale,
+					height,
+					weight,
+					age,
+					homeTown,
+					homeState,
+					socialMediaString,
+					infoString,
+					syncState)
+				VALUES ($1,
+				$2,
+				$3,
+				$4,
+				$5,
+				$6,
+				$7,
+				$8,
+				$9,
+				$10,
+				$11,
+				$12,
+				$13,
+				$14,
+				$15,
+				$16)
 		`,
 			[dbPlayers]
 		);
