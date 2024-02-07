@@ -1,6 +1,5 @@
 import { SgGame, SgPlay, SgStat, SgPlayer } from "./sgDtos";
 
-
 export interface SyncDto {
   version: number;
   overwrite: boolean | null;

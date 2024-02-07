@@ -1,4 +1,3 @@
-import { Play, Player, Stat, Game } from "@tanager/tgs";
 import { SyncMode } from "./sync.interface";
 import { SgGame, SgPlay, SgPlayer, SgStat } from "./sgDtos";
 
