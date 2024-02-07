@@ -208,8 +208,8 @@ export interface Team {
 	city: string;
 	state: string;
 	type: TeamTypes;
-	socialMediaString: string | null;
-	infoString: string | null;
+	socialMedias: string | null;
+	generalInfo: string | null;
 	division: Divisions | null;
 	defaultLogo: string | null;
 	darkModeLogo: string | null;
