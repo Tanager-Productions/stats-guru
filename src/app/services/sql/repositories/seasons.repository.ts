@@ -1,4 +1,4 @@
-import { Season as dbSeason } from "src/app/interfaces/models";
+import { Season as dbSeason } from "src/app/interfaces/entities";
 import { Repository } from "./repository.interface";
 import Database from "tauri-plugin-sql-api";
 import { Season } from "@tanager/tgs";

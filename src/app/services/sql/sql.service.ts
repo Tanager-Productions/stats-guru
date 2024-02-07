@@ -3,7 +3,7 @@ import { currentDatabaseVersion, databaseName, upgrades } from 'src/app/upgrades
 import { BehaviorSubject } from 'rxjs';
 import Database from "tauri-plugin-sql-api";
 import { SyncHistory } from 'src/app/interfaces/syncHistory.interface';
-import { Play, Player, Game, Stat } from 'src/app/interfaces/models';
+import { Play, Player, Game, Stat } from 'src/app/interfaces/entities';
 import { appDataDir } from '@tauri-apps/api/path';
 import { GamesRepository } from './repositories/games.repository';
 import { EventsRepository } from './repositories/events.repository';

@@ -1,7 +1,7 @@
 import { Injectable, WritableSignal, signal } from '@angular/core';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { SqlService } from '../sql/sql.service';
-import { Game, Play, Player, Stat, Team, Event } from 'src/app/interfaces/models';
+import { Game, Play, Player, Stat, Team, Event } from 'src/app/interfaces/entities';
 
 export type HomePageGame = {
 	gameId:number,

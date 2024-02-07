@@ -1,160 +1,254 @@
-import { Stat as dbStat } from "src/app/interfaces/models";
+import { Stat } from "src/app/interfaces/sgDtos";
 import { Repository } from "./repository.interface";
 import Database from "tauri-plugin-sql-api";
-import { Stat } from "@tanager/tgs";
-export class StatsRepository implements Repository<Stat, number> {
+import { StatEntity } from "src/app/interfaces/entities";
+
+export class StatsRepository implements Repository<StatEntity, Stat, {playerId: number, gameId: number}> {
 	private db: Database;
 
 	constructor(db: Database) {
 		this.db = db;
 	}
 
-	async find(id: number): Promise<Stat> {
-		var dbStats:dbStat[] = (await this.db.select(`select * from stats where id = '${id}'`));
-		var stat: Stat = {
-			gameId: dbStats[0].gameId,
-			playerId: dbStats[0].playerId,
-			minutes: dbStats[0].minutes,
-			assists: dbStats[0].assists,
-			rebounds: dbStats[0].rebounds,
-			defensiveRebounds: dbStats[0].defensiveRebounds,
-			offensiveRebounds: dbStats[0].offensiveRebounds,
-			fieldGoalsMade: dbStats[0].fieldGoalsMade,
-			fieldGoalsAttempted: dbStats[0].fieldGoalsAttempted,
-			blocks:dbStats[0].blocks,
-			steals: dbStats[0].steals,
-			threesMade: dbStats[0].threesMade,
-			threesAttempted: dbStats[0].threesAttempted,
-			freeThrowsMade: dbStats[0].freeThrowsMade,
-			freeThrowsAttempted: dbStats[0].freeThrowsAttempted,
-			points:dbStats[0].points,
-			turnovers: dbStats[0].turnovers,
-			fouls:  dbStats[0].fouls,
-			plusOrMinus: dbStats[0].plusOrMinus,
-			eff: dbStats[0].eff,
-			technicalFouls:  dbStats[0].technicalFouls,
-			onCourt:  dbStats[0].onCourt == 1 ? true : false,
+	mapDbToDto = (entity: StatEntity): Stat => {
+		return {
+			gameId: entity.gameId,
+			playerId: entity.playerId,
+			minutes: entity.minutes,
+			assists: entity.assists,
+			rebounds: entity.rebounds,
+			defensiveRebounds: entity.defensiveRebounds,
+			offensiveRebounds: entity.offensiveRebounds,
+			fieldGoalsMade: entity.fieldGoalsMade,
+			fieldGoalsAttempted: entity.fieldGoalsAttempted,
+			blocks: entity.blocks,
+			steals: entity.steals,
+			threesMade: entity.threesMade,
+			threesAttempted: entity.threesAttempted,
+			freeThrowsMade: entity.freeThrowsMade,
+			freeThrowsAttempted: entity.freeThrowsAttempted,
+			points: entity.points,
+			turnovers: entity.turnovers,
+			fouls: entity.fouls,
+			plusOrMinus: entity.plusOrMinus,
+			eff: entity.eff,
+			technicalFouls: entity.technicalFouls,
+			onCourt: entity.onCourt == 1 ? true : false,
 			playerHidden: null,
+			syncState: entity.syncState
 		}
-		return stat;
+	}
+
+	mapDtoToDb = (dto: Stat): StatEntity => {
+		return {
+			gameId: dto.gameId,
+			playerId: dto.playerId,
+			minutes: dto.minutes,
+			assists: dto.assists,
+			rebounds: dto.rebounds,
+			defensiveRebounds: dto.defensiveRebounds,
+			offensiveRebounds: dto.offensiveRebounds,
+			fieldGoalsMade: dto.fieldGoalsMade,
+			fieldGoalsAttempted: dto.fieldGoalsAttempted,
+			blocks: dto.blocks,
+			steals: dto.steals,
+			threesMade: dto.threesMade,
+			threesAttempted: dto.threesAttempted,
+			freeThrowsMade: dto.freeThrowsMade,
+			freeThrowsAttempted: dto.freeThrowsAttempted,
+			points: dto.points,
+			turnovers: dto.turnovers,
+			fouls: dto.fouls,
+			plusOrMinus: dto.plusOrMinus,
+			eff: dto.eff,
+			technicalFouls: dto.technicalFouls,
+			onCourt: dto.onCourt ? 1 : 0,
+			playerHidden: dto.playerHidden ?? false ? 1 : 0,
+			syncState: dto.syncState
+		}
+	}
+
+	async find(id: {playerId: number, gameId: number}): Promise<Stat> {
+		const stats = await this.db.select<StatEntity[]>(`
+			select 	*
+			from 		stats
+			where 	playerId = ${id.playerId}
+			and 		gameId = ${id.gameId}`);
+		const stat = stats[0];
+		return this.mapDbToDto(stat);
 	}
 
 	async getAll(): Promise<Stat[]> {
-		var dbStats:dbStat[] = (await this.db.select(`select * from stats`));
-		return dbStats.map(obj => ({
-			gameId: obj.gameId,
-			playerId: obj.playerId,
-			minutes: obj.minutes,
-			assists: obj.assists,
-			rebounds: obj.rebounds,
-			defensiveRebounds: obj.defensiveRebounds,
-			offensiveRebounds: obj.offensiveRebounds,
-			fieldGoalsMade: obj.fieldGoalsMade,
-			fieldGoalsAttempted: obj.fieldGoalsAttempted,
-			blocks: obj.blocks,
-			steals: obj.steals,
-			threesMade: obj.threesMade,
-			threesAttempted: obj.threesAttempted,
-			freeThrowsMade: obj.freeThrowsMade,
-			freeThrowsAttempted: obj.freeThrowsAttempted,
-			points: obj.points,
-			turnovers: obj.turnovers,
-			fouls: obj.fouls,
-			plusOrMinus: obj.plusOrMinus,
-			eff: obj.eff,
-			technicalFouls: obj.technicalFouls,
-			onCourt: obj.onCourt == 1 ? true : false,
-			playerHidden: null
-		}));
+		const stats = await this.db.select<StatEntity[]>('select * from stats');
+		return stats.map(this.mapDbToDto);
 	}
 
-	async add(model: Stat): Promise<number> {
-		const result = await this.db.execute(
-			"INSERT into stats (id, gameId, playerId, minutes, assists, rebounds, defensiveRebounds, offensiveRebounds, fieldGoalsMade, fieldGoalsAttempted, blocks, steals, threesMade, threesAttempted, freeThrowsMade, freeThrowsAttempted, points, turnovers, fouls, plusOrMinus, eff, technicalFouls, onCourt, syncState) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
-			[ 0,
-				model.gameId,
-				model.playerId,
-				model.minutes,
-				model.assists,
-				model.rebounds,
-				model.defensiveRebounds,
-				model.offensiveRebounds,
-				model.fieldGoalsMade,
-				model.fieldGoalsAttempted,
-				model.blocks,
-				model.steals,
-				model.threesMade,
-				model.threesAttempted,
-				model.freeThrowsMade,
-
-			]
-	 );
-	 return result.rowsAffected;
+	async add(model: Stat): Promise<void> {
+    const entity = this.mapDtoToDb(model);
+    await this.db.execute(`
+        INSERT INTO stats (
+            gameId,
+            playerId,
+            minutes,
+            assists,
+            rebounds,
+            defensiveRebounds,
+            offensiveRebounds,
+            fieldGoalsMade,
+            fieldGoalsAttempted,
+            blocks,
+            steals,
+            threesMade,
+            threesAttempted,
+            freeThrowsMade,
+            freeThrowsAttempted,
+            points,
+            turnovers,
+            fouls,
+            plusOrMinus,
+            eff,
+            technicalFouls,
+            onCourt,
+            playerHidden,
+            syncState
+        ) VALUES (
+            ${entity.gameId},
+            ${entity.playerId},
+            ${entity.minutes},
+            ${entity.assists},
+            ${entity.rebounds},
+            ${entity.defensiveRebounds},
+            ${entity.offensiveRebounds},
+            ${entity.fieldGoalsMade},
+            ${entity.fieldGoalsAttempted},
+            ${entity.blocks},
+            ${entity.steals},
+            ${entity.threesMade},
+            ${entity.threesAttempted},
+            ${entity.freeThrowsMade},
+            ${entity.freeThrowsAttempted},
+            ${entity.points},
+            ${entity.turnovers},
+            ${entity.fouls},
+            ${entity.plusOrMinus},
+            ${entity.eff},
+            ${entity.technicalFouls},
+            ${entity.onCourt},
+            ${entity.playerHidden},
+            ${entity.syncState}
+        );`);
 	}
 
-	delete(id: number): Promise<void> {
-		const result = this.db.execute(`delete * from stats where id = '${id}'`);
-		return result.then((res:any) => console.log(res))
+	async delete(id: {playerId: number, gameId: number}): Promise<void> {
+		await this.db.execute(`
+			delete 	*
+			from 		stats
+			where 	playerId = ${id.playerId}
+			and 		gameId = ${id.gameId}`);
 	}
 
-	update(model: Stat): Promise<void> {
-		throw new Error("Method not implemented.");
+	async update(model: Stat): Promise<void> {
+    const entity = this.mapDtoToDb(model);
+
+    await this.db.execute(`
+			UPDATE stats
+			SET
+				gameId = ${entity.gameId},
+				playerId = ${entity.playerId},
+				minutes = ${entity.minutes},
+				assists = ${entity.assists},
+				rebounds = ${entity.rebounds},
+				defensiveRebounds = ${entity.defensiveRebounds},
+				offensiveRebounds = ${entity.offensiveRebounds},
+				fieldGoalsMade = ${entity.fieldGoalsMade},
+				fieldGoalsAttempted = ${entity.fieldGoalsAttempted},
+				blocks = ${entity.blocks},
+				steals = ${entity.steals},
+				threesMade = ${entity.threesMade},
+				threesAttempted = ${entity.threesAttempted},
+				freeThrowsMade = ${entity.freeThrowsMade},
+				freeThrowsAttempted = ${entity.freeThrowsAttempted},
+				points = ${entity.points},
+				turnovers = ${entity.turnovers},
+				fouls = ${entity.fouls},
+				plusOrMinus = ${entity.plusOrMinus},
+				eff = ${entity.eff},
+				technicalFouls = ${entity.technicalFouls},
+				onCourt = ${entity.onCourt},
+				playerHidden = ${entity.playerHidden},
+				syncState = ${entity.syncState}
+			WHERE
+				gameId = ${entity.gameId} AND playerId = ${entity.playerId}`);
 	}
 
 	async bulkAdd(models: Stat[]): Promise<void> {
-		for(const model of models) {
-			await this.db.execute(
-				"INSERT into stats (id, gameId, playerId, minutes, assists, rebounds, defensiveRebounds, offensiveRebounds, fieldGoalsMade, fieldGoalsAttempted, blocks, steals, threesMade, threesAttempted, freeThrowsMade, freeThrowsAttempted, points, turnovers, fouls, plusOrMinus, eff, technicalFouls, onCourt, syncState) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
-			 [ 0,
-				model.gameId,
-				model.playerId,
-				model.minutes,
-				model.assists,
-				model.rebounds,
-				model.defensiveRebounds,
-				model.offensiveRebounds,
-				model.fieldGoalsMade,
-				model.fieldGoalsAttempted,
-				model.blocks,
-				model.steals,
-				model.threesMade,
-				model.threesAttempted,
-				model.freeThrowsMade,
-			 ]
-			);
-		}
+    if (models.length === 0) {
+        return;
+    }
+
+    const entities = models.map(model => this.mapDtoToDb(model));
+
+    const valuesClause = entities.map(entity => `(
+			${entity.gameId},
+			${entity.playerId},
+			${entity.minutes},
+			${entity.assists},
+			${entity.rebounds},
+			${entity.defensiveRebounds},
+			${entity.offensiveRebounds},
+			${entity.fieldGoalsMade},
+			${entity.fieldGoalsAttempted},
+			${entity.blocks},
+			${entity.steals},
+			${entity.threesMade},
+			${entity.threesAttempted},
+			${entity.freeThrowsMade},
+			${entity.freeThrowsAttempted},
+			${entity.points},
+			${entity.turnovers},
+			${entity.fouls},
+			${entity.plusOrMinus},
+			${entity.eff},
+			${entity.technicalFouls},
+			${entity.onCourt},
+			${entity.playerHidden},
+			${entity.syncState})`).join(', ');
+
+    await this.db.execute(`
+			INSERT INTO stats (
+					gameId,
+					playerId,
+					minutes,
+					assists,
+					rebounds,
+					defensiveRebounds,
+					offensiveRebounds,
+					fieldGoalsMade,
+					fieldGoalsAttempted,
+					blocks,
+					steals,
+					threesMade,
+					threesAttempted,
+					freeThrowsMade,
+					freeThrowsAttempted,
+					points,
+					turnovers,
+					fouls,
+					plusOrMinus,
+					eff,
+					technicalFouls,
+					onCourt,
+					playerHidden,
+					syncState
+			) VALUES ${valuesClause};`);
 	}
 
+
 	async getByGame(gameId: number): Promise<Stat[]> {
-		var dbStats : dbStat[] = (await this.db.select<dbStat[]>(`
+		const stats = await this.db.select<StatEntity[]>(`
 			SELECT 		*
 			FROM 			stats
-			WHERE 		gameId = ${gameId}
-		`));
-		return dbStats.map(obj => ({
-			gameId: obj.gameId,
-			playerId: obj.playerId,
-			minutes: obj.minutes,
-			assists: obj.assists,
-			rebounds: obj.rebounds,
-			defensiveRebounds: obj.defensiveRebounds,
-			offensiveRebounds: obj.offensiveRebounds,
-			fieldGoalsMade: obj.fieldGoalsMade,
-			fieldGoalsAttempted: obj.fieldGoalsAttempted,
-			blocks: obj.blocks,
-			steals: obj.steals,
-			threesMade: obj.threesMade,
-			threesAttempted: obj.threesAttempted,
-			freeThrowsMade: obj.freeThrowsMade,
-			freeThrowsAttempted: obj.freeThrowsAttempted,
-			points: obj.points,
-			turnovers: obj.turnovers,
-			fouls: obj.fouls,
-			plusOrMinus: obj.plusOrMinus,
-			eff: obj.eff,
-			technicalFouls: obj.technicalFouls,
-			onCourt: obj.onCourt == 1 ? true : false,
-			playerHidden: null
-		}));
+			WHERE 		gameId = ${gameId}`);
+		return stats.map(this.mapDbToDto);
 	}
 }

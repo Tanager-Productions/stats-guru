@@ -10,7 +10,7 @@ import { currentDatabaseVersion } from 'src/app/upgrades/versions';
 import { SyncMode } from 'src/app/interfaces/sync.interface';
 import { SyncResult } from 'src/app/interfaces/syncResult.interface';
 import { SyncService } from 'src/app/services/sync/sync.service';
-import { Game, Player, Stat, Play, GameActions, DEFAULT_PLAYER, GAME_ACTIONS_MAP, DEFAULT_STAT } from 'src/app/interfaces/models';
+import { Game, Player, Stat, Play, GameActions, DEFAULT_PLAYER, GAME_ACTIONS_MAP, DEFAULT_STAT } from 'src/app/interfaces/entities';
 import { EditPeriodTotalComponent } from '../../../../shared/edit-period-total/edit-period-total.component';
 import { AddPlayerComponent } from '../../../../shared/add-player/add-player.component';
 import { AgGridModule } from 'ag-grid-angular';

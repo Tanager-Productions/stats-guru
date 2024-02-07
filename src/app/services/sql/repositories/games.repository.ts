@@ -1,6 +1,6 @@
 import Database from "tauri-plugin-sql-api";
 import { Repository } from "./repository.interface";
-import { Game as dbGame } from "src/app/interfaces/models";
+import { Game as dbGame } from "src/app/interfaces/entities";
 import { Game, defaultGameAwayTeam, defaultGameHomeTeam } from "@tanager/tgs";
 import { SyncState } from "src/app/interfaces/syncState.enum";
 export class GamesRepository implements Repository<Game, number> {

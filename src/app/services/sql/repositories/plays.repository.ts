@@ -1,4 +1,4 @@
-import { Play as PlayEntity } from "src/app/interfaces/models";
+import { Play as PlayEntity } from "src/app/interfaces/entities";
 import { Repository } from "./repository.interface";
 import Database from "tauri-plugin-sql-api";
 import { Play } from "@tanager/tgs";

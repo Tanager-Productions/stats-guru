@@ -1,6 +1,6 @@
 import Database from "tauri-plugin-sql-api";
 import { Repository } from "./repository.interface";
-import { Team as dbTeam } from "src/app/interfaces/models";
+import { Team as dbTeam } from "src/app/interfaces/entities";
 import { Team } from "@tanager/tgs";
 export class TeamsRepository implements Repository<Team, number> {
 	private db: Database;

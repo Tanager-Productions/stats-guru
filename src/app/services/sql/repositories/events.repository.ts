@@ -1,4 +1,4 @@
-import { Event as dbEvent } from "src/app/interfaces/models";
+import { Event as dbEvent } from "src/app/interfaces/entities";
 import { Repository } from "./repository.interface";
 import Database from "tauri-plugin-sql-api";
 import { Event } from "@tanager/tgs";

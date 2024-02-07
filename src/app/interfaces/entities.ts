@@ -1,6 +1,6 @@
-import { SyncState } from "./syncState.enum";
+import { GameActions, Positions, EventTypes, TeamTypes, Divisions } from "@tanager/tgs";
 
-export interface Game {
+export interface GameEntity {
 	id: number;
 	homeTeamId: number;
 	awayTeamId: number;
@@ -37,67 +37,25 @@ export interface Game {
 	partialTimeoutsPerGame: number | null;
 	minutesPerPeriod: number | null;
 	minutesPerOvertime: number | null;
-	hiddenPlayers: string | null;
 	syncState: SyncState;
 }
 
-export const DEFAULT_GAME: Game = {
-	id: 0,
-	homeTeamId: 0,
-	awayTeamId: 0,
-	gameDate: new Date().toJSON(),
-	homePointsQ1: 0,
-	awayPointsQ1: 0,
-	homePointsQ2: 0,
-	awayPointsQ2: 0,
-	homePointsQ3: 0,
-	awayPointsQ3: 0,
-	homePointsQ4: 0,
-	awayPointsQ4: 0,
-	homePointsOT: 0,
-	awayPointsOT: 0,
-	homeTeamTOL: 0,
-	awayTeamTOL: 0,
-	complete: 1,
-	clock: "00:00",
-	hasFourQuarters: 0,
-	homeFinal: 0,
-	awayFinal: 0,
-	period: 0,
-	gameLink: null,
-	eventId: null,
-	homePartialTOL: 0,
-	awayPartialTOL: 0,
-	homeFullTOL: 0,
-	awayFullTOL: 0,
-	homeCurrentFouls: null,
-	awayCurrentFouls: null,
-	homeHasPossession: null,
-	resetTimeoutsEveryPeriod: null,
-	fullTimeoutsPerGame: null,
-	partialTimeoutsPerGame: null,
-	minutesPerPeriod: null,
-	minutesPerOvertime: null,
-	hiddenPlayers: null,
-	syncState: SyncState.Unchanged
-}
-
-export interface Play {
+export interface PlayEntity {
 	id: number;
-	order: number;
 	gameId: number;
 	turboStatsData: string | null;
 	sgLegacyData: string | null;
-	playerId: number | null;
 	teamId: number | null;
+	playerId: number | null;
 	action: GameActions;
 	period: number | null;
 	gameClock: string | null;
 	score: string | null;
 	timeStamp: string | null;
+	syncState: SyncState;
 }
 
-export interface Player {
+export interface PlayerEntity {
 	id: number;
 	firstName: string;
 	lastName: string;
@@ -113,28 +71,10 @@ export interface Player {
 	homeState: string | null;
 	socialMedias: string | null;
 	generalInfo: string | null;
+	syncState: SyncState;
 }
 
-export const DEFAULT_PLAYER: Player = {
-	id: 0,
-	firstName: "",
-	lastName: "",
-	number: 0,
-	position: null,
-	teamId: 0,
-	picture: null,
-	isMale: 0,
-	height: null,
-	weight: null,
-	age: null,
-	homeTown: null,
-	homeState: null,
-	socialMedias: null,
-	generalInfo: null
-}
-
-export interface Stat {
-	id: number;
+export interface StatEntity {
 	gameId: number;
 	playerId: number;
 	minutes: number;
@@ -157,111 +97,53 @@ export interface Stat {
 	eff: number;
 	technicalFouls: number | null;
 	onCourt: 1 | 0 | null;
+	playerHidden: 1 | 0 | null;
 	syncState: SyncState;
 }
 
-export const DEFAULT_STAT: Stat = {
-	id: 0,
-	gameId: 0,
-	playerId: 0,
-	steals: 0,
-	assists: 0,
-	rebounds: 0,
-	offensiveRebounds: 0,
-	plusOrMinus: 0,
-	technicalFouls: 0,
-	threesAttempted: 0,
-	threesMade: 0,
-	fieldGoalsAttempted: 0,
-	fieldGoalsMade: 0,
-	freeThrowsAttempted: 0,
-	fouls: 0,
-	freeThrowsMade: 0,
-	minutes: 0,
-	defensiveRebounds: 0,
-	blocks: 0,
-	turnovers: 0,
-	syncState: SyncState.Unchanged,
-	points: 0,
-	eff: 0,
-	onCourt: null
-};
-
-export interface Season {
+export interface SeasonEntity {
 	year: number;
 	createdOn: string;
 	createdBy: string | null;
 }
 
-export interface Event {
+export interface EventEntity {
 	id: number;
 	startDate: string;
 	endDate: string;
 	state: string | null;
-	title: string;
 	city: string | null;
 	picture: string | null;
 	type: EventTypes;
 }
 
-export interface Team {
+export interface TeamEntity {
 	id: number;
-	name: string;
 	isMale: 1 | 0;
 	seasonId: number;
-	city: string;
-	state: string;
-	type: TeamTypes;
-	socialMediaString: string | null;
-	infoString: string | null;
+	teamType: TeamTypes;
+	socialMedias: string | null;
+	generalInfo: string | null;
 	division: Divisions | null;
 	defaultLogo: string | null;
 	darkModeLogo: string | null;
 }
 
-export enum TeamTypes {
-	Local = 0,
-	GrindSession = 1,
-	Power = 2
+export interface SyncHistory {
+  id: number;
+  dateOccurred: string;
+  playsSynced: 1 | 0;
+  playersSynced: 1 | 0;
+  gamesSynced: 1 | 0;
+  statsSynced: 1 | 0;
+  errorMessages: string;
 }
 
-export enum Divisions {
-	Orange = 1,
-	Black = 2
-}
-
-export enum EventTypes {
-	Preseason = 100,
-	Regular = 200,
-	Postseason = 300
-}
-
-export enum Positions {
-	PointGuard = 0,
-	ShootingGuard = 1,
-	SmallForward = 2,
-	PowerForward = 3,
-	Center = 4,
-	Guard = 5,
-	Forward = 6
-}
-
-export enum GameActions {
-	OffRebound = 5,
-	DefRebound = 10,
-	Assist = 15,
-	Block = 20,
-	Steal = 25,
-	Foul = 30,
-	Turnover = 35,
-	ShotMade = 40,
-	ShotMissed = 45,
-	ThreeMade = 50,
-	ThreeMissed = 55,
-	FreeThrowMissed = 60,
-	FreeThrowMade = 65,
-	FullTO = 70,
-	PartialTO = 75
+export enum SyncState {
+  Unchanged = 0,
+  Added = 1,
+  Modified = 2,
+  Deleted = 3
 }
 
 const GAME_ACTIONS_MAP = new Map<GameActions, string>();

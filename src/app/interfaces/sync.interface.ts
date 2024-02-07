@@ -1,13 +1,14 @@
-import { Game, Play, Stat, Player } from "./models";
+import { SgGame, SgPlay, SgStat, SgPlayer } from "./sgDtos";
+
 
 export interface SyncDto {
   version: number;
   overwrite: boolean | null;
   mode: SyncMode;
-  games: Game[];
-  plays: Play[];
-  stats: Stat[];
-  players: Player[];
+  games: SgGame[];
+  plays: SgPlay[];
+  stats: SgStat[];
+  players: SgPlayer[];
 }
 
 export enum SyncMode {

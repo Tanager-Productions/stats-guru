@@ -1,4 +1,4 @@
-import { Stat, Play, Player, Game, Team, Season } from "./models";
+import { Stat, Play, Player, Game, Team, Season, Event } from "@tanager/tgs";
 
 export interface DataDto {
 	stats: Stat[];
