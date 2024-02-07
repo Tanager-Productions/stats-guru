@@ -73,7 +73,7 @@ export class PlayersRepository implements Repository<sgPlayer, number> {
 		const result = await this.db.execute(`
 			INSERT
 			  into
-			  players (id,
+			  players (
 				firstName,
 				lastName,
 				number,
@@ -86,8 +86,8 @@ export class PlayersRepository implements Repository<sgPlayer, number> {
 				age,
 				homeTown,
 				homeState,
-				socialMediaString,
-				infoString,
+				socialMedias,
+				generalInfo,
 				syncState)
 			VALUES ($1,
 				$2,
@@ -103,10 +103,9 @@ export class PlayersRepository implements Repository<sgPlayer, number> {
 				$12,
 				$13,
 				$14,
-				$15,
-				$16)
+				$15)
 		`,
-			[model.player.id,
+			[
 			model.player.firstName,
 			model.player.lastName,
 			model.player.number,
@@ -152,8 +151,8 @@ export class PlayersRepository implements Repository<sgPlayer, number> {
 					age = $10,
 					homeTown = $11,
 					homeState = $12,
-					socialMediaString = $13,
-					infoString = $14,
+					socialMedias = $13,
+					generalInfo = $14,
 					syncState = $15
 				WHERE
 					id = $16
@@ -180,8 +179,8 @@ export class PlayersRepository implements Repository<sgPlayer, number> {
 					age,
 					homeTown,
 					homeState,
-					socialMediaString,
-					infoString,
+					socialMedias,
+					generalInfo,
 					syncState)
 				VALUES ($1,
 				$2,
