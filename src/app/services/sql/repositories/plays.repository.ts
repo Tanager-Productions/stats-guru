@@ -114,15 +114,15 @@ export class PlaysRepository implements Repository<PlayEntityWithChildren, Play,
 			) VALUES (
 				${entity.id},
 				${entity.gameId},
-				${entity.turboStatsData},
-				${entity.sgLegacyData},
+				${entity.turboStatsData ? `'${entity.turboStatsData}'` : null},
+				${entity.sgLegacyData ? `'${entity.sgLegacyData}'` : null},
 				${entity.teamId},
 				${entity.playerId},
 				${entity.action},
 				${entity.period},
-				${entity.gameClock},
-				${entity.score},
-				${entity.timeStamp}
+				${entity.gameClock ? `'${entity.gameClock}'` : null},
+				${entity.score ? `'${entity.score}'` : null},
+				${entity.timeStamp ? `'${entity.timeStamp}'` : null}
 			);`);
 	}
 
@@ -141,15 +141,15 @@ export class PlaysRepository implements Repository<PlayEntityWithChildren, Play,
 			SET
 				id = ${entity.id},
 				gameId = ${entity.gameId},
-				turboStatsData = ${entity.turboStatsData},
-				sgLegacyData = ${entity.sgLegacyData},
+				turboStatsData = ${entity.turboStatsData ? `'${entity.turboStatsData}'` : null},
+				sgLegacyData = ${entity.sgLegacyData ? `'${entity.sgLegacyData}'` : null},
 				teamId = ${entity.teamId},
 				playerId = ${entity.playerId},
 				action = ${entity.action},
 				period = ${entity.period},
-				gameClock = ${entity.gameClock},
-				score = ${entity.score},
-				timeStamp = ${entity.timeStamp}
+				gameClock = ${entity.gameClock ? `'${entity.gameClock}'` : null},
+				score = ${entity.score ? `'${entity.score}'` : null},
+				timeStamp = ${entity.timeStamp ? `'${entity.timeStamp}'` : null}
 			WHERE
 				id = ${entity.id} AND gameId = ${entity.gameId}`);
 	}
@@ -164,15 +164,15 @@ export class PlaysRepository implements Repository<PlayEntityWithChildren, Play,
     const valuesClause = entities.map(entity => `(
 			${entity.id},
 			${entity.gameId},
-			${entity.turboStatsData},
-			${entity.sgLegacyData},
+			${entity.turboStatsData ? `'${entity.turboStatsData}'` : null},
+			${entity.sgLegacyData ? `'${entity.sgLegacyData}'` : null},
 			${entity.teamId},
 			${entity.playerId},
 			${entity.action},
 			${entity.period},
-			${entity.gameClock},
-			${entity.score},
-			${entity.timeStamp})`).join(', ');
+			${entity.gameClock ? `'${entity.gameClock}'` : null},
+			${entity.score ? `'${entity.score}'` : null},
+			${entity.timeStamp ? `'${entity.timeStamp}'` : null})`).join(', ');
 
     await this.db.execute(`
 			INSERT INTO plays (
