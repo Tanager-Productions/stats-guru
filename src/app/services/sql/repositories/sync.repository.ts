@@ -17,7 +17,7 @@ export class SyncRepository implements Repository<SyncEntity, SyncHistory, numbe
 			playersSynced: entity.playersSynced == 1 ? true : false,
 			gamesSynced: entity.gamesSynced == 1 ? true : false,
 			statsSynced: entity.statsSynced == 1 ? true : false,
-			errorMessages: entity.errorMessages.split('')
+			errorMessages: JSON.parse(entity.errorMessages)
 		}
 	}
 
@@ -29,7 +29,7 @@ export class SyncRepository implements Repository<SyncEntity, SyncHistory, numbe
 			playersSynced: dto.playersSynced == true ? 1 : 0,
 			gamesSynced: dto.gamesSynced == true ? 1 : 0,
 			statsSynced: dto.statsSynced == true ? 1 : 0,
-			errorMessages: dto.errorMessages[0]
+			errorMessages: JSON.stringify(dto.errorMessages)
 		}
 	}
 
