@@ -1,65 +1,119 @@
-import { SyncHistory } from "src/app/interfaces/syncHistory.interface";
+import { SyncHistory, SyncEntity } from "src/app/interfaces/entities";
 import { Repository } from "./repository.interface";
 import Database from "tauri-plugin-sql-api";
 
-export class SyncRepository implements Repository<SyncHistory, number> {
+export class SyncRepository implements Repository<SyncEntity, SyncHistory, number> {
 	private db: Database;
 
 	constructor(db: Database) {
 		this.db = db;
 	}
 
+	mapDbToDto = (entity: SyncEntity): SyncHistory => {
+		return {
+			id: entity.id,
+			dateOccurred: entity.dateOccurred,
+			playsSynced: entity.playsSynced == 1 ? true : false,
+			playersSynced: entity.playersSynced == 1 ? true : false,
+			gamesSynced: entity.gamesSynced == 1 ? true : false,
+			statsSynced: entity.statsSynced == 1 ? true : false,
+			errorMessages: entity.errorMessages.split('')
+		}
+	}
+
+	mapDtoToDb = (dto: SyncHistory): SyncEntity => {
+		return {
+			id: dto.id,
+			dateOccurred: dto.dateOccurred,
+			playsSynced: dto.playsSynced == true ? 1 : 0,
+			playersSynced: dto.playersSynced == true ? 1 : 0,
+			gamesSynced: dto.gamesSynced == true ? 1 : 0,
+			statsSynced: dto.statsSynced == true ? 1 : 0,
+			errorMessages: dto.errorMessages[0]
+		}
+	}
+
 	async find(id: number): Promise<SyncHistory> {
-		var syncs: SyncHistory[] = (await this.db.select(`select * from syncHistory where id = '${id}'`));
-		return syncs[0];
+		var syncs = await this.db.select<SyncEntity[]>(`
+			SELECT    *
+			FROM      syncHistory
+			WHERE     id = ${id}`);
+		return this.mapDbToDto(syncs[0]);
 	}
 
 	async getAll(): Promise<SyncHistory[]> {
-		var syncs: SyncHistory[] = (await this.db.select(`select * from syncHistory`));
-		return syncs;
+		var syncs = await this.db.select<SyncEntity[]>(`
+			SELECT    *
+			FROM      syncHistory`);
+		return syncs.map(this.mapDbToDto);
 	}
 
-	async add(model: SyncHistory): Promise<number> {
-		const result = await this.db.execute(
-			"INSERT into syncHistory (id, dateOccurred, playsSynced, playersSynced, gamesSynced, statsSynced, errorMessages) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-			[ model.id,
-				model.dateOccurred,
-				model.playsSynced,
-				model.playersSynced,
-				model.gamesSynced,
-				model.statsSynced,
-				model.errorMessages
-			]
-	 );
-	 return result.rowsAffected;
+	async add(model: SyncHistory): Promise<void> {
+		const entity = this.mapDtoToDb(model);
+		const result = await this.db.execute(`
+			INSERT INTO syncHistory (
+				dateOccurred,
+				playsSynced,
+				playersSynced,
+				gamesSynced,
+				statsSynced,
+				errorMessages
+			) VALUES (
+				'${entity.dateOccurred}',
+				${entity.playsSynced},
+				${entity.playersSynced},
+				${entity.gamesSynced},
+				${entity.statsSynced},
+				'${entity.errorMessages}'
+			);`);
+			model.id = result.lastInsertId;
 	}
 
-	delete(id: number): Promise<void> {
-		const result = this.db.execute(`delete * from syncHistory where id = '${id}'`);
-		return result.then(res => console.log(res));
+	async delete(id: number): Promise<void> {
+		await this.db.execute(`
+			DELETE FROM syncHistory
+			WHERE id = ${id}`);
 	}
 
-	update(model: SyncHistory): Promise<void> {
-		const result = this.db.execute(
-			"UPDATE syncHistory SET dateOccurred = $1, playsSynced = $2, playersSynced = $3, gamesSynced = $4, statsSynced = $5, errorMessages = $6, WHERE id = $7",
-			[ model.dateOccurred, model.playsSynced, model.playersSynced, model.gamesSynced, model.statsSynced, model.errorMessages, model.id ]
-		);
-		return result.then(res => console.log(res));
+	async update(model: SyncHistory): Promise<void> {
+		const entity = this.mapDtoToDb(model);
+
+		this.db.execute(`
+			UPDATE syncHistory
+			SET
+				dateOccurred = '${entity.dateOccurred}',
+				playsSynced = ${entity.playsSynced},
+				playersSynced = ${entity.playersSynced},
+				gamesSynced = ${entity.gamesSynced},
+				statsSynced = ${entity.statsSynced},
+				errorMessages = '${entity.errorMessages}'
+			WHERE
+				id = ${entity.id}`);
 	}
 
 	async bulkAdd(models: SyncHistory[]): Promise<void> {
-		for(const model of models) {
+    if (models.length === 0) {
+			return;
+    }
+
+    const entities = models.map(model => this.mapDtoToDb(model));
+
+		const valuesClause = entities.map(entity => `(
+			'${entity.dateOccurred}',
+			${entity.playsSynced},
+			${entity.playersSynced},
+			${entity.gamesSynced},
+			${entity.statsSynced},
+			'${entity.errorMessages}')`).join(', ');
+
 			await this.db.execute(
-				"INSERT into syncHistory (id, dateOccurred, playsSynced, playersSynced, gamesSynced, statsSynced, errorMessages) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-				[ model.id,
-					model.dateOccurred,
-					model.playsSynced,
-					model.playersSynced,
-					model.gamesSynced,
-					model.statsSynced,
-					model.errorMessages
-				]
-		 );
-		}
+				`INSERT INTO syncHistory (
+					dateOccurred,
+					playsSynced,
+					playersSynced,
+					gamesSynced,
+					statsSynced,
+					errorMessages
+				) VALUES ${valuesClause}`);
 	}
 }

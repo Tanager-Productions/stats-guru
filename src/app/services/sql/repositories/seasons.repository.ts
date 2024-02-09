@@ -1,67 +1,94 @@
-import { Season as dbSeason } from "src/app/interfaces/entities";
+import { SeasonEntity } from "src/app/interfaces/entities";
 import { Repository } from "./repository.interface";
 import Database from "tauri-plugin-sql-api";
 import { Season } from "@tanager/tgs";
-export class SeasonsRepository implements Repository<Season, number> {
+
+export class SeasonsRepository implements Repository<SeasonEntity, Season, number> {
 	private db: Database;
 
 	constructor(db: Database) {
 		this.db = db;
 	}
 
+	mapDbToDto = (entity: SeasonEntity): Season => {
+		return {
+			year: entity.year,
+			createdOn: entity.createdOn,
+			createdBy: entity.createdBy
+		};
+	}
+
+	mapDtoToDb = (dto: Season): SeasonEntity => {
+		return {
+			year: dto.year,
+			createdOn: dto.createdOn,
+			createdBy: dto.createdBy
+		};
+	}
+
 	async find(id: number): Promise<Season> {
-		var dbSeason:dbSeason[] = (await this.db.select(`select * from seasons where year = '${id}'`));
-		var season: Season = {
-			year: dbSeason[0].year,
-			createdOn: dbSeason[0].createdOn,
-			createdBy: dbSeason[0].createdBy
-		}
-		return season;
+		var seasons = await this.db.select<SeasonEntity[]>(`
+			SELECT 			*
+			FROM        seasons
+			WHERE       year = ${id}`);
+		return this.mapDbToDto(seasons[0]);
 	}
 
 	async getAll(): Promise<Season[]> {
-		var dbSeasons:dbSeason[] = (await this.db.select(`select * from seasons`));
-
-		return dbSeasons.map(obj => ({
-			year: obj.year,
-			createdOn: obj.createdOn,
-			createdBy: obj.createdBy
-		}));
+		var seasons = await this.db.select<SeasonEntity[]>(`
+			SELECT 			*
+			FROM        seasons`);
+		return seasons.map(this.mapDbToDto);
 	}
 
-	async add(model: Season): Promise<number> {
+	async add(model: Season): Promise<void> {
+		const entity = this.mapDtoToDb(model);
 		const result = await this.db.execute(
-			"INSERT into seasons (year, createdOn, createdBy) VALUES ($1, $2, $3)",
-			[ model.year,
-				model.createdOn,
-				model.createdBy
-			]
-	 );
-	 return result.rowsAffected;
+			`INSERT INTO seasons (
+				year,
+				createdOn,
+				createdBy
+			) VALUES (
+				${entity.year},
+				'${entity.createdOn}',
+				${entity.createdBy ? `'${entity.createdBy}'` : null}
+			);`);
 	}
 
-	delete(id: number): Promise<void> {
-		const result = this.db.execute(`delete * from seasons where year = '${id}'`);
-		return result.then(res => console.log(res));
+	async delete(id: number): Promise<void> {
+		await this.db.execute(`
+			DELETE FROM seasons
+			WHERE year = ${id}`);
 	}
 
-	update(model: Season): Promise<void> {
-		const result = this.db.execute(
-			"UPDATE seasons SET createdOn = $2, createdBy = $3 WHERE year = $7",
-			[ model.createdOn, model.createdBy, model.year ]
-		);
-		return result.then(res => console.log(res));
+	async update(model: Season): Promise<void> {
+		const entity = this.mapDtoToDb(model);
+
+		await this.db.execute(`
+		  UPDATE seasons
+			SET
+				createdOn =  '${entity.createdOn}',
+				createdBy = ${entity.createdBy ? `'${entity.createdBy}'` : null}
+			WHERE year = ${entity.year}`);
 	}
 
 	async bulkAdd(models: Season[]): Promise<void> {
-		for(const model of models) {
-			await this.db.execute(
-				"INSERT into seasons (year, createdOn, createdBy) VALUES ($1, $2, $3)",
-				[ model.year,
-					model.createdOn,
-					model.createdBy
-				]
-		 );
-		}
+    if (models.length === 0) {
+			return;
+    }
+
+    const entities = models.map(model => this.mapDtoToDb(model));
+
+		const valuesClause = entities.map(entity => `(
+			${entity.year},
+			'${entity.createdOn}',
+			${entity.createdBy ? `'${entity.createdBy}'` : null})`).join(', ');
+
+			await this.db.execute(`
+				INSERT INTO seasons (
+					year,
+					createdOn,
+					createdBy
+				) VALUES ${valuesClause};`);
 	}
 }

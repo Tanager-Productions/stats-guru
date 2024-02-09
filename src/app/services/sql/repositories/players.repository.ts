@@ -1,79 +1,76 @@
-import { Game, Player as PlayerEntity } from "src/app/interfaces/models";
-import { Player } from "@tanager/tgs";
-import { Repository } from "./repository.interface";
+import { PlayerEntity } from "src/app/interfaces/entities";
+import { Player, Game } from "src/app/interfaces/sgDtos";
 import Database from "tauri-plugin-sql-api";
-import { SyncState } from "src/app/interfaces/syncState.enum";
+import { Repository } from "./repository.interface";
 
-type sgPlayer = {
-	player: Player,
-	syncState: SyncState
-}
-
-export class PlayersRepository implements Repository<sgPlayer, number> {
+export class PlayersRepository implements Repository<PlayerEntity, Player, number> {
 	private db: Database;
+
 	constructor(db: Database) {
 		this.db = db;
 	}
 
-	private mapDbToDto = (obj: PlayerEntity): sgPlayer => {
+	mapDbToDto = (entity: PlayerEntity): Player => {
 		return {
-			player : {
-									id: obj.id,
-									firstName: obj.firstName,
-									lastName: obj.lastName,
-									number: obj.number,
-									position: obj.position,
-									teamId: obj.teamId,
-									picture: obj.picture,
-									isMale: obj.isMale == 1 ? true : false,
-									height: obj.height,
-									weight: obj.weight,
-									age: obj.age,
-									homeTown: obj.homeTown,
-									homeState: obj.homeState,
-									socialMedias: obj.socialMedias != null ? JSON.parse(obj.socialMedias) : null,
-									generalInfo: obj.generalInfo != null ? JSON.parse(obj.generalInfo) : null
-								},
-			syncState: SyncState.Unchanged
+			id: entity.id,
+			firstName: entity.firstName,
+			lastName: entity.lastName,
+			number: entity.number,
+			position: entity.position,
+			teamId: entity.teamId,
+			picture: entity.picture,
+			isMale: entity.isMale == 1 ? true : false,
+			height: entity.height,
+			weight: entity.weight,
+			age: entity.age,
+			homeTown: entity.homeTown,
+			homeState: entity.homeState,
+			socialMedias: entity.socialMedias != null ? JSON.parse(entity.socialMedias) : null,
+			generalInfo: entity.generalInfo != null ? JSON.parse(entity.generalInfo) : null,
+			syncState: entity.syncState
 		}
 	}
 
-	private mapDtoToDb = (obj: sgPlayer): PlayerEntity => {
+	mapDtoToDb = (dto: Player): PlayerEntity => {
 		return {
-			id: obj.player.id,
-			firstName: obj.player.firstName,
-			lastName: obj.player.lastName,
-			number: obj.player.number,
-			position: obj.player.position,
-			teamId: obj.player.teamId,
-			picture: obj.player.picture,
-			isMale: obj.player.isMale ? 1 : 0,
-			height: obj.player.height,
-			weight: obj.player.weight,
-			age: obj.player.age,
-			homeTown: obj.player.homeTown,
-			homeState: obj.player.homeState,
-			socialMedias: obj.player.socialMedias != null ? JSON.stringify(obj.player.socialMedias) : null,
-			generalInfo: obj.player.generalInfo != null ? JSON.stringify(obj.player.generalInfo) : null
+			id: dto.id,
+			firstName: dto.firstName,
+			lastName: dto.lastName,
+			number: dto.number,
+			position: dto.position,
+			teamId: dto.teamId,
+			picture: dto.picture,
+			isMale: dto.isMale ? 1 : 0,
+			height: dto.height,
+			weight: dto.weight,
+			age: dto.age,
+			homeTown: dto.homeTown,
+			homeState: dto.homeState,
+			socialMedias: dto.socialMedias != null ? JSON.stringify(dto.socialMedias) : null,
+			generalInfo: dto.generalInfo != null ? JSON.stringify(dto.generalInfo) : null,
+			syncState: dto.syncState
 		}
 	}
 
-	async find(id: number): Promise<sgPlayer> {
-		const result = await this.db.select<PlayerEntity[]>(`select * from players where id = '${id}'`);
-		const player = result[0];
-		return this.mapDbToDto(player);
+	async find(id: number): Promise<Player> {
+		const players = await this.db.select<PlayerEntity[]>(`
+			SELECT 			*
+			FROM 				players
+			WHERE 			id = ${id}`);
+		return this.mapDbToDto(players[0]);
 	}
 
-	async getAll(): Promise<sgPlayer[]> {
-		const players = await this.db.select<PlayerEntity[]>(`select * from players`);
+	async getAll(): Promise<Player[]> {
+		const players = await this.db.select<PlayerEntity[]>(`
+			SELECT 			*
+			FROM 				players`);
 		return players.map(this.mapDbToDto);
 	}
 
-	async add(model: sgPlayer): Promise<void> {
+	async add(model: Player): Promise<void> {
+		const entity = this.mapDtoToDb(model);
 		const result = await this.db.execute(`
-			INSERT
-			  into
-			  players (
+			INSERT INTO players (
 				firstName,
 				lastName,
 				number,
@@ -87,128 +84,105 @@ export class PlayersRepository implements Repository<sgPlayer, number> {
 				homeTown,
 				homeState,
 				socialMedias,
-				generalInfo,
-				syncState)
-			VALUES ($1,
-				$2,
-				$3,
-				$4,
-				$5,
-				$6,
-				$7,
-				$8,
-				$9,
-				$10,
-				$11,
-				$12,
-				$13,
-				$14,
-				$15)
-		`,
-			[
-			model.player.firstName,
-			model.player.lastName,
-			model.player.number,
-			model.player.position,
-			model.player.teamId,
-			model.player.picture,
-			model.player.isMale,
-			model.player.height,
-			model.player.weight,
-			model.player.age,
-			model.player.homeTown,
-			model.player.homeState,
-			model.player.socialMedias,
-			model.player.generalInfo,
-			SyncState.Added
-			]
-		);
-		model.player.id = result.lastInsertId;
+				generalInfo
+			) VALUES (
+				'${entity.firstName}',
+				'${entity.lastName}',
+				${entity.number},
+				${entity.position},
+				${entity.teamId},
+				${entity.picture ? `'${entity.picture}'` : null},
+				${entity.isMale},
+				${entity.height ? `'${entity.height}'` : null},
+				${entity.weight},
+				${entity.age},
+				${entity.homeTown ? `'${entity.homeTown}'` : null},
+				${entity.homeState ? `'${entity.homeState}'` : null},
+				${entity.socialMedias ? `'${entity.socialMedias}'` : null},
+				${entity.generalInfo ? `'${entity.generalInfo}'` : null}
+			);`);
+		model.id = result.lastInsertId;
 	}
 
 	async delete(id: number): Promise<void> {
 		await this.db.execute(`
-			DELETE		*
-			FROM	players
-			WHERE id = '${id}'
-		`);
+			DELETE FROM	players
+			WHERE id = ${id}`);
 	}
 
-	async update(model: sgPlayer): Promise<void> {
+	async update(model: Player): Promise<void> {
+		const entity = this.mapDtoToDb(model);
+
 		await this.db.execute(`
-				UPDATE
-					players
-				SET
-					firstName = $1,
-					lastName = $2,
-					number = $3,
-					position = $4,
-					teamId = $5,
-					picture = $6,
-					isMale = $7,
-					height = $8,
-					weight = $9,
-					age = $10,
-					homeTown = $11,
-					homeState = $12,
-					socialMedias = $13,
-					generalInfo = $14,
-					syncState = $15
-				WHERE
-					id = $16
-		`,
-			[model.player.firstName, model.player.lastName, model.player.number, model.player.position, model.player.teamId, model.player.picture, model.player.isMale, model.player.height, model.player.weight, model.player.age, model.player.homeTown, model.player.homeState, model.player.socialMedias, model.player.generalInfo, SyncState.Modified, model.player.id]
-		);
+			UPDATE players
+			SET
+				id = ${entity.id},
+				firstName = '${entity.firstName}',
+				lastName = '${entity.lastName}',
+				number = ${entity.number},
+				position = ${entity.position},
+				teamId = ${entity.teamId},
+				picture = ${entity.picture ? `'${entity.picture}'` : null},
+				isMale = ${entity.isMale},
+				height = ${entity.height ? `'${entity.height}'` : null},
+				weight = ${entity.weight},
+				age = ${entity.age},
+				homeTown = ${entity.homeTown ? `'${entity.homeTown}'` : null},
+				homeState = ${entity.homeState ? `'${entity.homeState}'` : null},
+				socialMedias = ${entity.socialMedias ? `'${entity.socialMedias}'` : null},
+				generalInfo = ${entity.generalInfo ? `'${entity.generalInfo}'` : null}
+			WHERE
+				id = ${entity.id}`);
 	}
 
-	async bulkAdd(models: sgPlayer[]): Promise<void> {
-		const dbPlayers: PlayerEntity[] = models.map(this.mapDtoToDb);
+	async bulkAdd(models: Player[]): Promise<void> {
+		if (models.length === 0) {
+			return;
+    }
+
+		const entities = models.map(model => this.mapDtoToDb(model));
+
+		const valuesClause = entities.map(entity => `(
+			'${entity.firstName}',
+			'${entity.lastName}',
+			${entity.number},
+			${entity.position},
+			${entity.teamId},
+			${entity.picture ? `'${entity.picture}'` : null},
+			${entity.isMale},
+			${entity.height ? `'${entity.height}'` : null},
+			${entity.weight},
+			${entity.age},
+			${entity.homeTown ? `'${entity.homeTown}'` : null},
+			${entity.homeState ? `'${entity.homeState}'` : null},
+			${entity.socialMedias ? `'${entity.socialMedias}'` : null},
+			${entity.generalInfo ? `'${entity.generalInfo}'` : null})`).join(', ');
+
 		await this.db.execute(`
-				INSERT
-					into
-					players (id,
-					firstName,
-					lastName,
-					number,
-					position,
-					teamId,
-					picture,
-					isMale,
-					height,
-					weight,
-					age,
-					homeTown,
-					homeState,
-					socialMedias,
-					generalInfo,
-					syncState)
-				VALUES ($1,
-				$2,
-				$3,
-				$4,
-				$5,
-				$6,
-				$7,
-				$8,
-				$9,
-				$10,
-				$11,
-				$12,
-				$13,
-				$14,
-				$15,
-				$16)
-		`,
-			[dbPlayers]
-		);
+			INSERT INTO players (
+				firstName,
+				lastName,
+				number,
+				position,
+				teamId,
+				picture,
+				isMale,
+				height,
+				weight,
+				age,
+				homeTown,
+				homeState,
+				socialMedias,
+				generalInfo
+			) VALUES ${valuesClause};`);
 	}
 
-	async getByGame(game: Game): Promise<sgPlayer[]> {
+	async getByGame(game: Game): Promise<Player[]> {
 		var dbPlayers: PlayerEntity[] = await this.db.select<PlayerEntity[]>(`
 			SELECT 		*
 			FROM 			players
-			WHERE 		teamId = ${game.homeTeamId}
-			OR				teamId = ${game.awayTeamId}
+			WHERE 		teamId = ${game.homeTeam.teamId}
+			OR				teamId = ${game.awayTeam.teamId}
 		`);
 		return dbPlayers.map(this.mapDbToDto);
 	}

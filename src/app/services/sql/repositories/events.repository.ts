@@ -1,79 +1,125 @@
-import { Event as dbEvent } from "src/app/interfaces/entities";
+import { EventEntity } from "src/app/interfaces/entities";
 import { Repository } from "./repository.interface";
 import Database from "tauri-plugin-sql-api";
 import { Event } from "@tanager/tgs";
-import { SyncState } from "src/app/interfaces/syncState.enum";
-export class EventsRepository implements Repository<Event, number> {
+
+export class EventsRepository implements Repository<EventEntity, Event, number> {
 	private db: Database;
 
 	constructor(db: Database) {
 		this.db = db;
 	}
 
+	mapDbToDto = (entity: EventEntity): Event => {
+		return {
+			id: entity.id,
+			startDate: entity.startDate,
+			endDate: entity.endDate,
+			state: entity.state,
+			title: entity.title,
+			city: entity.city,
+			picture: entity.city,
+			type: entity.type
+		};
+	}
+
+	mapDtoToDb = (dto: Event): EventEntity => {
+		return {
+			id: dto.id,
+			startDate: dto.startDate,
+			endDate: dto.endDate,
+			state: dto.state,
+			title: dto.title,
+			city: dto.city,
+			picture: dto.city,
+			type: dto.type
+		};
+	}
+
 	async find(id: number): Promise<Event> {
-		var dbEvent: dbEvent[] = (await this.db.select(`select * from events where id = '${id}'`));
-		var event: Event = {
-			id: dbEvent[0].id,
-			startDate: dbEvent[0].startDate,
-			endDate: dbEvent[0].endDate,
-			state: dbEvent[0].state,
-			title: dbEvent[0].title,
-			city: dbEvent[0].city,
-			picture: dbEvent[0].picture,
-			type:  dbEvent[0].type,
-		}
-		return event;
+		var events = await this.db.select<EventEntity[]>(`
+			SELECT 	*
+			FROM 		events
+			WHERE 	id = ${id}`);
+		return events[0];
 	}
 
 	async getAll(): Promise<Event[]> {
-		var dbEvents: dbEvent[] = (await this.db.select(`select * from events`));
-		return dbEvents.map(obj => ({
-			id: obj.id,
-			startDate: obj.startDate,
-			endDate: obj.endDate,
-			state: obj.state,
-			title: obj.title,
-			city: obj.city,
-			picture: obj.picture,
-			type: obj.type,
-		}));
+		var events = await this.db.select<EventEntity[]>(`
+			SELECT 	*
+			FROM 		events`);
+		return events.map(this.mapDbToDto);
 	}
 
-	async add(model: Event): Promise<number> {
+	async add(model: Event): Promise<void> {
+		const entity = this.mapDtoToDb(model);
 		const result = await this.db.execute(
-			`INSERT into events (id, startDate, endDate, state, title, city, picture, type ) VALUES ('${model.id}', '${model.startDate}', '${model.endDate}', '${model.state}', '${model.title}', '${model.city}', '${model.picture}', '${SyncState.Added}')`,
-	 );
-	 return result.rowsAffected;
+			`INSERT INTO events (
+				startDate,
+				endDate,
+				state,
+				title,
+				city,
+				picture,
+				type
+			) VALUES (
+				'${model.startDate}',
+				'${model.endDate},
+				${model.state ? `'${model.state}'` : null},
+				'${model.title}',
+				${model.city ? `'${model.city}'` : null},
+				${model.picture ? `'${model.picture}'` : null},
+				${model.type}
+			);`,);
+		model.id = result.lastInsertId;
 	}
 
-	delete(id: number): Promise<void> {
-		const result = this.db.execute(`delete * from events where id = '${id}'`);
-		return result.then((res:any) => console.log(res));
+	async delete(id: number): Promise<void> {
+		await this.db.execute(`
+			DELETE FROM events
+			WHERE id = ${id}`);
 	}
 
-	update(model: Event): Promise<void> {
-		const result = this.db.execute(
-			`UPDATE events SET startDate = '${model.startDate}', endDate = '${model.endDate}', state = '${model.state}', title = '${model.title}', city = '${model.city}', picture = '${model.picture}', type = '${model.type}' WHERE id = '${model.id}'`,
-		);
-		return result.then((res:any) => console.log(res));
+	async update(model: Event): Promise<void> {
+		const entity = this.mapDtoToDb(model);
+		await this.db.execute(`
+			UPDATE events
+			SET
+				startDate = '${entity.startDate}',
+				endDate = '${entity.endDate}',
+				state = ${entity.state ? `'${entity.state}'` : null},
+				title = '${entity.title}',
+				city = ${entity.city ? `'${entity.city}'` : null},
+				picture = ${entity.picture ? `'${entity.picture}'` : null},
+				type = ${entity.type}
+			WHERE id = ${entity.id}`);
 	}
 
 	async bulkAdd(models: Event[]): Promise<void> {
-		const dbEvents : dbEvent[] = models.map(obj => ({
-			id: obj.id,
-			startDate: obj.startDate,
-			endDate: obj.endDate,
-			state: obj.state,
-			title: obj.title,
-			city: obj.city,
- 			picture: obj.picture,
-			type: obj.type
-		}));
+		if (models.length === 0) {
+			return;
+    }
 
-		for(const model of dbEvents) {
-			await this.db.execute(
-				`INSERT into events (id, startDate, endDate, state, title, city, picture, type ) VALUES ('${model.id}', '${model.startDate}', '${model.endDate}', '${model.state}', '${model.title}', '${model.city}', '${model.picture}', '${model.type}')`,
-		 );
-		}
+    const entities = models.map(model => this.mapDtoToDb(model));
+
+		const valuesClause = entities.map(entity => `(
+			'${entity.startDate}',
+			'${entity.endDate}',
+			${entity.state ? `'${entity.state}'` : null},
+			'${entity.title}',
+			${entity.city ? `'${entity.city}'` : null},
+			${entity.picture ? `'${entity.picture}'` : null},
+			${entity.type})`).join(', ');
+
+		await this.db.execute(`
+			INSERT INTO events (
+				startDate,
+				endDate,
+				state,
+				title,
+				city,
+				picture,
+				type
+			)VALUES ${valuesClause};`);
 	}
 }

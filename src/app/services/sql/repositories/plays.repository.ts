@@ -22,7 +22,7 @@ export class PlaysRepository implements Repository<PlayEntityWithChildren, Play,
 
 	mapDbToDto = (entity: PlayEntityWithChildren): Play => {
 		return {
-			order: entity.id,
+			id: entity.id,
 			gameId: entity.gameId,
 			turboStatsData: entity.turboStatsData,
 			sgLegacyData: entity.sgLegacyData,
@@ -47,7 +47,7 @@ export class PlaysRepository implements Repository<PlayEntityWithChildren, Play,
 
 	mapDtoToDb = (dto: Play): PlayEntityWithChildren => {
 		return {
-			id: dto.order,
+			id: dto.id,
 			gameId: dto.gameId,
 			turboStatsData: dto.turboStatsData,
 			sgLegacyData: dto.sgLegacyData,

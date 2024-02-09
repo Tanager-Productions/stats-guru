@@ -109,6 +109,7 @@ export interface SeasonEntity {
 
 export interface EventEntity {
 	id: number;
+	title: string;
 	startDate: string;
 	endDate: string;
 	state: string | null;
@@ -119,8 +120,11 @@ export interface EventEntity {
 
 export interface TeamEntity {
 	id: number;
+	name: string;
 	isMale: 1 | 0;
 	seasonId: number;
+	city: string;
+	state: string;
 	teamType: TeamTypes;
 	socialMedias: string | null;
 	generalInfo: string | null;
@@ -129,7 +133,7 @@ export interface TeamEntity {
 	darkModeLogo: string | null;
 }
 
-export interface SyncHistory {
+export interface SyncEntity {
   id: number;
   dateOccurred: string;
   playsSynced: 1 | 0;
@@ -137,6 +141,16 @@ export interface SyncHistory {
   gamesSynced: 1 | 0;
   statsSynced: 1 | 0;
   errorMessages: string;
+}
+
+export interface SyncHistory {
+  id: number;
+  dateOccurred: string;
+  playsSynced: boolean;
+  playersSynced: boolean;
+  gamesSynced: boolean;
+  statsSynced: boolean;
+  errorMessages: string[];
 }
 
 export enum SyncState {
