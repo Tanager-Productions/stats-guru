@@ -6,7 +6,7 @@ import { SyncState } from 'src/app/interfaces/syncState.enum';
 import { CellEditingStoppedEvent, ColDef, GridApi } from 'ag-grid-community';
 import { ApiService } from 'src/app/services/api/api.service';
 import { GamecastDto } from 'src/app/interfaces/gamecastDto.interface';
-import { currentDatabaseVersion } from 'src/app/upgrades/versions';
+import { currentDatabaseVersion } from 'src/app/migrations/versions';
 import { SyncMode } from 'src/app/interfaces/sync.interface';
 import { SyncResult } from 'src/app/interfaces/syncResult.interface';
 import { SyncService } from 'src/app/services/sync/sync.service';

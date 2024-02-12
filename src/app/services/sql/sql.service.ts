@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { currentDatabaseVersion, databaseName, upgrades } from 'src/app/upgrades/versions';
+import { currentDatabaseVersion, databaseName, versions } from 'src/app/migrations/versions';
 import { BehaviorSubject } from 'rxjs';
 import Database from "tauri-plugin-sql-api";
 import { appDataDir } from '@tauri-apps/api/path';
@@ -49,17 +49,38 @@ export class SqlService {
 		this.syncRepo = new SyncRepository(this.db);
 		this.seasonsRepo = new SeasonsRepository(this.db);
 
-		for (let item of upgrades.upgrade) {
-			console.log(`Running version ${item.toVersion} upgrades`);
-			for (let stmt of item.statements) {
-				try {
-					await this.db.execute(stmt);
-				} catch (error) {
-					console.error(error);
-				}
-			}
-		}
+		await this.runMigrations();
 
 		this.initialized.next(true);
+	}
+
+	private async runMigrations() {
+		await this.db.execute(`
+			CREATE TABLE IF NOT EXISTS __migrations (
+				version INTEGER PRIMARY KEY,
+				dateExecuted TEXT NOT NULL
+			);`);
+
+		const results = await this.db.select<{maxVersion: number | null}[]>(`
+			SELECT MAX(version) AS maxVersion FROM __migrations`);
+
+		const currentVersion = results[0].maxVersion;
+		const versionsToRun = currentVersion == null ? versions : versions.filter(t => t.toVersion > currentVersion);
+		for (let version of versionsToRun) {
+			let transaction = 'BEGIN TRANSACTION\n\n';
+			for (let stmt of version.statements) {
+				transaction += stmt + '\n\n';
+			}
+			transaction += 'COMMIT;'
+			await this.db.execute(transaction);
+			await this.db.execute(`
+				INSERT INTO __migrations (
+					version,
+					dateExecuted
+				) VALUES (
+					${version.toVersion},
+					'${new Date().toJSON()}'
+				);`);
+		}
 	}
 }

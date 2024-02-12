@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import { SqlService } from '../sql/sql.service';
 import { SyncDto, SyncMode } from 'src/app/interfaces/sync.interface';
-import { currentDatabaseVersion, databaseName } from 'src/app/upgrades/versions';
+import { currentDatabaseVersion, databaseName } from 'src/app/migrations/versions';
 import { SyncResult } from 'src/app/interfaces/syncResult.interface';
 import { BehaviorSubject, Observable, Subscription, finalize, interval, map, repeat, takeWhile } from 'rxjs';
 import { SyncHistory } from 'src/app/interfaces/syncHistory.interface';

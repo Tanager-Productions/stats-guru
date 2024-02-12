@@ -9,9 +9,9 @@ export const version1: string[] = [
 
   `
     CREATE TABLE IF NOT EXISTS teams (
-			id INTEGER PRIMARY KEY AUTOINCREMENt,
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
-      isMale BOOLEAN NOT NULL,
+      isMale INTEGER NOT NULL,
 			seasonId INTEGER NOT NULL,
       city TEXT NOT NULL,
       state TEXT NOT NULL,
@@ -36,7 +36,7 @@ export const version1: string[] = [
       position INTEGER NULL,
       picture TEXT NULL,
       teamId INTEGER NOT NULL,
-      isMale BOOLEAN NOT NULL,
+      isMale INTEGER NOT NULL,
       height TEXT NULL,
       weight INTEGER NULL,
       age INTEGER NULL,
@@ -70,8 +70,8 @@ export const version1: string[] = [
 			homeTeamTOL INTEGER GENERATED ALWAYS AS ([homePartialTOL] + [homeFullTOL]),
 			awayTeamTOL INTEGER GENERATED ALWAYS AS ([awayPartialTOL] + [awayFullTOL]),
       clock TEXT NOT NULL,
-      complete BOOLEAN NOT NULL,
-      hasFourQuarters BOOLEAN NULL,
+      complete INTEGER NOT NULL,
+      hasFourQuarters INTEGER NULL,
       homeFinal GENERATED ALWAYS AS ([homePointsQ1] + [homePointsQ2] + [homePointsQ3] + [homePointsQ4] + [homePointsOT]),
       awayFinal GENERATED ALWAYS AS ([awayPointsQ1] + [awayPointsQ2] + [awayPointsQ3] + [awayPointsQ4] + [awayPointsOT]),
       period INTEGER NOT NULL,
@@ -83,8 +83,8 @@ export const version1: string[] = [
 			awayFullTOL INTEGER NOT NULL,
 			homeCurrentFouls INTEGER NULL,
 			awayCurrentFouls INTEGER NULL,
-			homeHasPossession BOOLEAN NULL,
-			resetTimeoutsEveryPeriod BOOLEAN NULL,
+			homeHasPossession INTEGER NULL,
+			resetTimeoutsEveryPeriod INTEGER NULL,
 			fullTimeoutsPerGame INTEGER NULL,
 			partialTimeoutsPerGame INTEGER NULL,
 			minutesPerPeriod INTEGER NULL,
@@ -152,7 +152,7 @@ export const version1: string[] = [
 				([threesMade] * 3 + [freeThrowsMade] + ([fieldGoalsMade] - [threesMade]) * 2 + [offensiveRebounds] + [defensiveRebounds] + [assists] + [steals] + [blocks] - ([fieldGoalsAttempted] - [fieldGoalsMade]) - ([freeThrowsAttempted] - [freeThrowsMade]) - [turnovers])
       ),
 			technicalFouls INTEGER NULL,
-			onCourt BOOLEAN NULL,
+			onCourt INTEGER NULL,
       syncState INTEGER NOT NULL DEFAULT 0,
       FOREIGN KEY (playerId) REFERENCES players(id) ON DELETE CASCADE,
 			FOREIGN KEY (gameId) REFERENCES games(id) ON DELETE CASCADE
@@ -180,20 +180,73 @@ export const version1: string[] = [
     CREATE TABLE IF NOT EXISTS syncHistory (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       dateOccurred TEXT NOT NULL,
-      playsSynced BOOLEAN NOT NULL,
-      playersSynced BOOLEAN NOT NULL,
-      gamesSynced BOOLEAN NOT NULL,
-      statsSynced BOOLEAN NOT NULL,
+      playsSynced INTEGER NOT NULL,
+      playersSynced INTEGER NOT NULL,
+      gamesSynced INTEGER NOT NULL,
+      statsSynced INTEGER NOT NULL,
       errorMessages TEXT NOT NULL
     );
   `
 ];
 
+export const version2: string[] = [
+	`ALTER TABLE teams RENAME COLUMN type TO teamType;`,
+	`ALTER TABLE teams RENAME COLUMN socialMediaString TO socialMedias;`,
+	`ALTER TABLE teams RENAME COLUMN infoString TO generalInfo;`,
+	`ALTER TABLE players RENAME COLUMN socialMediaString TO socialMedias;`,
+	`ALTER TABLE players RENAME COLUMN infoString TO generalInfo;`,
+	`ALTER TABLE games DROP COLUMN hiddenPlayers;`,
+	`
+		CREATE TABLE IF NOT EXISTS plays2 (
+			id INTEGER NOT NULL,
+			gameId INTEGER NOT NULL,
+			turboStatsData TEXT NULL,
+			sgLegacyData TEXT NULL,
+			playerId INTEGER NULL,
+			teamId INTEGER NULL,
+			action INTEGER NULL,
+			period INTEGER NULL,
+			gameClock TEXT NULL,
+			score TEXT NULL,
+			timeStamp TEXT NULL,
+			syncState INTEGER NOT NULL DEFAULT 0,
+			FOREIGN KEY (gameId) REFERENCES games(id) ON DELETE CASCADE,
+			FOREIGN KEY (playerId) REFERENCES players(id) ON DELETE CASCADE,
+			FOREIGN KEY (teamId) REFERENCES teams(id) ON DELETE CASCADE,
+			PRIMARY KEY (gameId, id)
+		);
+	`,
+	`
+		insert into plays2 (
+			id,
+			gameId,
+			turbostatsData,
+			sgLegacyData,
+			action,
+			period,
+			gameClock,
+			score,
+			timeStamp,
+			syncState
+		) select playOrder,
+			gameId,
+			turbostatsData,
+			COALESCE(teamName, 'null') || '|' || COALESCE(playerName, 'null') || '|' || COALESCE(playerNumber, 'null'),
+			action,
+			period,
+			gameClock,
+			score,
+			timeStamp,
+			syncState
+			from plays;
+	`,
+	`DROP TABLE plays;`,
+	`ALTER TABLE plays2 RENAME TO plays;`,
+	`ALTER TABLE stats ADD COLUMN playerHidden INTEGER NULL;`
+];
+
 export const currentDatabaseVersion = 1;
 export const databaseName = "sqlite:grindSessionStatsGuru.db";
-export const upgrades = {
-  database: databaseName,
-  upgrade: [
-    { toVersion: 1, statements: version1 }
-  ]
-};
+export const versions = [
+	{ toVersion: 1, statements: version1 }
+];
