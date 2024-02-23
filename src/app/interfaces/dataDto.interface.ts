@@ -1,10 +1,11 @@
-import { Stat, Play, Player, Game, Team, Season, Event } from "@tanager/tgs";
+import { Team, Season, Event } from "@tanager/tgs";
+import { SgGame, SgPlay, SgPlayer, SgStat } from "./sgDtos";
 
 export interface DataDto {
-	stats: Stat[];
-	plays: Play[];
-	players: Player[];
-	games: Game[];
+	stats: SgStat[];
+	plays: SgPlay[];
+	players: SgPlayer[];
+	games: SgGame[];
 	teams: Team[];
 	seasons: Season[];
 	events: Event[];

@@ -1,77 +1,83 @@
 <ion-header>
-  <ion-toolbar color="primary">
-    <ion-breadcrumbs>
-      <ion-breadcrumb>Games</ion-breadcrumb>
-    </ion-breadcrumbs>
-    <ion-buttons slot="end">
-      <ion-button id="filter">
-        <ion-icon slot="icon-only" name="funnel"></ion-icon>
-      </ion-button>
-      <ion-popover [dismissOnSelect]="true" trigger="filter">
-        <ng-template>
-          <ion-content>
-            <ion-list lines="full">
-              <ion-list-header>
-                Filter by Event
-              </ion-list-header>
-              <ion-radio-group [(ngModel)]="filterEventId">
-                <ion-item>
-                  <ion-radio [value]="0">All</ion-radio>
-                </ion-item>
-                <ion-item>
-                  <ion-radio [value]="null">Unassigned</ion-radio>
-                </ion-item>
-                <ion-item *ngFor="let item of common.events()">
-                  <ion-radio [value]="item.id">{{item.title}}</ion-radio>
-                </ion-item>
-              </ion-radio-group>
-            </ion-list>
-          </ion-content>
-        </ng-template>
-      </ion-popover>
-      <ion-button id="addPopoverButton">
-        <ion-icon slot="icon-only" name="add"></ion-icon>
-      </ion-button>
-	  <ion-popover trigger="addPopoverButton" #addPopover>
-		<ng-template>
-			<app-add-games (dismiss)="addPopover.dismiss()"></app-add-games>
-		</ng-template>
-	  </ion-popover>
-    </ion-buttons>
-  </ion-toolbar>
+	<ion-toolbar color="primary">
+		<ion-breadcrumbs>
+			<ion-breadcrumb>Games</ion-breadcrumb>
+		</ion-breadcrumbs>
+		<ion-buttons slot="end">
+			<ion-button id="filter">
+				<ion-icon slot="icon-only" name="funnel"></ion-icon>
+			</ion-button>
+			<ion-popover [dismissOnSelect]="true" trigger="filter">
+				<ng-template>
+					<ion-content>
+						<ion-list lines="full">
+							<ion-list-header>
+								Filter by Event
+							</ion-list-header>
+							<ion-radio-group [(ngModel)]="filterEventId">
+								<ion-item>
+									<ion-radio [value]="0">All</ion-radio>
+								</ion-item>
+								<ion-item>
+									<ion-radio [value]="null">Unassigned</ion-radio>
+								</ion-item>
+								@for (item of common.events(); track $index) {
+									<ion-item>
+										<ion-radio [value]="item.id">{{item.title}}</ion-radio>
+									</ion-item>
+								}
+							</ion-radio-group>
+						</ion-list>
+					</ion-content>
+				</ng-template>
+			</ion-popover>
+			<ion-button id="addPopoverButton">
+				<ion-icon slot="icon-only" name="add"></ion-icon>
+			</ion-button>
+			<ion-popover trigger="addPopoverButton" #addPopover>
+				<ng-template>
+					<app-add-games (dismiss)="addPopover.dismiss()"></app-add-games>
+				</ng-template>
+			</ion-popover>
+		</ion-buttons>
+	</ion-toolbar>
 </ion-header>
 
 <ion-content color="light">
-  <ion-grid>
-    <ion-row>
-      <ion-col size="1" size-lg="2"></ion-col>
-      <ion-col size="10" size-lg="8">
-
-        <ion-card *ngFor="let item of common.homePageGames()" [hidden]="filterEventId != 0 && item.eventId != filterEventId" [button]="true" routerLink="/home/gamecast/{{item.gameId}}">
-          <ion-card-header>
-            <ion-grid class="ion-no-padding" style="width: 80%">
-              <ion-row class="ion-text-center ion-align-items-center">
-                <ion-col>
-                  <img height="60" width="60" [src]="item.homeTeamLogo ?? 'assets/icon-black.png'"> <br>
-                  <ion-label>{{item.homeTeamName}}</ion-label>
-                </ion-col>
-                <ion-col>
-                  <strong>VS</strong>
-                </ion-col>
-                <ion-col>
-                  <img height="60" width="60" [src]="item.awayTeamLogo ?? 'assets/icon-black.png'"> <br>
-                  <ion-label>{{item.awayTeamName}}</ion-label>
-                </ion-col>
-              </ion-row>
-            </ion-grid>
-          </ion-card-header>
-          <ion-card-content>
-            <p>{{ item.gameDate | date: "short" }}</p>
-          </ion-card-content>
-        </ion-card>
-
-      </ion-col>
-      <ion-col size="1" size-lg="2"></ion-col>
-    </ion-row>
-  </ion-grid>
+	<ion-grid>
+		<ion-row>
+			<ion-col size="1" size-lg="2"></ion-col>
+			<ion-col size="10" size-lg="8">
+				@for (item of common.homePageGames(); track $index) {
+					<ion-card *ngFor="let item of common.homePageGames()"
+						[hidden]="filterEventId != 0 && item.eventId != filterEventId" [button]="true"
+						routerLink="/home/gamecast/{{item.gameId}}">
+						<ion-card-header>
+							<ion-grid class="ion-no-padding" style="width: 80%">
+								<ion-row class="ion-text-center ion-align-items-center">
+									<ion-col>
+										<img height="60" width="60" [src]="item.homeTeamLogo ?? 'assets/icon-black.png'">
+										<br>
+										<ion-label>{{item.homeTeamName}}</ion-label>
+									</ion-col>
+									<ion-col>
+										<strong>VS</strong>
+									</ion-col>
+									<ion-col>
+										<img height="60" width="60" [src]="item.awayTeamLogo ?? 'assets/icon-black.png'">
+										<br>
+										<ion-label>{{item.awayTeamName}}</ion-label>
+									</ion-col>
+								</ion-row>
+							</ion-grid>
+						</ion-card-header>
+						<ion-card-content>
+							<p>{{ item.gameDate | date: "short" }}</p>
+						</ion-card-content>
+					</ion-card>
+				}
+			</ion-col>
+			<ion-col size="1" size-lg="2"></ion-col>
+		</ion-row>
+	</ion-grid>
 </ion-content>

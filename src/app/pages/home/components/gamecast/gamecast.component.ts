@@ -170,7 +170,7 @@ export class GamecastComponent {
 			players: this.dataService.players(),
 			plays: this.dataService.plays()
 		}
-		let response = await this.api.GameCast(dto);
+		let response = await this.api.gameCast(dto);
 		let result:SyncResult = response.data;
 		console.log(result);
 		if (result.errorMessages.length > 0) {

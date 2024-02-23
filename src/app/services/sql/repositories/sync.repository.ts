@@ -34,61 +34,58 @@ export class SyncRepository implements Repository<SyncEntity, SyncHistory, numbe
 	}
 
 	async find(id: number): Promise<SyncHistory> {
-		var syncs = await this.db.select<SyncEntity[]>(`
-			SELECT    *
-			FROM      syncHistory
-			WHERE     id = ${id}`);
-		return this.mapDbToDto(syncs[0]);
+    var syncs = await this.db.select<SyncEntity[]>(`
+			SELECT *
+			FROM syncHistory
+			WHERE id = $1`, [id]);
+    return this.mapDbToDto(syncs[0]);
 	}
 
 	async getAll(): Promise<SyncHistory[]> {
 		var syncs = await this.db.select<SyncEntity[]>(`
-			SELECT    *
-			FROM      syncHistory`);
+			SELECT *
+			FROM syncHistory`);
 		return syncs.map(this.mapDbToDto);
 	}
 
 	async add(model: SyncHistory): Promise<void> {
-		const entity = this.mapDtoToDb(model);
-		const result = await this.db.execute(`
+    const entity = this.mapDtoToDb(model);
+    const sql = `
 			INSERT INTO syncHistory (
-				dateOccurred,
-				playsSynced,
-				playersSynced,
-				gamesSynced,
-				statsSynced,
-				errorMessages
-			) VALUES (
-				'${entity.dateOccurred}',
-				${entity.playsSynced},
-				${entity.playersSynced},
-				${entity.gamesSynced},
-				${entity.statsSynced},
-				'${entity.errorMessages}'
-			);`);
-			model.id = result.lastInsertId;
+				dateOccurred, playsSynced, playersSynced, gamesSynced, statsSynced, errorMessages
+			) VALUES ($1, $2, $3, $4, $5, $6)`;
+    const values = [
+			entity.dateOccurred, entity.playsSynced, entity.playersSynced,
+			entity.gamesSynced, entity.statsSynced, entity.errorMessages
+    ];
+    const result = await this.db.execute(sql, values);
+    model.id = result.lastInsertId;
 	}
 
 	async delete(id: number): Promise<void> {
 		await this.db.execute(`
-			DELETE FROM syncHistory
-			WHERE id = ${id}`);
+			DELETE FROM syncHistory WHERE id = $1`, [id]);
 	}
 
 	async update(model: SyncHistory): Promise<void> {
-		const entity = this.mapDtoToDb(model);
-
-		this.db.execute(`
-			UPDATE syncHistory
+    const entity = this.mapDtoToDb(model);
+    const sql = `
+			UPDATE
+				syncHistory
 			SET
-				dateOccurred = '${entity.dateOccurred}',
-				playsSynced = ${entity.playsSynced},
-				playersSynced = ${entity.playersSynced},
-				gamesSynced = ${entity.gamesSynced},
-				statsSynced = ${entity.statsSynced},
-				errorMessages = '${entity.errorMessages}'
+				dateOccurred = $1,
+				playsSynced = $2,
+				playersSynced = $3,
+				gamesSynced = $4,
+				statsSynced = $5,
+				errorMessages = $6
 			WHERE
-				id = ${entity.id}`);
+				id = $7`;
+    const values = [
+			entity.dateOccurred, entity.playsSynced, entity.playersSynced,
+			entity.gamesSynced, entity.statsSynced, entity.errorMessages, entity.id
+    ];
+    await this.db.execute(sql, values);
 	}
 
 	async bulkAdd(models: SyncHistory[]): Promise<void> {
@@ -96,24 +93,18 @@ export class SyncRepository implements Repository<SyncEntity, SyncHistory, numbe
 			return;
     }
 
-    const entities = models.map(model => this.mapDtoToDb(model));
+    const placeholders = models.map((_, index) => `(
+			$${index * 6 + 1}, $${index * 6 + 2}, $${index * 6 + 3},
+			$${index * 6 + 4}, $${index * 6 + 5}, $${index * 6 + 6})`).join(', ');
+    const values = models.flatMap(model => [
+			this.mapDtoToDb(model).dateOccurred, model.playsSynced, model.playersSynced,
+			model.gamesSynced, model.statsSynced, model.errorMessages
+    ]);
 
-		const valuesClause = entities.map(entity => `(
-			'${entity.dateOccurred}',
-			${entity.playsSynced},
-			${entity.playersSynced},
-			${entity.gamesSynced},
-			${entity.statsSynced},
-			'${entity.errorMessages}')`).join(', ');
-
-			await this.db.execute(
-				`INSERT INTO syncHistory (
-					dateOccurred,
-					playsSynced,
-					playersSynced,
-					gamesSynced,
-					statsSynced,
-					errorMessages
-				) VALUES ${valuesClause}`);
+    const sql = `
+			INSERT INTO syncHistory (
+				dateOccurred, playsSynced, playersSynced, gamesSynced, statsSynced, errorMessages
+			) VALUES ${placeholders}`;
+    await this.db.execute(sql, values);
 	}
 }

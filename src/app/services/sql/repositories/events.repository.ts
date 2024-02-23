@@ -37,89 +37,77 @@ export class EventsRepository implements Repository<EventEntity, Event, number> 
 	}
 
 	async find(id: number): Promise<Event> {
-		var events = await this.db.select<EventEntity[]>(`
-			SELECT 	*
-			FROM 		events
-			WHERE 	id = ${id}`);
-		return events[0];
+		const events = await this.db.select<EventEntity[]>(`
+        SELECT *
+        FROM events
+        WHERE id = $1`, [id]);
+		return this.mapDbToDto(events[0]);
 	}
 
 	async getAll(): Promise<Event[]> {
 		var events = await this.db.select<EventEntity[]>(`
-			SELECT 	*
-			FROM 		events`);
+			SELECT 		*
+			FROM 			events
+			ORDER BY 	title ASC`);
 		return events.map(this.mapDbToDto);
 	}
 
 	async add(model: Event): Promise<void> {
-		const entity = this.mapDtoToDb(model);
-		const result = await this.db.execute(
-			`INSERT INTO events (
-				startDate,
-				endDate,
-				state,
-				title,
-				city,
-				picture,
-				type
-			) VALUES (
-				'${model.startDate}',
-				'${model.endDate},
-				${model.state ? `'${model.state}'` : null},
-				'${model.title}',
-				${model.city ? `'${model.city}'` : null},
-				${model.picture ? `'${model.picture}'` : null},
-				${model.type}
-			);`,);
+		const sql = `
+			INSERT INTO events (
+				startDate, endDate, state, title, city, picture, type
+			) VALUES ($1, $2, $3, $4, $5, $6, $7)`;
+		const values = [
+			model.startDate, model.endDate, model.state, model.title,
+			model.city, model.picture, model.type
+		];
+		const result = await this.db.execute(sql, values);
 		model.id = result.lastInsertId;
 	}
 
 	async delete(id: number): Promise<void> {
 		await this.db.execute(`
-			DELETE FROM events
-			WHERE id = ${id}`);
+			DELETE FROM events WHERE id = $1`, [id]);
 	}
 
 	async update(model: Event): Promise<void> {
-		const entity = this.mapDtoToDb(model);
-		await this.db.execute(`
-			UPDATE events
+    const sql = `
+			UPDATE
+				events
 			SET
-				startDate = '${entity.startDate}',
-				endDate = '${entity.endDate}',
-				state = ${entity.state ? `'${entity.state}'` : null},
-				title = '${entity.title}',
-				city = ${entity.city ? `'${entity.city}'` : null},
-				picture = ${entity.picture ? `'${entity.picture}'` : null},
-				type = ${entity.type}
-			WHERE id = ${entity.id}`);
+				startDate = $1,
+				endDate = $2,
+				state = $3,
+				title = $4,
+				city = $5,
+				picture = $6,
+				type = $7
+			WHERE
+				id = $8`;
+    const values = [
+			model.startDate, model.endDate, model.state, model.title,
+			model.city, model.picture, model.type, model.id
+    ];
+    await this.db.execute(sql, values);
 	}
 
 	async bulkAdd(models: Event[]): Promise<void> {
-		if (models.length === 0) {
+    if (models.length === 0) {
 			return;
     }
 
-    const entities = models.map(model => this.mapDtoToDb(model));
+    const placeholders = models.map((_, i) => `(
+			$${i * 7 + 1}, $${i * 7 + 2}, $${i * 7 + 3}, $${i * 7 + 4},
+			$${i * 7 + 5}, $${i * 7 + 6}, $${i * 7 + 7})`).join(', ');
+    const values = models.flatMap(model => [
+			model.startDate, model.endDate, model.state,
+			model.title, model.city, model.picture, model.type
+		]);
 
-		const valuesClause = entities.map(entity => `(
-			'${entity.startDate}',
-			'${entity.endDate}',
-			${entity.state ? `'${entity.state}'` : null},
-			'${entity.title}',
-			${entity.city ? `'${entity.city}'` : null},
-			${entity.picture ? `'${entity.picture}'` : null},
-			${entity.type})`).join(', ');
-
-		await this.db.execute(`
+    const sql = `
 			INSERT INTO events (
-				startDate,
-				endDate,
-				state,
-				title,
-				city,
-				picture,
-				type
-			)VALUES ${valuesClause};`);
+				startDate, endDate, state, title, city, picture, type
+			) VALUES ${placeholders}`;
+    await this.db.execute(sql, values);
 	}
 }

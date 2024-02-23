@@ -28,30 +28,25 @@ export class SqlService {
 	public seasonsRepo!: SeasonsRepository;
 
 	constructor() {
-		this.init;
+		appDataDir().then(path => console.log(path));
+		Database.load(databaseName)
+			.then((database) => {
+				this.db = database;
+				this.gamesRepo = new GamesRepository(this.db);
+				this.playsRepo = new PlaysRepository(this.db);
+				this.playersRepo = new PlayersRepository(this.db);
+				this.teamsRepo = new TeamsRepository(this.db);
+				this.eventsRepo = new EventsRepository(this.db);
+				this.statsRepo = new StatsRepository(this.db);
+				this.syncRepo = new SyncRepository(this.db);
+				this.seasonsRepo = new SeasonsRepository(this.db);
+
+				this.runMigrations().then(() => this.initialized.next(true));
+			});
 	}
 
 	public isReady() {
 		return this.initialized.asObservable();
-	}
-
-	private async init() {
-		const appDataDirPath = await appDataDir();
-		console.log(appDataDirPath);
-
-		this.db = await Database.load(databaseName);
-		this.gamesRepo = new GamesRepository(this.db);
-		this.playsRepo = new PlaysRepository(this.db);
-		this.playersRepo = new PlayersRepository(this.db);
-		this.teamsRepo = new TeamsRepository(this.db);
-		this.eventsRepo = new EventsRepository(this.db);
-		this.statsRepo = new StatsRepository(this.db);
-		this.syncRepo = new SyncRepository(this.db);
-		this.seasonsRepo = new SeasonsRepository(this.db);
-
-		await this.runMigrations();
-
-		this.initialized.next(true);
 	}
 
 	private async runMigrations() {

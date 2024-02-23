@@ -1,30 +1,36 @@
 <ion-content color="light">
-  <ion-grid *ngIf="!checkingForKey" class="fixed">
-    <ion-row>
-      <ion-col size="3"></ion-col>
-      <ion-col size="6">
-        <ion-card class="ion-padding">
-          <ion-card-content class="ion-text-center">
-            <ion-label>
-              <h1>Go to <a href="https://dbm.thegrindsession.com" target="_blank">https://dbm.thegrindsession.com</a> and generate a key to register your application</h1>
-            </ion-label>
-            <ion-input
-              class="ion-text-left ion-margin-vertical"
-              [(ngModel)]="key"
-              label="Key"
-              fill="outline"
-            ></ion-input>
-            <ion-button [disabled]="key == ''">
-              <ion-label *ngIf="!loading" (click)="register()">Register</ion-label>
-              <ion-spinner *ngIf="loading"></ion-spinner>
-            </ion-button>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-      <ion-col size="3"></ion-col>
-    </ion-row>
-  </ion-grid>
-  <div class="loader" *ngIf="checkingForKey">
-    <ion-spinner name="crescent"></ion-spinner>
-  </div>
+	@if (checkingForKey) {
+		<div class="loader">
+		  <ion-spinner name="crescent"></ion-spinner>
+		</div>
+	} @else {
+		<ion-grid class="fixed">
+		  <ion-row>
+			<ion-col size="3"></ion-col>
+			<ion-col size="6">
+			  <ion-card class="ion-padding">
+				<ion-card-content class="ion-text-center">
+				  <ion-label>
+					<h1>Go to <a href="https://dbm.thegrindsession.com" target="_blank">https://dbm.thegrindsession.com</a> and generate a key to register your application</h1>
+				  </ion-label>
+				  <ion-input
+					class="ion-text-left ion-margin-vertical"
+					[(ngModel)]="key"
+					label="Key"
+					fill="outline"
+				  ></ion-input>
+				  <ion-button [disabled]="key == ''">
+					@if (loading) {
+						<ion-spinner></ion-spinner>
+					} @else {
+						<ion-label (click)="register()">Register</ion-label>
+					}
+				  </ion-button>
+				</ion-card-content>
+			  </ion-card>
+			</ion-col>
+			<ion-col size="3"></ion-col>
+		  </ion-row>
+		</ion-grid>
+	}
 </ion-content>

@@ -27,49 +27,49 @@ export class SeasonsRepository implements Repository<SeasonEntity, Season, numbe
 	}
 
 	async find(id: number): Promise<Season> {
-		var seasons = await this.db.select<SeasonEntity[]>(`
-			SELECT 			*
-			FROM        seasons
-			WHERE       year = ${id}`);
-		return this.mapDbToDto(seasons[0]);
+    var seasons = await this.db.select<SeasonEntity[]>(`
+			SELECT *
+			FROM seasons
+			WHERE year = $1`, [id]);
+    return this.mapDbToDto(seasons[0]);
 	}
 
 	async getAll(): Promise<Season[]> {
 		var seasons = await this.db.select<SeasonEntity[]>(`
-			SELECT 			*
-			FROM        seasons`);
+			SELECT *
+			FROM seasons`);
 		return seasons.map(this.mapDbToDto);
 	}
 
 	async add(model: Season): Promise<void> {
-		const entity = this.mapDtoToDb(model);
-		const result = await this.db.execute(
-			`INSERT INTO seasons (
-				year,
-				createdOn,
-				createdBy
-			) VALUES (
-				${entity.year},
-				'${entity.createdOn}',
-				${entity.createdBy ? `'${entity.createdBy}'` : null}
-			);`);
+    const sql = `
+			INSERT INTO seasons (
+				year, createdOn, createdBy
+			) VALUES ($1, $2, $3)`;
+    const values = [
+			model.year, model.createdOn, model.createdBy
+    ];
+    await this.db.execute(sql, values);
 	}
 
 	async delete(id: number): Promise<void> {
 		await this.db.execute(`
-			DELETE FROM seasons
-			WHERE year = ${id}`);
+			DELETE FROM seasons WHERE year = $1`, [id]);
 	}
 
 	async update(model: Season): Promise<void> {
-		const entity = this.mapDtoToDb(model);
-
-		await this.db.execute(`
-		  UPDATE seasons
-			SET
-				createdOn =  '${entity.createdOn}',
-				createdBy = ${entity.createdBy ? `'${entity.createdBy}'` : null}
-			WHERE year = ${entity.year}`);
+    const sql = `
+        UPDATE
+					seasons
+        SET
+					createdOn = $2,
+					createdBy = $3
+        WHERE
+					year = $1`;
+    const values = [
+			model.year, model.createdOn, model.createdBy
+    ];
+    await this.db.execute(sql, values);
 	}
 
 	async bulkAdd(models: Season[]): Promise<void> {
@@ -77,18 +77,15 @@ export class SeasonsRepository implements Repository<SeasonEntity, Season, numbe
 			return;
     }
 
-    const entities = models.map(model => this.mapDtoToDb(model));
+    const placeholders = models.map((_, index) => `(
+			$${index * 3 + 1}, $${index * 3 + 2}, $${index * 3 + 3})`).join(', ');
+    const values = models.flatMap(model => [model.year, model.createdOn, model.createdBy]);
 
-		const valuesClause = entities.map(entity => `(
-			${entity.year},
-			'${entity.createdOn}',
-			${entity.createdBy ? `'${entity.createdBy}'` : null})`).join(', ');
+    const sql = `
+			INSERT INTO seasons (
+				year, createdOn, createdBy
+			) VALUES ${placeholders}`;
+    await this.db.execute(sql, values);
+}
 
-			await this.db.execute(`
-				INSERT INTO seasons (
-					year,
-					createdOn,
-					createdBy
-				) VALUES ${valuesClause};`);
-	}
 }

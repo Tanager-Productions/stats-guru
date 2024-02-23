@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { ToastController, IonicModule } from '@ionic/angular';
 import { AuthService, Credentials } from '../../services/auth/auth.service';
 import { ApiService } from '../../services/api/api.service';
@@ -15,29 +15,26 @@ import { NgIf } from '@angular/common';
 	imports: [IonicModule, NgIf, FormsModule]
 })
 export class LoginPage {
+	private server = inject(ApiService);
+	private toastCtrl = inject(ToastController);
+	private authService = inject(AuthService);
+	private router = inject(Router);
+	private sync = inject(SyncService);
   loading:boolean = false;
   key:string = "";
   checkingForKey = true;
-
-  constructor(
-    private server: ApiService,
-    private toastCtrl: ToastController,
-    private authService: AuthService,
-    private router: Router,
-		private sync: SyncService
-  ) {}
 
 	async ngOnInit() {
 		let user = this.authService.getUser();
     if (user != null) {
 			try {
-				let debugResponse = await this.server.Debug();
+				let debugResponse = await this.server.debug();
 				if (debugResponse.status == 200) {
 					this.sync.online = true;
 					let userId = user.userId;
 					let res = this.authService.getCredential(Credentials.Token);
 					if (res != null) {
-						let httpResponse = await this.server.GetUser(res);
+						let httpResponse = await this.server.getUser(res);
 						if (httpResponse.status == 200) {
 							this.authService.showPopover = true;
 							this.router.navigateByUrl('/home');
@@ -45,7 +42,7 @@ export class LoginPage {
 							//token could have expired, so generate a new one
 							let apiKey = this.authService.getCredential(Credentials.Key);
 							if (apiKey != null) {
-								httpResponse = await this.server.GenerateToken(apiKey, userId);
+								httpResponse = await this.server.generateToken(apiKey, userId);
 								if (httpResponse.status == 200) {
 									let newToken = httpResponse.data;
 									this.authService.storeCredential(Credentials.Token, newToken);
@@ -73,13 +70,13 @@ export class LoginPage {
     let split = this.key.split(':');
     let adminId = split[0];
     let apiKey = split[1];
-    let res = await this.server.VerifyApiKey(apiKey, adminId);
+    let res = await this.server.verifyApiKey(apiKey, adminId);
     if (res.status == 200) {
       this.authService.storeCredential(Credentials.Key, apiKey);
-      res = await this.server.GenerateToken(apiKey, adminId);
+      res = await this.server.generateToken(apiKey, adminId);
       let token = res.data;
       this.authService.storeCredential(Credentials.Token, token);
-      res = await this.server.GetUser(token)
+      res = await this.server.getUser(token)
       this.authService.storeUser(res.data);
 			this.authService.showPopover = true;
       this.router.navigateByUrl('/home');

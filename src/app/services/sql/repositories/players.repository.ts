@@ -54,136 +54,116 @@ export class PlayersRepository implements Repository<PlayerEntity, Player, numbe
 
 	async find(id: number): Promise<Player> {
 		const players = await this.db.select<PlayerEntity[]>(`
-			SELECT 			*
-			FROM 				players
-			WHERE 			id = ${id}`);
+			SELECT *
+			FROM players
+			WHERE id = $1`, [id]);
 		return this.mapDbToDto(players[0]);
 	}
 
 	async getAll(): Promise<Player[]> {
 		const players = await this.db.select<PlayerEntity[]>(`
-			SELECT 			*
-			FROM 				players`);
+			SELECT * FROM players`);
 		return players.map(this.mapDbToDto);
 	}
 
 	async add(model: Player): Promise<void> {
 		const entity = this.mapDtoToDb(model);
-		const result = await this.db.execute(`
+		const sql = `
 			INSERT INTO players (
-				firstName,
-				lastName,
-				number,
-				position,
-				teamId,
-				picture,
-				isMale,
-				height,
-				weight,
-				age,
-				homeTown,
-				homeState,
-				socialMedias,
-				generalInfo
+				firstName, lastName, number,
+				position, teamId, picture,
+				isMale, height, weight,
+				age, homeTown, homeState,
+				socialMedias, generalInfo
 			) VALUES (
-				'${entity.firstName}',
-				'${entity.lastName}',
-				${entity.number},
-				${entity.position},
-				${entity.teamId},
-				${entity.picture ? `'${entity.picture}'` : null},
-				${entity.isMale},
-				${entity.height ? `'${entity.height}'` : null},
-				${entity.weight},
-				${entity.age},
-				${entity.homeTown ? `'${entity.homeTown}'` : null},
-				${entity.homeState ? `'${entity.homeState}'` : null},
-				${entity.socialMedias ? `'${entity.socialMedias}'` : null},
-				${entity.generalInfo ? `'${entity.generalInfo}'` : null}
-			);`);
+				$1, $2, $3, $4, $5,
+				$6, $7, $8, $9, $10,
+				$11, $12, $13, $14`;
+		const values = [
+			entity.firstName, entity.lastName, entity.number,
+			entity.position, entity.teamId, entity.picture,
+			entity.isMale, entity.height, entity.weight,
+			entity.age, entity.homeTown, entity.homeState,
+			entity.socialMedias, entity.generalInfo
+		]
+		const result = await this.db.execute(sql, values);
 		model.id = result.lastInsertId;
 	}
 
 	async delete(id: number): Promise<void> {
 		await this.db.execute(`
-			DELETE FROM	players
-			WHERE id = ${id}`);
+			DELETE FROM	players WHERE id = $1`, [id]);
 	}
 
 	async update(model: Player): Promise<void> {
 		const entity = this.mapDtoToDb(model);
 
-		await this.db.execute(`
-			UPDATE players
+		const sql = `
+			UPDATE
+				players
 			SET
-				id = ${entity.id},
-				firstName = '${entity.firstName}',
-				lastName = '${entity.lastName}',
-				number = ${entity.number},
-				position = ${entity.position},
-				teamId = ${entity.teamId},
-				picture = ${entity.picture ? `'${entity.picture}'` : null},
-				isMale = ${entity.isMale},
-				height = ${entity.height ? `'${entity.height}'` : null},
-				weight = ${entity.weight},
-				age = ${entity.age},
-				homeTown = ${entity.homeTown ? `'${entity.homeTown}'` : null},
-				homeState = ${entity.homeState ? `'${entity.homeState}'` : null},
-				socialMedias = ${entity.socialMedias ? `'${entity.socialMedias}'` : null},
-				generalInfo = ${entity.generalInfo ? `'${entity.generalInfo}'` : null}
+				firstName = $1,
+				lastName = $2,
+				number = $3,
+				position = $4,
+				teamId = $5,
+				picture = $6,
+				isMale = $7,
+				height = $8,
+				weight = $9,
+				age = $10,
+				homeTown = $11,
+				homeState = $12,
+				socialMedias = $13,
+				generalInfo = $14
 			WHERE
-				id = ${entity.id}`);
+				id = $15`;
+
+		const values = [
+			entity.firstName, entity.lastName, entity.number, entity.position,
+			entity.teamId, entity.picture, entity.isMale, entity.height,
+			entity.weight, entity.age, entity.homeTown, entity.homeState,
+			entity.socialMedias, entity.generalInfo, entity.id
+		];
+
+		await this.db.execute(sql, values);
 	}
 
 	async bulkAdd(models: Player[]): Promise<void> {
 		if (models.length === 0) {
 			return;
-    }
+		}
 
-		const entities = models.map(model => this.mapDtoToDb(model));
-
-		const valuesClause = entities.map(entity => `(
-			'${entity.firstName}',
-			'${entity.lastName}',
-			${entity.number},
-			${entity.position},
-			${entity.teamId},
-			${entity.picture ? `'${entity.picture}'` : null},
-			${entity.isMale},
-			${entity.height ? `'${entity.height}'` : null},
-			${entity.weight},
-			${entity.age},
-			${entity.homeTown ? `'${entity.homeTown}'` : null},
-			${entity.homeState ? `'${entity.homeState}'` : null},
-			${entity.socialMedias ? `'${entity.socialMedias}'` : null},
-			${entity.generalInfo ? `'${entity.generalInfo}'` : null})`).join(', ');
-
-		await this.db.execute(`
+		const placeholders = models.map((_, index) => `(
+			$${index * 14 + 1}, $${index * 14 + 2}, $${index * 14 + 3},
+			$${index * 14 + 4}, $${index * 14 + 5}, $${index * 14 + 6},
+			$${index * 14 + 7}, $${index * 14 + 8}, $${index * 14 + 9},
+			$${index * 14 + 10}, $${index * 14 + 11}, $${index * 14 + 12},
+			$${index * 14 + 13}, $${index * 14 + 14})`).join(', ');
+		const dtos = models.flatMap(model => this.mapDtoToDb(model));
+		const sql = `
 			INSERT INTO players (
-				firstName,
-				lastName,
-				number,
-				position,
-				teamId,
-				picture,
-				isMale,
-				height,
-				weight,
-				age,
-				homeTown,
-				homeState,
-				socialMedias,
-				generalInfo
-			) VALUES ${valuesClause};`);
+				firstName, lastName, number, position,
+				teamId, picture, isMale, height,
+				weight,  age, homeTown, homeState,
+				socialMedias, generalInfo
+			) VALUES ${placeholders};`;
+		const values = dtos.map(entity => [
+			entity.firstName, entity.lastName, entity.number, entity.position,
+			entity.teamId, entity.picture, entity.isMale, entity.height,
+			entity.weight, entity.age, entity.homeTown, entity.homeState,
+			entity.socialMedias, entity.generalInfo
+		]).flat();
+
+		await this.db.execute(sql, values);
 	}
 
 	async getByGame(game: Game): Promise<Player[]> {
 		var dbPlayers: PlayerEntity[] = await this.db.select<PlayerEntity[]>(`
-			SELECT 		*
-			FROM 			players
-			WHERE 		teamId = ${game.homeTeam.teamId}
-			OR				teamId = ${game.awayTeam.teamId}
-		`);
+			SELECT *
+			FROM players
+			WHERE teamId = $1
+			OR teamId = $2`, [game.homeTeam.teamId, game.awayTeam.teamId]);
 		return dbPlayers.map(this.mapDbToDto);
 	}
 }

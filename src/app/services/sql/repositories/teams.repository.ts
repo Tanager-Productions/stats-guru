@@ -45,124 +45,91 @@ export class TeamsRepository implements Repository<TeamEntity, Team, number> {
 	}
 
 	async find(id: number): Promise<Team> {
-		const team = await this.db.select<TeamEntity[]>(`
-			SELECT 			*
-			FROM        teams
-			WHERE       id = ${id}`);
-		return this.mapDbToDto(team[0]);
-	}
+    const teams = await this.db.select<TeamEntity[]>(`
+			SELECT *
+			FROM teams
+			WHERE id = $1`, [id]);
+    return this.mapDbToDto(teams[0]);
+}
 
 	async getAll(): Promise<Team[]> {
 		const teams = await this.db.select<TeamEntity[]>(`
-			SELECT 			*
-			FROM        teams`);
+			SELECT *
+			FROM teams`);
 		return teams.map(this.mapDbToDto);
 	}
 
 	async add(model: Team): Promise<void> {
-		const entity = this.mapDtoToDb(model);
-		const result = await this.db.execute(`
+    const entity = this.mapDtoToDb(model);
+    const sql = `
 			INSERT INTO teams (
-				name,
-				isMale,
-				seasonId,
-				city,
-				state,
-				type,
-				socialMedias,
-				generalInfo,
-				division,
-				defaultLogo,
-				darkModeLogo
-			) VALUES (
-				'${entity.name}',
-				${entity.isMale},
-				${entity.seasonId},
-				'${entity.city}',
-				'${entity.state}',
-				${entity.teamType},
-				${entity.socialMedias ? `'${entity.socialMedias}'` : null},
-				${entity.generalInfo ? `'${entity.generalInfo}'` : null},
-				${entity.division},
-				${entity.defaultLogo ? `'${entity.defaultLogo}'` : null},
-				${entity.darkModeLogo ? `'${entity.darkModeLogo}'` : null}
-			);`);
-			model.id = result.lastInsertId;
-	}
+				name, isMale, seasonId, city, state, type, socialMedias, generalInfo, division, defaultLogo, darkModeLogo
+			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`;
+    const values = [
+			entity.name, entity.isMale, entity.seasonId, entity.city,
+			entity.state, entity.teamType, entity.socialMedias,
+			entity.generalInfo, entity.division, entity.defaultLogo,
+			entity.darkModeLogo
+    ];
+    const result = await this.db.execute(sql, values);
+    model.id = result.lastInsertId;
+}
 
 	async delete(id: number): Promise<void> {
 		await this.db.execute(`
-			DELETE		*
-			FROM	    teams
-			WHERE     id = ${id}`);
+			DELETE FROM teams WHERE id = $1`, [id]);
 	}
 
 	async update(model: Team): Promise<void> {
-		const entity = this.mapDtoToDb(model);
-		await this.db.execute(`
-				UPDATE
-					teams
-				SET
-					name = '${entity.name}',
-					isMale = ${entity.isMale},
-					seasonId = ${entity.seasonId},
-					city = '${entity.city}',
-					state = '${entity.state}',
-					type = ${entity.teamType},
-					isMale = ${entity.isMale},
-					socialMedias = ${entity.socialMedias ? `'${entity.socialMedias}'` : null},
-					generalInfo = ${entity.generalInfo ? `'${entity.generalInfo}'` : null},
-					division = ${entity.division},
-					defaultLogo = ${entity.defaultLogo ? `'${entity.defaultLogo}'` : null},
-					darkModeLogo = ${entity.darkModeLogo ? `'${entity.darkModeLogo}'` : null},
-				WHERE
-					id = ${entity.id}`);
+    const entity = this.mapDtoToDb(model);
+    const sql = `
+			UPDATE
+				teams
+			SET
+				name = $1, isMale = $2, seasonId = $3, city = $4, state = $5,
+				type = $6, socialMedias = $7, generalInfo = $8, division = $9,
+				defaultLogo = $10, darkModeLogo = $11
+			WHERE
+				id = $12`;
+    const values = [
+			entity.name, entity.isMale, entity.seasonId, entity.city, entity.state,
+			entity.teamType, entity.socialMedias, entity.generalInfo, entity.division,
+			entity.defaultLogo, entity.darkModeLogo, entity.id
+    ];
+    await this.db.execute(sql, values);
 	}
 
 	async bulkAdd(models: Team[]): Promise<void> {
-		if (models.length === 0) {
+    if (models.length === 0) {
 			return;
     }
 
-		const entities = models.map(model => this.mapDtoToDb(model));
+    const placeholders = models.map((_, index) => `(
+			$${index * 11 + 1}, $${index * 11 + 2}, $${index * 11 + 3}, $${index * 11 + 4},
+			$${index * 11 + 5}, $${index * 11 + 6}, $${index * 11 + 7}, $${index * 11 + 8},
+			$${index * 11 + 9}, $${index * 11 + 10}, $${index * 11 + 11})`).join(', ');
+    const values = models.flatMap(model => this.mapDtoToDb(model));
+    const flatValues = values.flatMap(entity => [
+			entity.name, entity.isMale, entity.seasonId, entity.city,
+			entity.state, entity.teamType, entity.socialMedias,
+			entity.generalInfo, entity.division, entity.defaultLogo,
+			entity.darkModeLogo
+    ]);
 
-		const valuesClause = entities.map(entity => `(
-			'${entity.name}',
-			${entity.isMale},
-			${entity.seasonId},
-			'${entity.city}',
-			'${entity.state}',
-			${entity.teamType},
-			${entity.socialMedias ? `'${entity.socialMedias}'` : null},
-			${entity.generalInfo ? `'${entity.generalInfo}'` : null},
-			${entity.division},
-			${entity.defaultLogo ? `'${entity.defaultLogo}'` : null},
-			${entity.darkModeLogo ? `'${entity.darkModeLogo}'` : null})`).join(', ');
-
-		await this.db.execute(`
+    const sql = `
 			INSERT INTO teams (
-				name,
-				isMale,
-				seasonId,
-				city,
-				state,
-				type,
-				socialMedias,
-				generalInfo,
-				division,
-				defaultLogo,
-				darkModeLogo
-			) VALUES ${valuesClause};`);
+				name, isMale, seasonId, city, state, type, socialMedias, generalInfo, division, defaultLogo, darkModeLogo
+			) VALUES ${placeholders}`;
+    await this.db.execute(sql, flatValues);
 	}
 
 	async hasTeamPlayer(id: number): Promise<boolean> {
-		let results: {count: number}[] = await this.db.select(`
-			select 	count(id) as count
-			from 		players p
-			where 	p.firstName = 'team'
-			and 		p.lastName = 'team'
-			and 		p.teamId == ${id}
-		`);
-		return results[0].count == 0;
+    const results: {count: number}[] = await this.db.select(`
+			SELECT count(id) AS count
+			FROM players p
+			WHERE p.firstName = 'team'
+			AND p.lastName = 'team'
+			AND p.teamId = $1`, [id]);
+    return results[0].count == 0;
 	}
 }

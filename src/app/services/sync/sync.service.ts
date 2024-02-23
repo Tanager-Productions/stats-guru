@@ -127,19 +127,13 @@ export class SyncService {
       let dto: DataDto = response.data;
 
 			this.syncingMessage = 'Adding seasons...';
-			if (dto.seasons.length > 0) {
-				await this.sqlService.bulkInsert("seasons", dto.seasons);
-			}
+			await this.sqlService.seasonsRepo.bulkAdd(dto.seasons);
 
 			this.syncingMessage = 'Adding teams...';
-			if (dto.teams.length > 0) {
-				await this.sqlService.bulkInsert("teams", dto.teams);
-			}
+			await this.sqlService.teamsRepo.bulkAdd(dto.teams);
 
 			this.syncingMessage = 'Adding events...';
-			if (dto.events.length > 0) {
-				await this.sqlService.bulkInsert("events", dto.events);
-			}
+			await this.sqlService.eventsRepo.bulkAdd(dto.events);
 
 			this.syncingMessage = 'Adding players...';
 			for (var i = 0; i < dto.players.length; i = i + 250) {
@@ -147,7 +141,7 @@ export class SyncService {
 				if (end > dto.players.length) {
 					end = dto.players.length;
 				}
-				await this.sqlService.bulkInsert("players", dto.players.slice(i, end));
+				await this.sqlService.playersRepo.bulkAdd(dto.players.slice(i, end));
 			}
 
 			this.syncingMessage = 'Adding games...';
