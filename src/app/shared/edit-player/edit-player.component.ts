@@ -1,8 +1,8 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { Player } from 'src/app/types/entities';
 import { NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
+import { Player } from 'src/app/types/models';
 
 @Component({
 	selector: 'app-edit-player',
@@ -12,8 +12,8 @@ import { IonicModule } from '@ionic/angular';
 	imports: [IonicModule, FormsModule, NgIf]
 })
 export class EditPlayerComponent {
-	@Input() player!:Player;
-	@Input() color!:string;
-	editPlayer:boolean = false;
+	@Input() player!: Player;
+	@Input() color!: string;
+	editPlayer: boolean = false;
 	@Output() savePlayer: EventEmitter<void> = new EventEmitter();
 }

@@ -1,8 +1,8 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { ModalController, IonicModule } from '@ionic/angular';
-import { Game } from 'src/app/types/entities';
 import { FormsModule } from '@angular/forms';
 import { NgIf } from '@angular/common';
+import { Game } from 'src/app/types/models';
 
 @Component({
 	selector: 'app-edit-period-total',

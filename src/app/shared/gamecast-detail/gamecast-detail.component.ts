@@ -1,8 +1,8 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { Game } from 'src/app/types/entities';
-import { SqlService } from 'src/app/services/sql/sql.service';
+import { Component, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
+import { database } from 'src/app/app.db';
+import { Game } from 'src/app/types/models';
 
 @Component({
 	selector: 'app-gamecast-detail',
@@ -12,20 +12,9 @@ import { IonicModule } from '@ionic/angular';
 	imports: [IonicModule, FormsModule]
 })
 export class GamecastDetailComponent {
-	@Input() game!:Game;
-	@Output() dismiss: EventEmitter<void> = new EventEmitter();
-
-	constructor(private crud: SqlService) {}
+	@Input() game!: Game;
 
 	async save() {
-		await this.crud.save('games', this.game, {"id": this.game.id});
-	}
-
-	setCheckbox($event:any) {
-		this.game.resetTimeoutsEveryPeriod = $event.detail.checked ? 1 : 0;
-	}
-
-	setPeriods($event:any) {
-		this.game.hasFourQuarters = $event.detail.checked ? 1 : 0;
+		await database.games.put(this.game);
 	}
 }

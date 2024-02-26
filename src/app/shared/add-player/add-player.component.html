@@ -55,8 +55,8 @@
 							<img *ngIf="player.picture != null" [src]="player.picture">
 						</ion-thumbnail>
 						<ion-label>{{player.number}} {{player.firstName}} {{player.lastName}}</ion-label>
-						<ion-button color="tertiary" slot="end" fill="clear" *ngIf="isHidden(player)" (click)="playerUnhidden.emit(player)">Unhide</ion-button>
-						<ion-button color="tertiary" slot="end" fill="clear" *ngIf="!isHidden(player)" (click)="playerHidden.emit(player)">Hide</ion-button>
+						<ion-button color="tertiary" slot="end" fill="clear" *ngIf="stat.playerHidden" (click)="playerUnhidden.emit(player)">Unhide</ion-button>
+						<ion-button color="tertiary" slot="end" fill="clear" *ngIf="!stat.playerHidden" (click)="playerHidden.emit(player)">Hide</ion-button>
 					</ion-item>
 				</ion-list>
 			</ion-col>

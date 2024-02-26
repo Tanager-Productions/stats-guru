@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { ApiService } from '../api/api.service';
-import { BehaviorSubject, Observable, Subscription, finalize, interval, map, repeat, takeWhile } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription, filter, finalize, interval, map, repeat, takeWhile } from 'rxjs';
 import { CommonService } from '../common/common.service';
 import { DataDto, SyncHistory, mapGameToDto, mapGameToModel, mapPlayToDto, mapPlayToModel, mapPlayerToDto, mapPlayerToModel, mapStatToDto, mapStatToModel } from 'src/app/types/models';
 import { join, appLogDir } from '@tauri-apps/api/path';
@@ -103,7 +103,7 @@ export class SyncService {
 	}
 
   public syncComplete() {
-    return this.initialSyncComplete.asObservable();
+    return this.initialSyncComplete.pipe(filter(t => t === true));
   }
 
   public setTimer() {

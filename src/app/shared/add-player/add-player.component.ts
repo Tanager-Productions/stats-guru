@@ -1,9 +1,9 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { DEFAULT_PLAYER, Game, Player, Positions } from 'src/app/types/entities';
-import { SyncState } from 'src/app/interfaces/syncState.enum';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { NgIf, NgFor } from '@angular/common';
+import { Game, Player, Stat, SyncState } from 'src/app/types/models';
+import { defaultPlayer } from '@tanager/tgs';
 
 @Component({
 	selector: 'app-add-player',
@@ -13,34 +13,32 @@ import { NgIf, NgFor } from '@angular/common';
 	imports: [NgIf, IonicModule, FormsModule, NgFor]
 })
 export class AddPlayerComponent {
-	tab:"add"|"hide" = "add";
+	tab: "add" | "hide" = "add";
 	newPlayerNumber: number = 0;
 	newPlayerFirstName!: string;
 	newPlayerLastName!: string;
 	@Input() team!: 'home' | 'away';
-	@Input() teamId!:number;
-	@Input() isMale!:number;
+	@Input() teamId!: number;
+	@Input() isMale!: boolean;
+	@Input() stat!: Stat;
 	@Output() dismiss: EventEmitter<void> = new EventEmitter();
 	@Output() playerAdded: EventEmitter<Player> = new EventEmitter();
 	@Output() playerHidden: EventEmitter<Player> = new EventEmitter();
 	@Output() playerUnhidden: EventEmitter<Player> = new EventEmitter();
-	@Input() color!:string;
+	@Input() color!: string;
 	@Input() players!: Player[];
 	@Input() settings!: Game;
 
 	public addToTeam() {
-		let newTeamPlayer = DEFAULT_PLAYER;
-		newTeamPlayer.firstName = this.newPlayerFirstName;
-		newTeamPlayer.lastName = this.newPlayerLastName;
-		newTeamPlayer.number = this.newPlayerNumber;
-		newTeamPlayer.teamId = this.teamId;
-		newTeamPlayer.isMale = this.isMale;
-		newTeamPlayer.syncState = SyncState.Added;
-		this.playerAdded.emit(newTeamPlayer);
+		this.playerAdded.emit({
+			...defaultPlayer,
+			syncState: SyncState.Added,
+			firstName: this.newPlayerFirstName,
+			lastName: this.newPlayerLastName,
+			number: this.newPlayerNumber,
+			teamId: this.teamId,
+			isMale: this.isMale
+		});
 		this.dismiss.emit();
-	}
-
-	isHidden(player:Player) {
-		return this.settings.hiddenPlayers?.split(',').includes(player.id.toString());
 	}
 }

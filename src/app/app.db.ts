@@ -23,7 +23,7 @@ export class StatsGuruDb extends Dexie {
 			plays: '[id+gameId], syncState',
 			stats: '[gameId+playerId], syncState',
 			players: '++id, syncState, [teamId+isMale+firstName+lastName]',
-			games: '++id, eventId, homeTeamId, awayTeamId, [gameDate+homeTeamId+awayTeamId], syncState'
+			games: '++id, eventId, [gameDate+homeTeam.teamId+awayTeam.teamId], syncState'
     });
   }
 

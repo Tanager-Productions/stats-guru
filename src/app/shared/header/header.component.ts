@@ -1,9 +1,7 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { SyncHistory } from 'src/app/interfaces/syncHistory.interface';
 import { Account } from 'src/app/types/account';
 import { AuthService } from 'src/app/services/auth/auth.service';
-import { SqlService } from 'src/app/services/sql/sql.service';
 import { SyncService } from 'src/app/services/sync/sync.service';
 import { ColDef } from 'ag-grid-community';
 import { appWindow } from '@tauri-apps/api/window'
@@ -12,6 +10,8 @@ import { DatePipe, NgIf, NgTemplateOutlet } from "@angular/common";
 import { ValueFormatterParams } from "ag-grid-community";
 import { AgGridModule } from 'ag-grid-angular';
 import { IonicModule } from '@ionic/angular';
+import { SyncHistory } from 'src/app/types/models';
+import { database } from 'src/app/app.db';
 
 function getDate(params:ValueFormatterParams) {
   const date:Date = new Date(params.value);
@@ -27,9 +27,12 @@ function getDate(params:ValueFormatterParams) {
 	imports: [NgIf, IonicModule, NgTemplateOutlet, AgGridModule, DatePipe]
 })
 export class HeaderComponent implements OnInit {
+	private router = inject(Router);
+	private auth = inject(AuthService);
+	public sync = inject(SyncService);
   public isWin: boolean = true;
   @Input() showPopover = false;
-  public user:Account | null;
+  public user: Account | null = null;
   public modalOpen:boolean = false;
   public syncHistory?: SyncHistory[];
 
@@ -43,26 +46,15 @@ export class HeaderComponent implements OnInit {
 		{field: 'errorMessages', headerName: 'Error Messages', cellRenderer: (data: any) => { return data.value === "[]" ? "N/A" : data.value}}
 	]
 
-  constructor(
-    private router: Router,
-    auth: AuthService,
-    public sync:SyncService,
-    private crud:SqlService
-  ) {
-    this.user = auth.getUser();
-    os.platform().then(plat => {
-			this.isWin = plat == 'win32';
-			if (this.isWin) {
-				window.appWindow.setDecorations(false);
-			}
-		});
-  }
-
-  ngOnInit() {
-    this.sync.syncComplete().subscribe(async complete => {
-      if (complete) {
-        this.syncHistory = await this.crud.query({table: "syncHistory", orderByColumn: "dateOccurred", orderDirection: "desc"});
-      }
+  async ngOnInit() {
+    this.user = this.auth.getUser();
+		const plat = await os.platform();
+		this.isWin = plat == 'win32';
+		if (this.isWin) {
+			window.appWindow.setDecorations(false);
+		}
+    this.sync.syncComplete().subscribe(async () => {
+			this.syncHistory = await database.syncHistory.toArray();
     })
   }
 
@@ -78,11 +70,13 @@ export class HeaderComponent implements OnInit {
     appWindow.minimize();
   }
 
-  navigateToLogin(): void {
+  navigateToLogin() {
+		this.auth.removeUser();
+		this.user = null;
     this.router.navigate(['/login']);
   }
 
-  startSync(): void {
+  startSync() {
     this.sync.setTimer();
   }
 

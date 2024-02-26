@@ -7,22 +7,22 @@
 				<ion-select-option [value]="0">Female</ion-select-option>
 			</ion-select>
 		</ion-item>
+		<ion-item>.
+			<ion-select class="ion-margin-vertical" label="Home Team" labelPlacement="floating" interface="popover" [(ngModel)]="homeTeam">
+				<div *ngFor="let team of teams">
+					<ion-select-option *ngIf="team.isMale == isMale" [value]="team">{{team.name}}</ion-select-option>
+				</div>
+			</ion-select>
+		</ion-item>
 		<ion-item>
-			<ion-select class="ion-margin-vertical" label="Home Team" labelPlacement="floating" interface="popover" [(ngModel)]="homeTeamId">
+			<ion-select class="ion-margin-vertical" label="Away Team" labelPlacement="floating" interface="popover" [(ngModel)]="awayTeam">
 				<div *ngFor="let team of teams">
 					<ion-select-option *ngIf="team.isMale == isMale" [value]="team.id">{{team.name}}</ion-select-option>
 				</div>
 			</ion-select>
 		</ion-item>
 		<ion-item>
-			<ion-select class="ion-margin-vertical" label="Away Team" labelPlacement="floating" interface="popover" [(ngModel)]="awayTeamId">
-				<div *ngFor="let team of teams">
-					<ion-select-option *ngIf="team.isMale == isMale" [value]="team.id">{{team.name}}</ion-select-option>
-				</div>
-			</ion-select>
-		</ion-item>
-		<ion-item>
-			<ion-select class="ion-margin-vertical" label="Event" labelPlacement="floating" interface="popover" [(ngModel)]="event">
+			<ion-select class="ion-margin-vertical" label="Event" labelPlacement="floating" interface="popover" [(ngModel)]="eventId">
 				<ion-select-option [value]="null">None</ion-select-option>
 				<ion-select-option [value]="event.id" *ngFor="let event of common.events()">{{event.title}}</ion-select-option>
 			</ion-select>
