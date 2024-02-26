@@ -146,16 +146,12 @@ export class GamecastComponent {
 	protected dataService = inject(GamecastService);
 
   ngOnInit() {
-		this.initSub = this.sql.isReady().subscribe(ready => {
-			if (ready) {
-				this.sync.gameCastInProgress = true;
-				this.route.params.subscribe(async params => {
-					this.gameId = params['gameId'];
-					await this.dataService.fetchData(this.gameId);
-					if (this.sync.online) {
-						this.interval = setInterval(async () => await this.send(), 15000);
-					}
-				});
+		this.sync.gameCastInProgress = true;
+		this.route.params.subscribe(async params => {
+			this.gameId = params['gameId'];
+			await this.dataService.fetchData(this.gameId);
+			if (this.sync.online) {
+				this.interval = setInterval(async () => await this.send(), 15000);
 			}
 		});
   }

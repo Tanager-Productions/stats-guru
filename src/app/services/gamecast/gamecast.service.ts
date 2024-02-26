@@ -1,10 +1,9 @@
 import { Injectable, Signal, WritableSignal, computed, effect, inject, signal, untracked } from '@angular/core';
-import { DEFAULT_PLAYER, DEFAULT_STAT, Game, GameActions, Play, Player, Stat } from 'src/app/types/entities';
-import { SqlService } from '../sql/sql.service';
-import { SyncState } from 'src/app/interfaces/syncState.enum';
-import { GamecastDataService } from './database/gamecast-data.service';
+import { GameActions, defaultPlayer, defaultStat } from '@tanager/tgs';
+import { database } from 'src/app/app.db';
+import { Game, Play, Player, Stat, SyncState } from 'src/app/types/models';
 
-const playerSort = (a:Player, b:Player) => {
+const playerSort = (a: Player, b: Player) => {
 	if (a.number == b.number)
 		return 0;
 	else if (a.number < b.number)
@@ -14,12 +13,9 @@ const playerSort = (a:Player, b:Player) => {
 }
 
 @Injectable({
-  providedIn: 'root'
+	providedIn: 'root'
 })
 export class GamecastService {
-	private sql = inject(SqlService);
-	private dataService = inject(GamecastDataService);
-
 	private statsSrc: WritableSignal<Stat[]> = signal([]);
 	public stats = this.statsSrc.asReadonly();
 
@@ -29,17 +25,17 @@ export class GamecastService {
 	private playersSrc: WritableSignal<Player[]> = signal([]);
 	public players = this.playersSrc.asReadonly();
 
-	private gameSrc: WritableSignal<Game|null> = signal(null);
+	private gameSrc: WritableSignal<Game | null> = signal(null);
 	public game = this.gameSrc.asReadonly();
 	private gameEffect = effect(async () => {
 		const game = this.game();
 		if (game) {
 			game.syncState = game.syncState == SyncState.Added ? SyncState.Added : SyncState.Modified;
-			await this.sql.save('games', game, { "id": game.id });
+			await database.games.put(game);
 		}
 	});
 
-	private selectedPlayerId:WritableSignal<number|null> = signal(null);
+	private selectedPlayerId: WritableSignal<number | null> = signal(null);
 
 	public selectedPlayer = computed(() => {
 		const players = this.players();
@@ -57,67 +53,55 @@ export class GamecastService {
 		const players = this.players();
 		const stats = this.stats();
 		const game = untracked(this.game);
-		return players.filter(t => t.teamId == game?.homeTeamId && stats.find(s => s.playerId == t.id)?.onCourt === 1);
+		return players.filter(t => t.teamId == game?.homeTeam.teamId && stats.find(s => s.playerId == t.id)?.onCourt);
 	});
 
 	public awayPlayersOnCourt = computed(() => {
 		const players = this.players();
 		const stats = this.stats();
 		const game = untracked(this.game);
-		return players.filter(t => t.teamId == game?.awayTeamId && stats.find(s => s.playerId == t.id)?.onCourt === 1);
+		return players.filter(t => t.teamId == game?.homeTeam.teamId && stats.find(s => s.playerId == t.id)?.onCourt);
 	});
 
 	public homeTeamPlayers = computed(() => {
 		const players = this.players();
 		const game = untracked(this.game);
-		return players.filter(t => t.teamId == game?.homeTeamId).sort(playerSort);
+		return players.filter(t => t.teamId == game?.homeTeam.teamId).sort(playerSort);
 	});
 
 	public awayTeamPlayers = computed(() => {
 		const players = this.players();
 		const game = untracked(this.game);
-		return players.filter(t => t.teamId == game?.awayTeamId).sort(playerSort);
+		return players.filter(t => t.teamId == game?.awayTeam.teamId).sort(playerSort);
 	});
 
 	public hiddenPlayerIds = computed(() => {
-		const game = this.game();
-		return game?.hiddenPlayers?.split(',').map(t => Number(t));
+		const stats = this.stats();
+		return stats.filter(t => t.playerHidden).map(t => t.playerId);
 	});
 
-	private isMaleSrc: WritableSignal<1|0> = signal(1);
-	public isMale = this.isMaleSrc.asReadonly();
-
-	private homeTeamNameSrc = signal('');
-	public homeTeamName = this.homeTeamNameSrc.asReadonly();
-
-	private awayTeamNameSrc = signal('');
-	public awayTeamName = this.awayTeamNameSrc.asReadonly();
-
 	public async fetchData(gameId: number) {
-		const game = await this.sql.gamesRepo.find(gameId);
+		const game = (await database.games.get(gameId))!;
 		this.gameSrc.set(game);
 
-		const stats = await this.sql.statsRepo.getByGame(gameId);
+		const stats = await database.stats.where({gameId: gameId}).toArray();
 		this.statsSrc.set(stats);
 
-		const plays = await this.sql.playsRepo.getByGame(gameId);
+		const plays = await database.plays.where({gameId: gameId}).toArray();
 		this.playsSrc.set(plays);
 
-		const players = await this.sql.playersRepo.getByGame(game);
+		const players = await database.players
+			.where('teamId').equals(game.homeTeam.teamId)
+			.or('teamId').equals(game.awayTeam.teamId)
+			.toArray();
 		this.playersSrc.set(players);
-
-		const homeTeam = await this.sql.teamsRepo.find(game.homeTeamId);
-		const awayTeam = await this.sql.teamsRepo.find(game.awayTeamId);
-		this.isMaleSrc.set(homeTeam.isMale);
-		this.homeTeamNameSrc.set(homeTeam.name);
-		this.awayTeamNameSrc.set(awayTeam.name);
 
 		await this.setTeamPlayers(game);
 	}
 
 	private async setTeamPlayers(game: Game) {
 		if (await this.sql.teamsRepo.hasTeamPlayer(game.homeTeamId) == false) {
-			let teamPlayer = DEFAULT_PLAYER;
+			let teamPlayer = defaultPlayer;
 			teamPlayer.firstName = 'team';
 			teamPlayer.lastName = 'team';
 			teamPlayer.number = -1;
@@ -128,7 +112,7 @@ export class GamecastService {
 		}
 
 		if (await this.sql.teamsRepo.hasTeamPlayer(game.awayTeamId) == false) {
-			let teamPlayer = DEFAULT_PLAYER;
+			let teamPlayer = defaultPlayer;
 			teamPlayer.firstName = 'team';
 			teamPlayer.lastName = 'team';
 			teamPlayer.number = -1;
@@ -157,28 +141,35 @@ export class GamecastService {
 		this.selectedPlayerId.set(playerId);
 	}
 
-	public async addPlayer(player:Player) {
-		let id = await this.sql.playersRepo.add(player);
+	public async addPlayer(player: Player) {
+		const id = await database.transaction('rw', 'players', () => {
+			return database.players.add(player);
+		});
 		player.id = id;
-		const game = this.game();
-		if (game) {
-			this.playersSrc.update(players => [...players, player]);
-		}
-		return player;
+		this.playersSrc.update(players => [...players, player]);
 	}
 
-	public async updatePlayer(player: Player) {
-		player.syncState == SyncState.Added ? SyncState.Added : SyncState.Modified;
-		await this.sql.save("players", player, {"id": player.id});
+	public async updatePlayer(playerToUpdate: Player) {
+		playerToUpdate.syncState == SyncState.Added ? SyncState.Added : SyncState.Modified;
+		this.playersSrc.update(players => players.map(player => {
+			if (player.id == playerToUpdate.id) {
+				database.transaction('rw', 'players', () => {
+					database.players.put(playerToUpdate);
+				});
+				return { ...playerToUpdate };
+			} else {
+				return player;
+			}
+		}))
 	}
 
-	public async getStat(playerId:number) {
+	public async getStat(playerId: number) {
 		const game = this.game()!;
 		let stat = this.stats().find(t => t.playerId == playerId);
 		if (stat) {
 			return stat;
 		} else {
-			let newStat = DEFAULT_STAT;
+			let newStat = defaultStat;
 			newStat.gameId = game.id;
 			newStat.playerId = playerId;
 			newStat.syncState = SyncState.Added;
@@ -191,11 +182,11 @@ export class GamecastService {
 		}
 	}
 
-	public async updateStat(stat:Stat) {
+	public async updateStat(stat: Stat) {
 		const game = this.game();
 		if (game) {
 			stat.syncState = stat.syncState == SyncState.Added ? SyncState.Added : SyncState.Modified;
-			await this.sql.save("stats", stat, {"playerId": stat.playerId, "gameId": game.id});
+			await this.sql.save("stats", stat, { "playerId": stat.playerId, "gameId": game.id });
 			stat = (await this.sql.rawQuery(`select * from stats where playerId = '${stat.playerId}' and gameId = '${stat.gameId}'`))[0];
 			this.statsSrc.update(stats => stats.map(value => value.id == stat.id ? stat : value));
 		}
@@ -204,36 +195,31 @@ export class GamecastService {
 	public switchPossession() {
 		const game = this.game();
 		if (game) {
-			this.gameSrc.set({...game, homeHasPossession: game.homeHasPossession == 1 ? 0 : 1});
+			this.gameSrc.set({ ...game, homeHasPossession: !game.homeHasPossession });
 		}
 	}
 
-	public hidePlayer(player:Player) {
-		const game = this.game();
-		if (game) {
-			const hiddenPlayers = this.hiddenPlayerIds() ?? [];
-			this.gameSrc.set({ ...game, hiddenPlayers: [...hiddenPlayers, player.id].toString() });
-		}
-	}
-
-	public unhidePlayer(player:Player) {
-		const game = this.game();
-		if (game) {
-			const hiddenPlayers = this.hiddenPlayerIds()!;
-			let index = hiddenPlayers.findIndex(t => t == player.id);
-			hiddenPlayers.splice(index, 1);
-			this.gameSrc.set({ ...game, hiddenPlayers: hiddenPlayers.toString() });
-		}
+	public togglePlayerHidden(player: Player) {
+		this.statsSrc.update(stats => stats.map(stat => {
+			if (stat.playerId == player.id) {
+				database.transaction('rw', 'stats', () => {
+					database.stats.update({ playerId: stat.playerId, gameId: stat.gameId }, { 'playerHidden': !stat.playerHidden });
+				});
+				return { ...stat, playerHidden: !stat.playerHidden }
+			} else {
+				return stat
+			}
+		}));
 	}
 
 	public toggleGameComplete() {
 		const game = this.game();
 		if (game) {
-			this.gameSrc.set({...game, complete: game.complete == 1 ? 0 : 1});
+			this.gameSrc.set({ ...game, complete: !game.complete });
 		}
 	}
 
-	public async updatePeriodTotal(team: 'home' | 'away', points:number) {
+	public async updatePeriodTotal(team: 'home' | 'away', points: number) {
 		const game = { ...this.game()! };
 		if (team == 'away') {
 			if (game.period == 1) {
@@ -267,7 +253,7 @@ export class GamecastService {
 
 	public resetTOs() {
 		const game = { ...this.game()! };
-		if (game.resetTimeoutsEveryPeriod == 1) {
+		if (game.resetTimeoutsEveryPeriod) {
 			game.homeFullTOL = game.fullTimeoutsPerGame ?? 0;
 			game.awayFullTOL = game.fullTimeoutsPerGame ?? 0;
 			game.homePartialTOL = game.partialTimeoutsPerGame ?? 0;
@@ -278,15 +264,15 @@ export class GamecastService {
 
 	/** Does not trigger game update for performance. Clock will naturally get synced up as other changes happen. */
 	public updateClock(duration: number) {
-    const minutes = Math.floor(duration / 60);
-    const seconds = duration % 60;
-    this.gameSrc()!.clock = `${minutes < 10 ? '0' + minutes : minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
-  }
+		const minutes = Math.floor(duration / 60);
+		const seconds = duration % 60;
+		this.gameSrc()!.clock = `${minutes < 10 ? '0' + minutes : minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+	}
 
 	public async addPlay(team: 'home' | 'away', action: GameActions, player?: Player) {
 		const { playsSrc, game, homeTeamName, awayTeamName } = this;
 		let play: Play = {
-			id:0,
+			id: 0,
 			playOrder: playsSrc().length + 1,
 			gameId: game()!.id,
 			turboStatsData: null,
@@ -306,7 +292,7 @@ export class GamecastService {
 		});
 		if (existingPlay.length == 1) {
 			play.syncState = existingPlay[0].SyncState == SyncState.Added ? SyncState.Added : SyncState.Modified;
-			await this.sql.save('plays', play, {playOrder: play.playOrder, gameId: game()!.id});
+			await this.sql.save('plays', play, { playOrder: play.playOrder, gameId: game()!.id });
 		} else {
 			play.syncState = SyncState.Added;
 			await this.sql.save('plays', play);
@@ -314,7 +300,7 @@ export class GamecastService {
 		this.playsSrc.update(plays => [play, ...plays]);
 	}
 
-	public addFoulToGame(team: 'home'|'away') {
+	public addFoulToGame(team: 'home' | 'away') {
 		const game = { ...this.game()! };
 		if (team == 'away') {
 			if (game.awayCurrentFouls == null) {
@@ -332,7 +318,7 @@ export class GamecastService {
 		this.gameSrc.set(game);
 	}
 
-	public addTimeoutToGame(team: 'home'|'away', partial: boolean) {
+	public addTimeoutToGame(team: 'home' | 'away', partial: boolean) {
 		const game = { ...this.game()! };
 		if (team == 'away') {
 			if (game.awayTeamTOL > 0) {
