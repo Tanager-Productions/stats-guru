@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { Game } from 'src/app/interfaces/entities';
+import { Game } from 'src/app/types/entities';
 import { SqlService } from 'src/app/services/sql/sql.service';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';

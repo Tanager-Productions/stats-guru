@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { ModalController, IonicModule } from '@ionic/angular';
-import { Game } from 'src/app/interfaces/entities';
+import { Game } from 'src/app/types/entities';
 import { FormsModule } from '@angular/forms';
 import { NgIf } from '@angular/common';
 

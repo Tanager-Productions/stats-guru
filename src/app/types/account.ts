@@ -1,4 +1,4 @@
-export interface AccountDto {
+export interface Account {
   userId: string;
   email: string;
   darkMode: boolean | null;

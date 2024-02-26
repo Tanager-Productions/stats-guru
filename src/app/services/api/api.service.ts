@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { CapacitorHttp, HttpHeaders, HttpOptions, HttpResponse } from "@capacitor/core";
-import { GamecastDto } from 'src/app/interfaces/gamecastDto.interface';
-import { SyncDto } from 'src/app/interfaces/sync.interface';
+import { SyncDto, GamecastDto } from 'src/app/types/sync';
 import { environment } from 'src/environments/environment';
 
 @Injectable({

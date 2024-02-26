@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { SyncHistory } from 'src/app/interfaces/syncHistory.interface';
-import { AccountDto } from 'src/app/interfaces/accountDto.interface';
+import { Account } from 'src/app/types/account';
 import { AuthService } from 'src/app/services/auth/auth.service';
 import { SqlService } from 'src/app/services/sql/sql.service';
 import { SyncService } from 'src/app/services/sync/sync.service';
@@ -29,7 +29,7 @@ function getDate(params:ValueFormatterParams) {
 export class HeaderComponent implements OnInit {
   public isWin: boolean = true;
   @Input() showPopover = false;
-  public user:AccountDto | null;
+  public user:Account | null;
   public modalOpen:boolean = false;
   public syncHistory?: SyncHistory[];
 

@@ -1,5 +1,5 @@
 import { Injectable, Signal, WritableSignal, computed, effect, inject, signal, untracked } from '@angular/core';
-import { DEFAULT_PLAYER, DEFAULT_STAT, Game, GameActions, Play, Player, Stat } from 'src/app/interfaces/entities';
+import { DEFAULT_PLAYER, DEFAULT_STAT, Game, GameActions, Play, Player, Stat } from 'src/app/types/entities';
 import { SqlService } from '../sql/sql.service';
 import { SyncState } from 'src/app/interfaces/syncState.enum';
 import { GamecastDataService } from './database/gamecast-data.service';

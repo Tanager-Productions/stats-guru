@@ -2,7 +2,7 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { SqlService } from 'src/app/services/sql/sql.service';
 import { SyncState } from 'src/app/interfaces/syncState.enum';
 import { CommonService } from 'src/app/services/common/common.service';
-import { Team, Event, Game, DEFAULT_GAME } from 'src/app/interfaces/entities';
+import { Team, Event, Game, DEFAULT_GAME } from 'src/app/types/entities';
 import { NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';

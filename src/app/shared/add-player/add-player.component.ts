@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { DEFAULT_PLAYER, Game, Player, Positions } from 'src/app/interfaces/entities';
+import { DEFAULT_PLAYER, Game, Player, Positions } from 'src/app/types/entities';
 import { SyncState } from 'src/app/interfaces/syncState.enum';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';

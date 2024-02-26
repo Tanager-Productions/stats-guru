@@ -1,13 +1,10 @@
 import { Injectable, WritableSignal, inject, signal } from '@angular/core';
-import { SqlService } from '../sql/sql.service';
-import { HomePageGame } from '../sql/repositories/games.repository';
 import { Event } from '@tanager/tgs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CommonService {
-	private sql = inject(SqlService);
   public homePageGames: WritableSignal<HomePageGame[]> = signal([]);
   public events: WritableSignal<Event[]> = signal([]);
 

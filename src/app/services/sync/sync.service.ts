@@ -1,22 +1,21 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { ApiService } from '../api/api.service';
-import { SqlService } from '../sql/sql.service';
-import { SyncDto, SyncMode } from 'src/app/interfaces/sync.interface';
-import { currentDatabaseVersion, databaseName } from 'src/app/migrations/versions';
-import { SyncResult } from 'src/app/interfaces/syncResult.interface';
 import { BehaviorSubject, Observable, Subscription, finalize, interval, map, repeat, takeWhile } from 'rxjs';
-import { SyncHistory } from 'src/app/interfaces/syncHistory.interface';
 import { CommonService } from '../common/common.service';
-import { DataDto } from 'src/app/interfaces/dataDto.interface';
-import { info } from "tauri-plugin-log-api";
-import { appDataDir, join, BaseDirectory, appLogDir } from '@tauri-apps/api/path';
+import { DataDto, SyncHistory, mapGameToDto, mapGameToModel, mapPlayToDto, mapPlayToModel, mapPlayerToDto, mapPlayerToModel, mapStatToDto, mapStatToModel } from 'src/app/types/models';
+import { join, appLogDir } from '@tauri-apps/api/path';
 import { readTextFile } from '@tauri-apps/api/fs'
 import { AuthService } from '../auth/auth.service';
+import { database } from 'src/app/app.db';
+import { SyncDto, SyncMode, SyncResult } from 'src/app/types/sync';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SyncService {
+	private api = inject(ApiService);
+	private common = inject(CommonService);
+	private authService = inject(AuthService);
   private seconds = 600; //10 minutes
   private timeRemaining$: Observable<number> = interval(1000).pipe(
     map(n => (this.seconds - n) * 1000),
@@ -36,45 +35,40 @@ export class SyncService {
 	public online:boolean = false;
 	public syncingMessage = '';
 
-  constructor(
-		private api:ApiService,
-		private sqlService:SqlService,
-		private common:CommonService,
-		private authService: AuthService
-	) { }
-
   public async beginSync(isInitial:boolean = false) {
 		if (!this.gameCastInProgress) {
 			this.syncing = true;
 			this.syncingMessage = 'Syncing with server...';
 			try {
+				const data = await database.getSyncTables();
 				let res: SyncDto = {
-					version: currentDatabaseVersion,
+					version: database.currentDatabaseVersion,
 					mode: SyncMode.Full,
 					overwrite: null,
-					games: await this.sqlService.query({table: "games"}),
-					players: await this.sqlService.query({table: "players"}),
-					stats: await this.sqlService.query({table: "stats"}),
-					plays: await this.sqlService.query({table: "plays"})
+					games: data[0].map(mapGameToDto),
+					players: data[1].map(mapPlayerToDto),
+					stats: data[2].map(mapStatToDto),
+					plays: data[3].map(mapPlayToDto)
 				}
 				let httpResponse = await this.api.postSync(res);
 				if (httpResponse.status == 200) {
 					let res: SyncResult = httpResponse.data;
-					let history: SyncHistory = {
-						id: 0,
-						dateOccurred: new Date().toUTCString(),
-						statsSynced: res.statsSynced,
-						gamesSynced: res.gamesSynced,
-						playersSynced: res.playersSynced,
-						playsSynced: res.playsSynced,
-						errorMessages: JSON.stringify(res.errorMessages)
-					};
-					await this.sqlService.save('syncHistory', history);
-					if (history.statsSynced && history.playersSynced && history.gamesSynced && history.playsSynced) {
-						await this.sqlService.rawExecute(`
-							delete from seasons;
-							delete from events;
-						`);
+					database.transaction('rw', database.syncHistory, () => {
+						database.syncHistory.add({
+							id: 0,
+							dateOccurred: new Date().toUTCString(),
+							statsSynced: res.statsSynced,
+							gamesSynced: res.gamesSynced,
+							playersSynced: res.playersSynced,
+							playsSynced: res.playsSynced,
+							errorMessages: res.errorMessages
+						});
+					});
+					if (res.statsSynced && res.playersSynced && res.gamesSynced && res.playsSynced) {
+						const tablesToClear = database.tables.filter(t => t.name !== 'syncHistory')
+						for (let table of tablesToClear) {
+							table.clear();
+						}
 						await this.getData();
 					}
 				} else {
@@ -124,52 +118,45 @@ export class SyncService {
     let response = await this.api.getData();
 
     if (response.status == 200) {
-      let dto: DataDto = response.data;
+      const {
+				seasons,
+				teams,
+				events,
+				players,
+				games,
+				plays,
+				stats
+			} = response.data as DataDto;
+			await database.transaction('rw', [
+				'seasons',
+				'teams',
+				'events',
+				'players',
+				'games',
+				'plays',
+				'stats'
+			], () => {
+				this.syncingMessage = 'Adding seasons...';
+				database.seasons.bulkAdd(seasons);
 
-			this.syncingMessage = 'Adding seasons...';
-			await this.sqlService.seasonsRepo.bulkAdd(dto.seasons);
+				this.syncingMessage = 'Adding teams...';
+				database.teams.bulkAdd(teams);
 
-			this.syncingMessage = 'Adding teams...';
-			await this.sqlService.teamsRepo.bulkAdd(dto.teams);
+				this.syncingMessage = 'Adding events...';
+				database.events.bulkAdd(events);
 
-			this.syncingMessage = 'Adding events...';
-			await this.sqlService.eventsRepo.bulkAdd(dto.events);
+				this.syncingMessage = 'Adding players...';
+				database.players.bulkAdd(players.map(mapPlayerToModel));
 
-			this.syncingMessage = 'Adding players...';
-			for (var i = 0; i < dto.players.length; i = i + 250) {
-				let end = i + 250;
-				if (end > dto.players.length) {
-					end = dto.players.length;
-				}
-				await this.sqlService.playersRepo.bulkAdd(dto.players.slice(i, end));
-			}
+				this.syncingMessage = 'Adding games...';
+				database.games.bulkAdd(games.map(mapGameToModel));
 
-			this.syncingMessage = 'Adding games...';
-			for (var i = 0; i < dto.games.length; i = i + 250) {
-				let end = i + 250;
-				if (end > dto.games.length) {
-					end = dto.games.length;
-				}
-				await this.sqlService.bulkInsert("games", dto.games.slice(i, end));
-			}
+				this.syncingMessage = 'Adding plays...';
+				database.plays.bulkAdd(plays.map(mapPlayToModel));
 
-			this.syncingMessage = 'Adding plays...';
-			for (var i = 0; i < dto.plays.length; i = i + 250) {
-				let end = i + 250;
-				if (end > dto.plays.length) {
-					end = dto.plays.length;
-				}
-				await this.sqlService.bulkInsert("plays", dto.plays.slice(i, end));
-			}
-
-			this.syncingMessage = 'Adding stats...';
-			for (var i = 0; i < dto.stats.length; i = i + 250) {
-				let end = i + 250;
-				if (end > dto.stats.length) {
-					end = dto.stats.length;
-				}
-				await this.sqlService.bulkInsert("stats", dto.stats.slice(i, end));
-			}
+				this.syncingMessage = 'Adding stats...';
+				database.stats.bulkAdd(stats.map(mapStatToModel));
+			});
     } else {
       throw new Error(`Failed to fetch data from server: ${response.data}`);
     }
