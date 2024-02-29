@@ -1,16 +1,9 @@
-import { ChangeDetectionStrategy, Component, Injector, WritableSignal, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
-import { SqlService } from 'src/app/services/sql/sql.service';
-import { SyncState } from 'src/app/interfaces/syncState.enum';
 import { CellEditingStoppedEvent, ColDef, GridApi } from 'ag-grid-community';
 import { ApiService } from 'src/app/services/api/api.service';
-import { GamecastDto } from 'src/app/types/gamecastDto.interface';
-import { currentDatabaseVersion } from 'src/app/migrations/versions';
-import { SyncMode } from 'src/app/types/sync.ts';
-import { SyncResult } from 'src/app/types/syncResult.interface';
 import { SyncService } from 'src/app/services/sync/sync.service';
-import { Game, Player, Stat, Play, GameActions, DEFAULT_PLAYER, GAME_ACTIONS_MAP, DEFAULT_STAT } from 'src/app/types/entities';
 import { EditPeriodTotalComponent } from '../../../../shared/edit-period-total/edit-period-total.component';
 import { AddPlayerComponent } from '../../../../shared/add-player/add-player.component';
 import { AgGridModule } from 'ag-grid-angular';
@@ -20,8 +13,11 @@ import { EditPlayerComponent } from '../../../../shared/edit-player/edit-player.
 import { NgIf, NgFor, NgClass, SlicePipe, DatePipe } from '@angular/common';
 import { IonPopover, IonicModule, LoadingController, RadioGroupChangeEventDetail } from '@ionic/angular';
 import { IonRadioGroupCustomEvent } from '@ionic/core';
-import { info } from "tauri-plugin-log-api";
 import { GamecastService } from 'src/app/services/gamecast/gamecast.service';
+import { GAME_ACTIONS_MAP, Play, Player, SyncState } from 'src/app/types/models';
+import { database } from 'src/app/app.db';
+import { GamecastDto, SyncMode, SyncResult } from 'src/app/types/sync';
+import { GameActions } from '@tanager/tgs';
 
 type RadioEvent = IonRadioGroupCustomEvent<RadioGroupChangeEventDetail<Player|null>>;
 
@@ -138,11 +134,9 @@ export class GamecastComponent {
 
 	//inject
 	private route = inject(ActivatedRoute);
-	private sql = inject(SqlService);
 	private api = inject(ApiService);
 	protected sync = inject(SyncService);
 	private loadingCtrl = inject(LoadingController);
-	private injector = inject(Injector);
 	protected dataService = inject(GamecastService);
 
   ngOnInit() {
@@ -159,7 +153,7 @@ export class GamecastComponent {
 	private async send() {
 		let dto: GamecastDto = {
 			game: this.dataService.game()!,
-			version: currentDatabaseVersion,
+			version: database.currentDatabaseVersion,
 			overwrite: null,
 			mode: SyncMode.Full,
 			stats: this.dataService.stats(),
@@ -199,24 +193,30 @@ export class GamecastComponent {
 	}
 
 	public async editingStopped(event: CellEditingStoppedEvent<StatsRow>) {
-		let statToUpdate = await this.dataService.getStat(event.data!.playerId);
-		statToUpdate.assists = event.data!.assists;
-		statToUpdate.offensiveRebounds = event.data!.offensiveRebounds;
-		statToUpdate.defensiveRebounds = event.data!.defensiveRebounds;
-		statToUpdate.fieldGoalsAttempted = event.data!.fieldGoalsAttempted;
-		statToUpdate.fieldGoalsMade = event.data!.fieldGoalsMade;
-		statToUpdate.threesAttempted = event.data!.threesAttempted;
-		statToUpdate.threesMade = event.data!.threesMade;
-		statToUpdate.turnovers = event.data!.turnovers;
-		statToUpdate.technicalFouls = event.data!.technicalFouls;
-		statToUpdate.freeThrowsAttempted = event.data!.freeThrowsAttempted;
-		statToUpdate.freeThrowsMade = event.data!.freeThrowsMade;
-		statToUpdate.blocks = event.data!.blocks;
-		statToUpdate.steals = event.data!.steals;
-		statToUpdate.plusOrMinus = event.data!.plusOrMinus;
-		statToUpdate.fouls = event.data!.fouls;
-		statToUpdate.syncState = SyncState.Modified;
-		await this.dataService.updateStat(statToUpdate);
+		const { data } = event;
+		if (data) {
+			const player = this.dataService.players().find(t => t.id == data.playerId)!;
+			this.dataService.updateStat({
+				player: player,
+				updateFn: stat => {
+					stat.assists = data.assists;
+					stat.offensiveRebounds = data.offensiveRebounds;
+					stat.defensiveRebounds = data.defensiveRebounds;
+					stat.fieldGoalsAttempted = data.fieldGoalsAttempted;
+					stat.fieldGoalsMade = data.fieldGoalsMade;
+					stat.threesAttempted = data.threesAttempted;
+					stat.threesMade = data.threesMade;
+					stat.turnovers = data.turnovers;
+					stat.technicalFouls = data.technicalFouls;
+					stat.freeThrowsAttempted = data.freeThrowsAttempted;
+					stat.freeThrowsMade = data.freeThrowsMade;
+					stat.blocks = data.blocks;
+					stat.steals = data.steals;
+					stat.plusOrMinus = data.plusOrMinus;
+					stat.fouls = data.fouls;
+				}
+			});
+		}
   }
 
 	public async setPrevPlays() {
@@ -282,22 +282,23 @@ export class GamecastComponent {
 		}
 	}
 
-	public async addToCourt(team: 'home' | 'away', player: Player) {
+	public addToCourt(team: 'home' | 'away', player: Player) {
 		const playersOnCourt = team == 'home' ? this.dataService.homePlayersOnCourt() : this.dataService.awayPlayersOnCourt();
 		if (playersOnCourt.length < 6 && !playersOnCourt.find(t => t.id == player.id)) {
-			let stat = await this.dataService.getStat(player.id);
-			stat.onCourt = 1;
-			await this.dataService.updateStat(stat);
+			this.dataService.updateStat({
+				player: player,
+				updateFn: stat => stat.onCourt = true
+			});
 		}
 	}
 
 	public selectPlayer(team: 'home' | 'away', playerId: number) {
 		const { players, selectedPlayer, game } = this.dataService;
-		this.previousPlayerWasHome = players().find(t => t.id == selectedPlayer()?.id)?.teamId == game()?.homeTeamId;
+		this.previousPlayerWasHome = players().find(t => t.id == selectedPlayer()?.id)?.teamId == game()?.homeTeam.teamId;
 		if (selectedPlayer()?.id == playerId) {
-			this.dataService.setSelectedPlayer(null);
+			this.dataService.selectedPlayerId.set(null);
 		} else {
-			this.dataService.setSelectedPlayer(playerId);
+			this.dataService.selectedPlayerId.set(playerId);
 		}
 
 		//auto complete
@@ -321,69 +322,81 @@ export class GamecastComponent {
 		}
 	}
 
-	public async addTechnical() {
-		let stat = await this.dataService.getStat(this.dataService.selectedPlayer()!.id);
-		stat.technicalFouls = stat.technicalFouls == null ? 1 : stat.technicalFouls + 1;
-		await this.dataService.updateStat(stat);
+	public addTechnical() {
+		this.dataService.updateStat({
+			updateFn: stat => stat.technicalFouls = stat.technicalFouls == null ? 1 : stat.technicalFouls + 1
+		})
 		this.foulDisplay = false;
 	}
 
-  public async removeFromCourt(player: Player) {
-		if (this.dataService.selectedPlayer()?.id == player.id) {
-			this.dataService.setSelectedPlayer(null);
-			let stat = await this.dataService.getStat(player.id);
-			stat.onCourt = 0;
-			await this.dataService.updateStat(stat);
+  public removeFromCourt(player: Player) {
+		if (this.dataService.selectedPlayerId() == player.id) {
+			this.dataService.selectedPlayerId.set(null);
+			this.dataService.updateStat({
+				player: player,
+				updateFn: stat => stat.onCourt = false
+			});
 		}
   }
 
   public async addPoints(team: 'home' | 'away', points: number, missed: boolean = false) {
 		let updatePlusOrMinus = false;
+
+		if (!missed) {
+			this.dataService.updatePeriodTotal(team, points);
+		}
 		if (!this.timerRunning && !missed) {
 			updatePlusOrMinus = true;
 			this.homeTeamPlusOrMinus = this.dataService.game()!.homeFinal;
 			this.awayTeamPlusOrMinus = this.dataService.game()!.awayFinal;
 		}
-		const player = this.dataService.selectedPlayer()!;
-		const stat = await this.dataService.getStat(player.id);
-		if (points == 1) {
-			stat.freeThrowsAttempted++;
-			if (!missed) {
-				stat.freeThrowsMade++;
-				stat.points++;
-				await this.dataService.addPlay(team, GameActions.FreeThrowMade, player);
-			} else {
-				await this.dataService.addPlay(team, GameActions.FreeThrowMissed, player);
-			}
-		} else if (points == 2) {
-			stat.fieldGoalsAttempted++;
-			if (!missed) {
-				stat.fieldGoalsMade++;
-				stat.points += 2;
-				await this.dataService.addPlay(team, GameActions.ShotMade, player);
-				this.assistDisplay = true;
-			} else {
-				await this.dataService.addPlay(team, GameActions.ShotMissed, player);
-				this.reboundDisplay = true;
-			}
-		} else {
-			stat.fieldGoalsAttempted++;
-			stat.threesAttempted++;
-			if (!missed) {
-				stat.fieldGoalsMade++;
-				stat.threesMade++;
-				stat.points += 3;
-				await this.dataService.addPlay(team, GameActions.ThreeMade, player);
-				this.assistDisplay = true;
-			} else {
-				await this.dataService.addPlay(team, GameActions.ThreeMissed, player);
-				this.reboundDisplay = true;
-			}
+
+		if (points == 1 && missed) {
+			this.dataService.addPlay(team, GameActions.FreeThrowMissed);
+			this.dataService.updateStat({
+				updateFn: stat => stat.fieldGoalsAttempted++
+			});
+		} else if (points == 1 && !missed) {
+			this.dataService.addPlay(team, GameActions.FreeThrowMade);
+			this.dataService.updateStat({
+				updateFn: stat => {
+					stat.fieldGoalsAttempted++
+					stat.fieldGoalsMade++
+				}
+			});
+		} else if (points == 2 && missed) {
+			this.dataService.addPlay(team, GameActions.ShotMissed);
+			this.dataService.updateStat({
+				updateFn: stat => stat.fieldGoalsAttempted++
+			});
+		} else if (points == 2 && !missed) {
+			this.dataService.addPlay(team, GameActions.ShotMade);
+			this.dataService.updateStat({
+				updateFn: stat => {
+					stat.fieldGoalsAttempted++
+					stat.fieldGoalsMade++
+				}
+			});
+		} else if (points == 3 && missed) {
+			this.dataService.addPlay(team, GameActions.ThreeMissed);
+			this.dataService.updateStat({
+				updateFn: stat => {
+					stat.fieldGoalsAttempted++
+					stat.threesAttempted++
+				}
+			});
+		} else if (points == 3 && !missed) {
+			this.dataService.addPlay(team, GameActions.ThreeMade);
+			this.dataService.updateStat({
+				updateFn: stat => {
+					stat.fieldGoalsAttempted++
+					stat.fieldGoalsMade++
+					stat.threesAttempted++
+					stat.threesMade++
+				}
+			});
 		}
-		await this.dataService.updateStat(stat);
-		if (!missed) {
-			await this.dataService.updatePeriodTotal(team, points);
-		}
+
 		if (updatePlusOrMinus) {
 			await this.calculatePlusOrMinus();
 		}

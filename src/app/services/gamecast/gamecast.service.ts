@@ -1,4 +1,4 @@
-import { Injectable, Signal, WritableSignal, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Injectable, WritableSignal, computed, effect, inject, signal, untracked } from '@angular/core';
 import { GameActions, defaultPlayer, defaultStat } from '@tanager/tgs';
 import { database } from 'src/app/app.db';
 import { Game, Play, Player, Stat, SyncState } from 'src/app/types/models';
@@ -10,6 +10,18 @@ const playerSort = (a: Player, b: Player) => {
 		return -1;
 	else
 		return 1;
+}
+
+const calculateStatColumns = (model: Stat) => {
+	const {
+		freeThrowsMade, fieldGoalsMade, threesMade,
+		offensiveRebounds, defensiveRebounds,
+		assists, steals, blocks, fieldGoalsAttempted,
+		freeThrowsAttempted, turnovers
+	} = model;
+	model.points = freeThrowsMade + ((fieldGoalsMade - threesMade) * 2) + (threesMade * 3);
+	model.rebounds = offensiveRebounds + defensiveRebounds;
+	model.eff = model.points + model.rebounds + assists + steals + blocks - (fieldGoalsAttempted - fieldGoalsMade) - (freeThrowsAttempted - freeThrowsMade) - turnovers;
 }
 
 @Injectable({
@@ -35,7 +47,7 @@ export class GamecastService {
 		}
 	});
 
-	private selectedPlayerId: WritableSignal<number | null> = signal(null);
+	public selectedPlayerId: WritableSignal<number | null> = signal(null);
 
 	public selectedPlayer = computed(() => {
 		const players = this.players();
@@ -137,10 +149,6 @@ export class GamecastService {
 		}
 	}
 
-	public setSelectedPlayer(playerId: number | null) {
-		this.selectedPlayerId.set(playerId);
-	}
-
 	public async addPlayer(player: Player) {
 		const id = await database.transaction('rw', 'players', () => {
 			return database.players.add(player);
@@ -163,32 +171,35 @@ export class GamecastService {
 		}))
 	}
 
-	public async getStat(playerId: number) {
-		const game = this.game()!;
-		let stat = this.stats().find(t => t.playerId == playerId);
-		if (stat) {
-			return stat;
+	public updateStat(options: { player?: Player, updateFn: (stat: Stat) => void }) {
+		const playerId = options.player ? options.player.id : this.selectedPlayerId();
+		if (playerId == null) {
+			throw 'What exactly are you trying to do?';
 		} else {
-			let newStat = defaultStat;
-			newStat.gameId = game.id;
-			newStat.playerId = playerId;
-			newStat.syncState = SyncState.Added;
-			let stats = await this.sql.query({
-				table: 'stats',
-				where: { gameId: game.id }
-			});
-			this.statsSrc.set(stats);
-			return this.stats().find(t => t.playerId == playerId)!;
-		}
-	}
-
-	public async updateStat(stat: Stat) {
-		const game = this.game();
-		if (game) {
-			stat.syncState = stat.syncState == SyncState.Added ? SyncState.Added : SyncState.Modified;
-			await this.sql.save("stats", stat, { "playerId": stat.playerId, "gameId": game.id });
-			stat = (await this.sql.rawQuery(`select * from stats where playerId = '${stat.playerId}' and gameId = '${stat.gameId}'`))[0];
-			this.statsSrc.update(stats => stats.map(value => value.id == stat.id ? stat : value));
+			const prevStat = this.statsSrc().find(t => t.playerId == playerId);
+			if (prevStat) {
+				this.statsSrc.update(stats => stats.map(stat => {
+					if (stat.playerId == playerId) {
+						options.updateFn(stat);
+						calculateStatColumns(stat);
+						stat.syncState = stat.syncState == SyncState.Added ? SyncState.Added : SyncState.Modified;
+						database.transaction('rw', 'stats', () => database.stats.put(stat));
+					}
+					return stat;
+				}));
+			} else {
+				const game = this.game()!;
+				const newStat = {
+					...defaultStat,
+					syncState: SyncState.Added,
+					gameId: game.id,
+					playerId: playerId
+				};
+				options.updateFn(newStat);
+				calculateStatColumns(newStat);
+				database.transaction('rw', 'stats', () => database.stats.add(newStat));
+				this.statsSrc.update(stats => [...stats, newStat]);
+			}
 		}
 	}
 
@@ -219,7 +230,7 @@ export class GamecastService {
 		}
 	}
 
-	public async updatePeriodTotal(team: 'home' | 'away', points: number) {
+	public updatePeriodTotal(team: 'home' | 'away', points: number) {
 		const game = { ...this.game()! };
 		if (team == 'away') {
 			if (game.period == 1) {
@@ -269,35 +280,32 @@ export class GamecastService {
 		this.gameSrc()!.clock = `${minutes < 10 ? '0' + minutes : minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
 	}
 
-	public async addPlay(team: 'home' | 'away', action: GameActions, player?: Player) {
-		const { playsSrc, game, homeTeamName, awayTeamName } = this;
+	public addPlay(team: 'home' | 'away', action: GameActions, player?: Player) {
+		const plays = this.plays();
+		const game = this.game()!;
+		const selectedPlayer = player ?? this.selectedPlayer();
 		let play: Play = {
-			id: 0,
-			playOrder: playsSrc().length + 1,
-			gameId: game()!.id,
+			id: plays.length + 1,
+			gameId: game.id,
 			turboStatsData: null,
-			syncState: SyncState.Unchanged,
-			period: game()!.period,
-			playerName: player ? `${player.firstName} ${player.lastName}` : null,
-			playerNumber: player ? player.number : null,
-			score: `${game()?.homeFinal} - ${game()?.awayFinal}`,
-			teamName: team == 'home' ? homeTeamName() : awayTeamName(),
+			sgLegacyData: null,
+			syncState: SyncState.Added,
+			period: game.period,
+			player: selectedPlayer ? { ...selectedPlayer, playerId: selectedPlayer.id } : null,
+			team: team == 'home' ? { ...game.homeTeam, name: game.homeTeam.teamName } : { ...game.awayTeam, name: game.awayTeam.teamName },
+			score: `${game.homeFinal} - ${game.awayFinal}`,
 			timeStamp: new Date().toJSON(),
 			action: action,
-			gameClock: game()!.clock
+			gameClock: game.clock
 		}
-		let existingPlay = await this.sql.query({
-			table: 'plays',
-			where: { playOrder: play.playOrder, gameId: game()!.id }
+		database.transaction('rw', 'plays', async () => {
+			const existing = await database.plays.get({ gameId: game.id, id: play.id });
+			if (existing && existing.syncState != SyncState.Added) {
+				play.syncState = SyncState.Modified;
+			}
+			this.playsSrc.update(plays => [play, ...plays]);
+			database.plays.put(play);
 		});
-		if (existingPlay.length == 1) {
-			play.syncState = existingPlay[0].SyncState == SyncState.Added ? SyncState.Added : SyncState.Modified;
-			await this.sql.save('plays', play, { playOrder: play.playOrder, gameId: game()!.id });
-		} else {
-			play.syncState = SyncState.Added;
-			await this.sql.save('plays', play);
-		}
-		this.playsSrc.update(plays => [play, ...plays]);
 	}
 
 	public addFoulToGame(team: 'home' | 'away') {
