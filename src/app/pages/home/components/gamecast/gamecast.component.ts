@@ -11,46 +11,12 @@ import { GamecastDetailComponent } from '../../../../shared/gamecast-detail/game
 import { FormsModule } from '@angular/forms';
 import { EditPlayerComponent } from '../../../../shared/edit-player/edit-player.component';
 import { NgIf, NgFor, NgClass, SlicePipe, DatePipe } from '@angular/common';
-import { IonPopover, IonicModule, LoadingController, RadioGroupChangeEventDetail } from '@ionic/angular';
-import { IonRadioGroupCustomEvent } from '@ionic/core';
-import { GamecastService } from 'src/app/services/gamecast/gamecast.service';
-import { GAME_ACTIONS_MAP, Play, Player, SyncState } from 'src/app/types/models';
+import { IonPopover, IonicModule } from '@ionic/angular';
+import { BoxScore, GamecastService } from 'src/app/services/gamecast/gamecast.service';
+import { GAME_ACTIONS_MAP, Play, Player, mapGameToDto, mapPlayToDto, mapPlayerToDto, mapStatToDto } from 'src/app/types/models';
 import { database } from 'src/app/app.db';
-import { GamecastDto, SyncMode, SyncResult } from 'src/app/types/sync';
+import { SyncMode, SyncResult } from 'src/app/types/sync';
 import { GameActions } from '@tanager/tgs';
-
-type RadioEvent = IonRadioGroupCustomEvent<RadioGroupChangeEventDetail<Player|null>>;
-
-const playerSort = (a:Player, b:Player) => {
-	if (a.number == b.number)
-		return 0;
-	else if (a.number < b.number)
-		return -1;
-	else
-		return 1;
-}
-
-type StatsRow =  {
-  playerId: number,
-  blocks: number,
-	name:string,
-  fieldGoalsAttempted: number,
-  fieldGoalsMade: number,
-  fouls: number,
-  freeThrowsAttempted: number,
-  freeThrowsMade: number,
-  assists: number,
-  plusOrMinus: number,
-  points: number,
-  rebounds: number,
-  defensiveRebounds: number,
-  offensiveRebounds: number,
-  steals: number,
-  threesAttempted: number,
-  threesMade: number,
-  turnovers: number,
-	technicalFouls: number
-}
 
 @Component({
 	selector: 'app-gamecast',
@@ -76,7 +42,6 @@ type StatsRow =  {
 export class GamecastComponent {
 	//config
 	private gameId!:number;
-	private prevPlays?: Play[];
   private timerSubscription?: Subscription;
   private timerDuration!: number;
   public timerRunning: boolean = false;
@@ -86,10 +51,8 @@ export class GamecastComponent {
 
 	//boxscore modal
 	public statsTab: 'home' | 'away' = 'home';
-	public homeStatGridApi!: GridApi<StatsRow>;
-	public awayStatGridApi!: GridApi<StatsRow>;
-	public homeTeamStats!: StatsRow[];
-	public awayTeamStats!: StatsRow[];
+	public homeStatGridApi!: GridApi<BoxScore>;
+	public awayStatGridApi!: GridApi<BoxScore>;
 	public teamStats: ColDef[] = [
 		{field: 'number', headerName: 'NUM', pinned: true, editable: false},
 		{field: 'name', editable: false, pinned: true},
@@ -136,31 +99,37 @@ export class GamecastComponent {
 	private route = inject(ActivatedRoute);
 	private api = inject(ApiService);
 	protected sync = inject(SyncService);
-	private loadingCtrl = inject(LoadingController);
 	protected dataService = inject(GamecastService);
 
   ngOnInit() {
 		this.sync.gameCastInProgress = true;
 		this.route.params.subscribe(async params => {
 			this.gameId = params['gameId'];
-			await this.dataService.fetchData(this.gameId);
+			await this.dataService.setGame(this.gameId);
 			if (this.sync.online) {
 				this.interval = setInterval(async () => await this.send(), 15000);
 			}
 		});
   }
 
+  async ngOnDestroy() {
+		this.initSub?.unsubscribe();
+    this.stopTimer();
+		clearInterval(this.interval);
+		await this.send();
+		this.sync.gameCastInProgress = false;
+  }
+
 	private async send() {
-		let dto: GamecastDto = {
-			game: this.dataService.game()!,
+		let response = await this.api.gameCast({
+			game: mapGameToDto(this.dataService.game()!),
 			version: database.currentDatabaseVersion,
 			overwrite: null,
 			mode: SyncMode.Full,
-			stats: this.dataService.stats(),
-			players: this.dataService.players(),
-			plays: this.dataService.plays()
-		}
-		let response = await this.api.gameCast(dto);
+			stats: this.dataService.stats().map(mapStatToDto),
+			players: this.dataService.players().map(mapPlayerToDto),
+			plays: this.dataService.plays().map(mapPlayToDto)
+		});
 		let result:SyncResult = response.data;
 		console.log(result);
 		if (result.errorMessages.length > 0) {
@@ -192,7 +161,7 @@ export class GamecastComponent {
 		}
 	}
 
-	public async editingStopped(event: CellEditingStoppedEvent<StatsRow>) {
+	public async editingStopped(event: CellEditingStoppedEvent<BoxScore>) {
 		const { data } = event;
 		if (data) {
 			const player = this.dataService.players().find(t => t.id == data.playerId)!;
@@ -218,69 +187,6 @@ export class GamecastComponent {
 			});
 		}
   }
-
-	public async setPrevPlays() {
-		const loader = await this.loadingCtrl.create({message: 'Fetching plays...'});
-		await loader.present();
-		try {
-			this.prevPlays = await this.sql.rawQuery(`
-				SELECT 		*
-				FROM 			Plays
-				WHERE 		gameId = '${this.gameId}'
-				AND				syncState != 3
-				ORDER BY	playOrder DESC
-			`);
-		} catch(error) {
-			console.log('Something went wrong while opening the plays modal', error);
-		}
-		await loader.dismiss();
-	}
-
-	public async loadBoxScore() {
-		this.homeTeamStats = await this.sql.rawQuery(`
-			SELECT		p.number, p.firstName || ' ' || p.lastName as name, s.playerId, s.assists, s.rebounds,
-								s.defensiveRebounds, s.offensiveRebounds, s.fieldGoalsMade, s.fieldGoalsAttempted,
-								s.blocks, s.steals, s.threesMade, s.threesAttempted, s.freeThrowsMade, s.freeThrowsAttempted,
-								s.points, s.turnovers, s.fouls, s.technicalFouls, s.plusOrMinus
-			FROM			stats s
-			JOIN			players p ON s.playerId = p.id
-			WHERE 		p.teamId = '${this.dataService.game()?.homeTeamId}'
-			AND				s.gameId = '${this.gameId}'
-			ORDER BY 	p.number;
-		`);
-		this.awayTeamStats = await this.sql.rawQuery(`
-			SELECT		p.number, p.firstName || ' ' || p.lastName as name, s.playerId, s.assists, s.rebounds,
-								s.defensiveRebounds, s.offensiveRebounds, s.fieldGoalsMade, s.fieldGoalsAttempted,
-								s.blocks, s.steals, s.threesMade, s.threesAttempted, s.freeThrowsMade, s.freeThrowsAttempted,
-								s.points, s.turnovers, s.fouls, s.technicalFouls, s.plusOrMinus
-			FROM			stats s
-			JOIN			players p ON s.playerId = p.id
-			WHERE 		p.teamId = '${this.dataService.game()?.awayTeamId}'
-			AND				s.gameId = '${this.gameId}'
-			ORDER BY 	p.number;
-		`);
-	}
-
-	public async setTotals(team: 'home'|'away') {
-		let totals = await this.sql.rawQuery(`
-			SELECT		0 as number, 'Totals' as name, 0 as playerId, SUM(s.assists) as assists, SUM(s.rebounds) as rebounds,
-								SUM(s.defensiveRebounds) as defensiveRebounds, SUM(s.offensiveRebounds) as offensiveRebounds,
-								SUM(s.fieldGoalsMade) as fieldGoalsMade, SUM(s.fieldGoalsAttempted) as fieldGoalsAttempted,
-								SUM(s.blocks) as blocks, SUM(s.steals) as steals, SUM(s.threesMade) as threesMade,
-								SUM(s.threesAttempted) as threesAttempted, SUM(s.freeThrowsMade) as freeThrowsMade,
-								SUM(s.freeThrowsAttempted) as freeThrowsAttempted, SUM(s.points) as points, SUM(s.turnovers) as turnovers,
-								SUM(s.fouls) as fouls, SUM(COALESCE(s.technicalFouls, 0)) as technicalFouls, SUM(s.plusOrMinus) as plusOrMinus
-			FROM			stats s
-			JOIN			players p ON s.playerId = p.id
-			WHERE 		p.teamId = '${team == 'home' ? this.dataService.game()?.homeTeamId : this.dataService.game()?.awayTeamId}'
-			AND				s.gameId = '${this.gameId}'
-		`);
-		if (team == 'home') {
-			this.homeStatGridApi.setGridOption('pinnedBottomRowData', totals);
-		} else {
-			this.awayStatGridApi.setGridOption('pinnedBottomRowData', totals);
-		}
-	}
 
 	public addToCourt(team: 'home' | 'away', player: Player) {
 		const playersOnCourt = team == 'home' ? this.dataService.homePlayersOnCourt() : this.dataService.awayPlayersOnCourt();
@@ -339,7 +245,7 @@ export class GamecastComponent {
 		}
   }
 
-  public async addPoints(team: 'home' | 'away', points: number, missed: boolean = false) {
+  public addPoints(team: 'home' | 'away', points: number, missed: boolean = false) {
 		let updatePlusOrMinus = false;
 
 		if (!missed) {
@@ -398,501 +304,102 @@ export class GamecastComponent {
 		}
 
 		if (updatePlusOrMinus) {
-			await this.calculatePlusOrMinus();
+			this.calculatePlusOrMinus(); //todo
 		}
   }
 
-  public async addFoul(team: 'home' | 'away') {
+  public addFoul(team: 'home' | 'away') {
 		let player = this.dataService.selectedPlayer();
 		if (player) {
 			this.stopTimer();
-			const stat = await this.dataService.getStat(player.id);
-			stat.fouls++;
-			await this.dataService.updateStat(stat);
-			await this.dataService.addPlay(team, GameActions.Foul, player);
 			this.dataService.addFoulToGame(team);
+			this.dataService.addPlay(team, GameActions.Foul);
+			this.dataService.updateStat({
+				updateFn: stat => stat.fouls++
+			});
+			this.foulDisplay = true;
 		}
-		this.foulDisplay = true;
   }
 
-  public async addTimeout(team: 'home' | 'away', partial: boolean) {
+  public addTimeout(team: 'home' | 'away', partial: boolean) {
 		this.stopTimer();
 		this.dataService.addTimeoutToGame(team, partial);
-		await this.dataService.addPlay(team, partial ? GameActions.PartialTO : GameActions.FullTO);
+		this.dataService.addPlay(team, partial ? GameActions.PartialTO : GameActions.FullTO);
   }
 
-	public async addSteal(team: 'home' | 'away') {
+	public addSteal(team: 'home' | 'away') {
 		let player = this.dataService.selectedPlayer();
 		if (player) {
-			let stat = await this.dataService.getStat(player.id);
-			stat.steals++;
-			await this.dataService.updateStat(stat);
-			await this.dataService.addPlay(team, GameActions.Steal, player);
+			this.dataService.addPlay(team, GameActions.Steal);
+			this.dataService.updateStat({
+				updateFn: stat => stat.steals++
+			});
 			this.stealDisplay = true;
 		}
 	}
 
-	public async addAssist(team: 'home' | 'away') {
+	public addAssist(team: 'home' | 'away') {
 		let player = this.dataService.selectedPlayer();
 		if (player) {
-			let stat = await this.dataService.getStat(player.id);
-			stat.assists++;
-			await this.dataService.updateStat(stat);
-			await this.dataService.addPlay(team, GameActions.Assist, player);
+			this.dataService.addPlay(team, GameActions.Assist, player);
+			this.dataService.updateStat({
+				updateFn: stat => stat.assists++
+			});
 		}
 	}
 
-	public async addPassback(team: 'home' | 'away', made: boolean) {
-		await this.addRebound(team, true);
-		await this.addPoints(team, 2, !made);
+	public addPassback(team: 'home' | 'away', made: boolean) {
+		this.addRebound(team, true);
+		this.addPoints(team, 2, !made);
 		this.reboundDisplay = false;
 		this.assistDisplay = false;
 	}
 
-	public async addRebound(team: 'home' | 'away', offensive: boolean) {
+	public addRebound(team: 'home' | 'away', offensive: boolean) {
 		let player = this.dataService.selectedPlayer();
 		if (player) {
-			let stat = await this.dataService.getStat(player.id);
-			stat.rebounds++;
-			if (offensive) {
-				stat.offensiveRebounds++;
-				await this.dataService.addPlay(team, GameActions.OffRebound, player);
-			} else {
-				stat.defensiveRebounds++;
-				await this.dataService.addPlay(team, GameActions.DefRebound, player);
-			}
-			await this.dataService.updateStat(stat);
+			this.dataService.updateStat({
+				updateFn: stat => {
+					stat.rebounds++;
+					if (offensive) {
+						stat.offensiveRebounds++;
+						this.dataService.addPlay(team, GameActions.OffRebound);
+					} else {
+						stat.defensiveRebounds++;
+						this.dataService.addPlay(team, GameActions.DefRebound);
+					}
+				}
+			});
 		}
 	}
 
-	public async addBlock(team: 'home' | 'away') {
+	public addBlock(team: 'home' | 'away') {
 		let player = this.dataService.selectedPlayer();
 		if (player) {
-			let stat = await this.dataService.getStat(player.id);
-			stat.blocks++;
-			await this.dataService.updateStat(stat);
-			await this.dataService.addPlay(team, GameActions.Block, player);
+			this.dataService.addPlay(team, GameActions.Block, player);
+			this.dataService.updateStat({
+				updateFn: stat => stat.blocks++
+			});
 			this.missedDisplay = true;
 		}
 	}
 
-	public async addTurnover(team: 'home' | 'away') {
+	public addTurnover(team: 'home' | 'away') {
 		let player = this.dataService.selectedPlayer();
 		if (player) {
-			let stat = await this.dataService.getStat(player.id);
-			stat.turnovers++;
-			await this.dataService.updateStat(stat);
-			await this.dataService.addPlay(team, GameActions.Turnover, player);
+			this.dataService.addPlay(team, GameActions.Turnover, player);
+			this.dataService.updateStat({
+				updateFn: stat => stat.turnovers++
+			});
 		}
 	}
 
-	public async updatePlayerPlay($event:RadioEvent, play:Play) {
-		if ($event.detail.value == null) {
-			play.playerNumber = null;
-			play.playerName = null;
+	public getPlayer(play: Play) {
+		const { homeTeamPlayers, awayTeamPlayers, game } = this.dataService;
+		if (play.team?.name == game()?.homeTeam.teamName) {
+			return homeTeamPlayers().find(t => t.id == play.player?.playerId);
 		} else {
-			play.playerNumber = $event.detail.value.number;
-			play.playerName = `${$event.detail.value.firstName} ${$event.detail.value.lastName}`;
-		}
-		await this.updatePlay(play);
-	}
-
-	public async removeLastPlay() {
-		let play = this.plays![0];
-		await this.undoAction(play);
-		if (play.syncState == SyncState.Added) {
-			await this.sql.delete('plays', { playOrder: play.playOrder, "gameId": this.gameId });
-			this.plays?.shift();
-		} else {
-			play.syncState = SyncState.Deleted;
-			await this.sql.save('plays', play, { playOrder: play.playOrder,"gameId": this.gameId });
-			this.plays = this.plays!.filter(t => t.syncState != SyncState.Deleted);
-		}
-	}
-
-	private async undoAction(play:Play) {
-		const game = { ...this.dataService.game() };
-		if (play.action == GameActions.Assist) {
-			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
-			stat.assists--;
-			await this.dataService.updateStat(stat);
-		} else if (play.action == GameActions.Block) {
-			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
-			stat.blocks--;
-			await this.dataService.updateStat(stat);
-		} else if (play.action == GameActions.DefRebound) {
-			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
-			stat.defensiveRebounds--;
-			await this.dataService.updateStat(stat);
-		} else if (play.action == GameActions.Foul) {
-			let player = this.getPlayer(play)!;
-			let stat = await this.dataService.getStat(player.id);
-			stat.fouls--;
-			await this.dataService.updateStat(stat);
-			if (player.teamId == game.homeTeamId) {
-				game.homeCurrentFouls!--;
-			} else {
-				game.awayCurrentFouls!--;
-			}
-		} else if (play.action == GameActions.FreeThrowMade) {
-			let player = this.getPlayer(play)!;
-			let stat = await this.dataService.getStat(player.id);
-			stat.freeThrowsMade--;
-			stat.freeThrowsAttempted--;
-			await this.dataService.updateStat(stat);
-			if (player.teamId == game.homeTeamId) {
-				if (play.period == 1) {
-					game.homePointsQ1--;
-				} else if (play.period == 2) {
-					game.homePointsQ2--;
-				} else if (play.period == 3 && game.hasFourQuarters == 0) {
-					game.homePointsOT--;
-				} else if (play.period == 3 && game.hasFourQuarters == 1) {
-					game.homePointsQ3--;
-				} else if (play.period == 4) {
-					game.homePointsQ4--;
-				} else if (play.period == 5) {
-					game.homePointsOT--;
-				}
-				game.homeFinal--;
-			} else {
-				if (play.period == 1) {
-					game.awayPointsQ1--;
-				} else if (play.period == 2) {
-					game.awayPointsQ2--;
-				} else if (play.period == 3 && game.hasFourQuarters == 0) {
-					game.awayPointsOT--;
-				} else if (play.period == 3 && game.hasFourQuarters == 1) {
-					game.awayPointsQ3--;
-				} else if (play.period == 4) {
-					game.awayPointsQ4--;
-				} else if (play.period == 5) {
-					game.awayPointsOT--;
-				}
-				game.awayFinal--;
-			}
-		} else if (play.action == GameActions.FreeThrowMissed) {
-			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
-			stat.freeThrowsAttempted--;
-			await this.dataService.updateStat(stat);
-		} else if (play.action == GameActions.FullTO) {
-			if (play.teamName == this.homeTeamName) {
-				game.homeTeamTOL++;
-				game.homeFullTOL!++;
-			} else {
-				game.awayTeamTOL++;
-				game.awayFullTOL!++;
-			}
-		} else if (play.action == GameActions.OffRebound) {
-			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
-			stat.offensiveRebounds--;
-			await this.dataService.updateStat(stat);
-		} else if (play.action == GameActions.PartialTO) {
-			if (play.teamName == this.homeTeamName) {
-				game.homeTeamTOL++;
-				game.homePartialTOL!++;
-			} else {
-				game.awayTeamTOL++;
-				game.awayPartialTOL!++;
-			}
-		} else if (play.action == GameActions.ShotMade) {
-			let player = this.getPlayer(play)!;
-			let stat = await this.dataService.getStat(player.id);
-			stat.fieldGoalsMade--;
-			stat.fieldGoalsAttempted--;
-			await this.dataService.updateStat(stat);
-			if (player.teamId == game.homeTeamId) {
-				if (play.period == 1) {
-					game.homePointsQ1 -= 2;
-				} else if (play.period == 2) {
-					game.homePointsQ2 -= 2;
-				} else if (play.period == 3 && game.hasFourQuarters == 0) {
-					game.homePointsOT -= 2;
-				} else if (play.period == 3 && game.hasFourQuarters == 1) {
-					game.homePointsQ3 -= 2;
-				} else if (play.period == 4) {
-					game.homePointsQ4 -= 2;
-				} else if (play.period == 5) {
-					game.homePointsOT -= 2;
-				}
-				game.homeFinal -= 2;
-			} else {
-				if (play.period == 1) {
-					game.awayPointsQ1 -= 2;
-				} else if (play.period == 2) {
-					game.awayPointsQ2 -= 2;
-				} else if (play.period == 3 && game.hasFourQuarters == 0) {
-					game.awayPointsOT -= 2;
-				} else if (play.period == 3 && game.hasFourQuarters == 1) {
-					game.awayPointsQ3 -= 2;
-				} else if (play.period == 4) {
-					game.awayPointsQ4 -= 2;
-				} else if (play.period == 5) {
-					game.awayPointsOT -= 2;
-				}
-				game.awayFinal -= 2;
-			}
-		} else if (play.action == GameActions.ShotMissed) {
-			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
-			stat.fieldGoalsAttempted--;
-			await this.dataService.updateStat(stat);
-		} else if (play.action == GameActions.Steal) {
-			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
-			stat.steals--;
-			await this.dataService.updateStat(stat);
-		} else if (play.action == GameActions.ThreeMade) {
-			let player = this.getPlayer(play)!;
-			let stat = await this.dataService.getStat(player.id);
-			stat.threesMade--;
-			stat.threesAttempted--;
-			await this.dataService.updateStat(stat);
-			if (player.teamId == game.homeTeamId) {
-				if (play.period == 1) {
-					game.homePointsQ1 -= 3;
-				} else if (play.period == 2) {
-					game.homePointsQ2 -= 3;
-				} else if (play.period == 3 && game.hasFourQuarters == 0) {
-					game.homePointsOT -= 3;
-				} else if (play.period == 3 && game.hasFourQuarters == 1) {
-					game.homePointsQ3 -= 3;
-				} else if (play.period == 4) {
-					game.homePointsQ4 -= 3;
-				} else if (play.period == 5) {
-					game.homePointsOT -= 3;
-				}
-				game.homeFinal -= 3;
-			} else {
-				if (play.period == 1) {
-					game.awayPointsQ1 -= 3;
-				} else if (play.period == 2) {
-					game.awayPointsQ2 -= 3;
-				} else if (play.period == 3 && game.hasFourQuarters == 0) {
-					game.awayPointsOT -= 3;
-				} else if (play.period == 3 && game.hasFourQuarters == 1) {
-					game.awayPointsQ3 -= 3;
-				} else if (play.period == 4) {
-					game.awayPointsQ4 -= 3;
-				} else if (play.period == 5) {
-					game.awayPointsOT -= 3;
-				}
-				game.awayFinal -= 3;
-			}
-		} else if (play.action == GameActions.ThreeMissed) {
-			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
-			stat.threesAttempted--;
-			await this.dataService.updateStat(stat);
-		} else if (play.action == GameActions.Turnover) {
-			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
-			stat.turnovers--;
-			await this.dataService.updateStat(stat);
-		}
-		this.currentGame.set(game);
-	}
-
-	private async redoAction(play:Play) {
-		const game = { ...this.dataService.game() };
-		if (play.action == GameActions.Assist) {
-			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
-			stat.assists++;
-			await this.dataService.updateStat(stat);
-		} else if (play.action == GameActions.Block) {
-			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
-			stat.blocks++;
-			await this.dataService.updateStat(stat);
-		} else if (play.action == GameActions.DefRebound) {
-			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
-			stat.defensiveRebounds++;
-			await this.dataService.updateStat(stat);
-		} else if (play.action == GameActions.Foul) {
-			let player = this.getPlayer(play)!;
-			let stat = await this.dataService.getStat(player.id);
-			stat.fouls++;
-			await this.dataService.updateStat(stat);
-			if (player.teamId == game.homeTeamId) {
-				game.homeCurrentFouls!++;
-			} else {
-				game.awayCurrentFouls!++;
-			}
-		} else if (play.action == GameActions.FreeThrowMade) {
-			let player = this.getPlayer(play)!;
-			let stat = await this.dataService.getStat(player.id);
-			stat.freeThrowsMade++;
-			stat.freeThrowsAttempted++;
-			await this.dataService.updateStat(stat);
-			if (player.teamId == game.homeTeamId) {
-				if (play.period == 1) {
-					game.homePointsQ1++;
-				} else if (play.period == 2) {
-					game.homePointsQ2++;
-				} else if (play.period == 3 && game.hasFourQuarters == 0) {
-					game.homePointsOT++;
-				} else if (play.period == 3 && game.hasFourQuarters == 1) {
-					game.homePointsQ3++;
-				} else if (play.period == 4) {
-					game.homePointsQ4++;
-				} else if (play.period == 5) {
-					game.homePointsOT++;
-				}
-				game.homeFinal++;
-			} else {
-				if (play.period == 1) {
-					game.awayPointsQ1++;
-				} else if (play.period == 2) {
-					game.awayPointsQ2++;
-				} else if (play.period == 3 && game.hasFourQuarters == 0) {
-					game.awayPointsOT++;
-				} else if (play.period == 3 && game.hasFourQuarters == 1) {
-					game.awayPointsQ3++;
-				} else if (play.period == 4) {
-					game.awayPointsQ4++;
-				} else if (play.period == 5) {
-					game.awayPointsOT++;
-				}
-				game.awayFinal++;
-			}
-		} else if (play.action == GameActions.FreeThrowMissed) {
-			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
-			stat.freeThrowsAttempted++;
-			await this.dataService.updateStat(stat);
-		} else if (play.action == GameActions.FullTO) {
-			if (play.teamName == this.homeTeamName) {
-				game.homeTeamTOL--;
-				game.homeFullTOL!--;
-			} else {
-				game.awayTeamTOL--;
-				game.awayFullTOL!--;
-			}
-		} else if (play.action == GameActions.OffRebound) {
-			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
-			stat.offensiveRebounds++;
-			await this.dataService.updateStat(stat);
-		} else if (play.action == GameActions.PartialTO) {
-			if (play.teamName == this.homeTeamName) {
-				game.homeTeamTOL--;
-				game.homePartialTOL!--;
-			} else {
-				game.awayTeamTOL--;
-				game.awayPartialTOL!--;
-			}
-		} else if (play.action == GameActions.ShotMade) {
-			let player = this.getPlayer(play)!;
-			let stat = await this.dataService.getStat(player.id);
-			stat.fieldGoalsMade++;
-			stat.fieldGoalsAttempted++;
-			await this.dataService.updateStat(stat);
-			if (player.teamId == game.homeTeamId) {
-				if (play.period == 1) {
-					game.homePointsQ1 += 2;
-				} else if (play.period == 2) {
-					game.homePointsQ2 += 2;
-				} else if (play.period == 3 && game.hasFourQuarters == 0) {
-					game.homePointsOT += 2;
-				} else if (play.period == 3 && game.hasFourQuarters == 1) {
-					game.homePointsQ3 += 2;
-				} else if (play.period == 4) {
-					game.homePointsQ4 += 2;
-				} else if (play.period == 5) {
-					game.homePointsOT += 2;
-				}
-				game.homeFinal += 2;
-			} else {
-				if (play.period == 1) {
-					game.awayPointsQ1 += 2;
-				} else if (play.period == 2) {
-					game.awayPointsQ2 += 2;
-				} else if (play.period == 3 && game.hasFourQuarters == 0) {
-					game.awayPointsOT += 2;
-				} else if (play.period == 3 && game.hasFourQuarters == 1) {
-					game.awayPointsQ3 += 2;
-				} else if (play.period == 4) {
-					game.awayPointsQ4 += 2;
-				} else if (play.period == 5) {
-					game.awayPointsOT += 2;
-				}
-				game.awayFinal += 2;
-			}
-		} else if (play.action == GameActions.ShotMissed) {
-			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
-			stat.fieldGoalsAttempted++;
-			await this.dataService.updateStat(stat);
-		} else if (play.action == GameActions.Steal) {
-			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
-			stat.steals++;
-			await this.dataService.updateStat(stat);
-		} else if (play.action == GameActions.ThreeMade) {
-			let player = this.getPlayer(play)!;
-			let stat = await this.dataService.getStat(player.id);
-			stat.threesMade++;
-			stat.threesAttempted++;
-			await this.dataService.updateStat(stat);
-			if (player.teamId == game.homeTeamId) {
-				if (play.period == 1) {
-					game.homePointsQ1 += 3;
-				} else if (play.period == 2) {
-					game.homePointsQ2 += 3;
-				} else if (play.period == 3 && game.hasFourQuarters == 0) {
-					game.homePointsOT += 3;
-				} else if (play.period == 3 && game.hasFourQuarters == 1) {
-					game.homePointsQ3 += 3;
-				} else if (play.period == 4) {
-					game.homePointsQ4 += 3;
-				} else if (play.period == 5) {
-					game.homePointsOT += 3;
-				}
-				game.homeFinal += 3;
-			} else {
-				if (play.period == 1) {
-					game.awayPointsQ1 += 3;
-				} else if (play.period == 2) {
-					game.awayPointsQ2 += 3;
-				} else if (play.period == 3 && game.hasFourQuarters == 0) {
-					game.awayPointsOT += 3;
-				} else if (play.period == 3 && game.hasFourQuarters == 1) {
-					game.awayPointsQ3 += 3;
-				} else if (play.period == 4) {
-					game.awayPointsQ4 += 3;
-				} else if (play.period == 5) {
-					game.awayPointsOT += 3;
-				}
-				game.awayFinal += 3;
-			}
-		} else if (play.action == GameActions.ThreeMissed) {
-			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
-			stat.threesAttempted++;
-			await this.dataService.updateStat(stat);
-		} else if (play.action == GameActions.Turnover) {
-			let stat = await this.dataService.getStat(this.getPlayer(play)!.id);
-			stat.turnovers++;
-			await this.dataService.updateStat(stat);
-		}
-		this.currentGame.set(game);
-	}
-
-	public async updatePlay(play: Play) {
-		let prevPlay = this.prevPlays!.find(t => t.playOrder == play.playOrder)!;
-		if (prevPlay.teamName != play.teamName && play.playerName != null) {
-			if (play.teamName == this.homeTeamName) {
-				play.playerName = this.homeTeamPlayers()[0].firstName + ' ' + this.homeTeamPlayers()[0].lastName;
-				play.playerNumber = this.homeTeamPlayers()[0].number;
-			} else {
-				play.playerName = this.awayTeamPlayers()[0].firstName + ' ' + this.awayTeamPlayers()[0].lastName;
-				play.playerNumber = this.awayTeamPlayers()[0].number;
-			}
-		}
-		await this.undoAction(prevPlay);
-		await this.redoAction(play);
-		play.score = `${this.dataService.game()?.homeFinal} - ${this.dataService.game()?.awayFinal}`;
-		play.syncState = play.syncState == SyncState.Added ? SyncState.Added : SyncState.Modified;
-		await this.sql.save('plays', play, {playOrder: play.playOrder, "gameId": this.gameId});
-		await this.setPrevPlays();
-	}
-
-	public getPlayer(play:Play) {
-		const { homeTeamName, homeTeamPlayers, awayTeamPlayers } = this.dataService;
-		if (play.teamName == homeTeamName()) {
-			return homeTeamPlayers().find(t => t.number == play.playerNumber && `${t.firstName} ${t.lastName}` == play.playerName);
-		} else {
-			return awayTeamPlayers().find(t => t.number == play.playerNumber && `${t.firstName} ${t.lastName}` == play.playerName);
+			return awayTeamPlayers().find(t => t.id == play.player?.playerId);
 		}
 	}
 
@@ -907,7 +414,7 @@ export class GamecastComponent {
   private startTimer() {
 		const game = { ...this.dataService.game()! };
 		if (game.clock == "00:00") {
-			if (game.period < (game.hasFourQuarters == 1 ? 4 : 2))
+			if (game.period < (game.hasFourQuarters ? 4 : 2))
 				this.timerDuration = game.minutesPerPeriod! * 60;
 			else
 				this.timerDuration = game.minutesPerOvertime! * 60;
@@ -930,38 +437,16 @@ export class GamecastComponent {
 
   private stopTimer() {
     this.timerRunning = false;
-    if (this.timerSubscription) {
-      this.timerSubscription.unsubscribe();
-    }
+		this.timerSubscription?.unsubscribe();
 		this.calculatePlusOrMinus();
   }
 
-	private async calculatePlusOrMinus() {
+	private calculatePlusOrMinus() {
 		const game = this.dataService.game()!;
-		const { homePlayersOnCourt, awayPlayersOnCourt } = this.dataService;
 		const homePlusOrMinusToAdd = (game.homeFinal - this.homeTeamPlusOrMinus) - (game.awayFinal - this.awayTeamPlusOrMinus);
 		const awayPlusOrMinusToAdd = homePlusOrMinusToAdd * -1;
-		const homePlayers = homePlayersOnCourt().slice(0);
-		const awayPlayers = awayPlayersOnCourt().slice(0);
-		for (let item of homePlayers) {
-			let stat = await this.dataService.getStat(item.id);
-			stat.plusOrMinus += homePlusOrMinusToAdd;
-			await this.dataService.updateStat(stat);
-		}
-		for (let item of awayPlayers) {
-			let stat = await this.dataService.getStat(item.id);
-			stat.plusOrMinus += awayPlusOrMinusToAdd;
-			await this.dataService.updateStat(stat);
-		}
+		this.dataService.updatePlusOrMinus(homePlusOrMinusToAdd, awayPlusOrMinusToAdd);
 		this.homeTeamPlusOrMinus = game.homeFinal;
 		this.awayTeamPlusOrMinus = game.awayFinal;
 	}
-
-  async ngOnDestroy() {
-		this.initSub?.unsubscribe();
-    this.stopTimer();
-		clearInterval(this.interval);
-		await this.send();
-		this.sync.gameCastInProgress = false;
-  }
 }
