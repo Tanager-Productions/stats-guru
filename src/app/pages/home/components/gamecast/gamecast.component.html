@@ -59,7 +59,7 @@
 							</ion-button>
 							<ion-popover trigger="context-menu-trigger{{$index}}" [showBackdrop]="false" triggerAction="context-menu">
 								<ng-template>
-									<app-edit-player color="{{homeColor()}}" [player]="player" (savePlayer)="dataService.updatePlayer(player)"></app-edit-player>
+									<app-edit-player [player]="player" (savePlayer)="dataService.updatePlayer(player)"></app-edit-player>
 								</ng-template>
 							</ion-popover>
 						}
@@ -693,15 +693,13 @@
 		<ion-modal trigger="addHomePlayer" #addHomePlayerModal [backdropDismiss]="false">
 			<ng-template>
 				<app-add-player
-					style="height: 100%;"
 					team="home"
-					[teamId]="game.homeTeamId"
-					[isMale]="isMale"
-					[players]="players()!"
-					[settings]="game"
-					(playerAdded)="addPlayer($event)"
-					(playerHidden)="hidePlayer($event)"
-					(playerUnhidden)="unhidePlayer($event)"
+					[teamId]="game.homeTeam.teamId"
+					[isMale]="game.homeTeam.isMale"
+					[players]="dataService.players()"
+					[stats]="dataService.stats()"
+					(playerAdded)="dataService.addPlayer($event)"
+					(playerHiddenChanged)="dataService.togglePlayerHidden($event)"
 					[color]="homeColor()"
 					(dismiss)="addHomePlayerModal.dismiss()"
 				></app-add-player>
@@ -710,15 +708,13 @@
 		<ion-modal trigger="addAwayPlayer" #addAwayPlayerModal [backdropDismiss]="false">
 			<ng-template>
 				<app-add-player
-					style="height: 100%;"
 					team="away"
-					[teamId]="game.awayTeamId"
-					[isMale]="isMale"
-					[players]="players()!"
-					[settings]="game"
-					(playerAdded)="addPlayer($event)"
-					(playerHidden)="hidePlayer($event)"
-					(playerUnhidden)="unhidePlayer($event)"
+					[teamId]="game.awayTeam.teamId"
+					[isMale]="game.awayTeam.isMale"
+					[players]="dataService.players()"
+					[stats]="dataService.stats()"
+					(playerAdded)="dataService.addPlayer($event)"
+					(playerHiddenChanged)="dataService.togglePlayerHidden($event)"
 					[color]="awayColor()"
 					(dismiss)="addAwayPlayerModal.dismiss()"
 				></app-add-player>

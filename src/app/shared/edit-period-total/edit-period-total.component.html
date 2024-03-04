@@ -1,15 +1,15 @@
-<ion-header *ngIf="color">
+<ion-header>
 	<ion-toolbar [color]="color">
 		<ion-title>Edit Points</ion-title>
 		<ion-buttons slot="end">
-			<ion-button (click)="submitPoints()" [disabled]="!firstPeriodPoints && !secondPeriodPoints && !thirdPeriodPoints && !fourthPeriodPoints && !overtimePoints">Submit</ion-button>
+			<ion-button (click)="submitPoints()">Submit</ion-button>
 			<ion-button (click)="modalCtrl.dismiss()">
 				<ion-icon slot="icon-only" name="close"></ion-icon>
 			</ion-button>
 		</ion-buttons>
 	</ion-toolbar>
 </ion-header>
-<ion-content style="height: calc(100% - 56px);" *ngIf="color" class="ion-padding" color="light">
+<ion-content class="ion-padding" color="light">
 	<ion-grid>
 		<ion-row>
 			<ion-col size="1"></ion-col>

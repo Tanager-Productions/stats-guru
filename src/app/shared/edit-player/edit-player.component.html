@@ -21,10 +21,13 @@
 		label="Number"
 		[readonly]="!editPlayer"
 	></ion-input>
-	<ion-button *ngIf="editPlayer" class="ion-float-right" color="{{color}}" fill="clear" (click)="savePlayer.emit(); editPlayer = false;">
-		<ion-icon size="large" slot="icon-only" name="checkmark"></ion-icon>
-	</ion-button>
-	<ion-button *ngIf="!editPlayer" class="ion-float-right" color="{{color}}" fill="clear" (click)="editPlayer = true;">
-		<ion-icon size="large" slot="icon-only" name="pencil"></ion-icon>
-	</ion-button>
+	@if (editPlayer) {
+		<ion-button class="ion-float-right" fill="clear" (click)="savePlayer.emit(); editPlayer = false;">
+			<ion-icon size="large" slot="icon-only" name="checkmark"></ion-icon>
+		</ion-button>
+	} @else {
+		<ion-button class="ion-float-right" fill="clear" (click)="editPlayer = true;">
+			<ion-icon size="large" slot="icon-only" name="pencil"></ion-icon>
+		</ion-button>
+	}
 </ion-content>

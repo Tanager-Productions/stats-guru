@@ -55,6 +55,11 @@ export type BoxScore = {
 	freeThrowsAttempted: number;
 };
 
+export type ChangePeriodTotalsConfig = {
+	totals: { p1: number, p2: number, p3: number, p4: number, ot: number },
+	team: 'home' | 'away'
+}
+
 const mapStatToBoxScore = (stat: Stat, players: Player[]): BoxScore => {
 	const player = players.find(t => t.id == stat.playerId)!;
 	return {
@@ -370,6 +375,27 @@ export class GamecastService {
 				game.homePointsOT += points;
 			}
 			game.homeFinal += points;
+		}
+		this.gameSrc.set(game);
+	}
+
+	public changePeriodTotals(config: ChangePeriodTotalsConfig) {
+		const game = { ...this.game()! };
+		const { p1, p2, p3, p4, ot } = config.totals;
+		if (config.team == 'away') {
+			game.awayPointsQ1 = p1;
+			game.awayPointsQ2 = p2;
+			game.awayPointsQ3 = p3;
+			game.awayPointsQ4 = p4;
+			game.awayPointsOT = ot;
+			game.awayFinal = p1 + p2 + p2 + p4 + ot;
+		} else {
+			game.homePointsQ1 = p1;
+			game.homePointsQ2 = p2;
+			game.homePointsQ3 = p3;
+			game.homePointsQ4 = p4;
+			game.homePointsOT = ot;
+			game.homeFinal = p1 + p2 + p2 + p4 + ot;
 		}
 		this.gameSrc.set(game);
 	}

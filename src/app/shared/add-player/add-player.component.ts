@@ -1,8 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
-import { NgIf, NgFor } from '@angular/common';
-import { Game, Player, Stat, SyncState } from 'src/app/types/models';
+import { Player, Stat, SyncState } from 'src/app/types/models';
 import { defaultPlayer } from '@tanager/tgs';
 
 @Component({
@@ -10,24 +9,30 @@ import { defaultPlayer } from '@tanager/tgs';
 	templateUrl: './add-player.component.html',
 	styleUrls: ['./add-player.component.scss'],
 	standalone: true,
-	imports: [NgIf, IonicModule, FormsModule, NgFor]
+	imports: [IonicModule, FormsModule]
 })
 export class AddPlayerComponent {
-	tab: "add" | "hide" = "add";
-	newPlayerNumber: number = 0;
-	newPlayerFirstName!: string;
-	newPlayerLastName!: string;
-	@Input() team!: 'home' | 'away';
-	@Input() teamId!: number;
-	@Input() isMale!: boolean;
-	@Input() stat!: Stat;
+	protected tab: "add" | "hide" = "add";
+	protected newPlayerNumber: number = 0;
+	protected newPlayerFirstName!: string;
+	protected newPlayerLastName!: string;
+	@Input({ required: true }) team!: 'home' | 'away';
+	@Input({ required: true }) teamId!: number;
+	@Input({ required: true }) isMale!: boolean;
+	@Input({ required: true }) stats!: Stat[];
+	@Input({ required: true }) color!: string;
+	@Input({ required: true }) players!: Player[];
+	protected mapping: {stat: Stat, player: Player}[] = [];
 	@Output() dismiss: EventEmitter<void> = new EventEmitter();
 	@Output() playerAdded: EventEmitter<Player> = new EventEmitter();
-	@Output() playerHidden: EventEmitter<Player> = new EventEmitter();
-	@Output() playerUnhidden: EventEmitter<Player> = new EventEmitter();
-	@Input() color!: string;
-	@Input() players!: Player[];
-	@Input() settings!: Game;
+	@Output() playerHiddenChanged: EventEmitter<Player> = new EventEmitter();
+
+	ngOnInit() {
+		this.mapping = this.players.map(player => {
+			const stat = this.stats.find(t => t.playerId == player.id)!;
+			return { stat, player };
+		})
+	}
 
 	public addToTeam() {
 		this.playerAdded.emit({
