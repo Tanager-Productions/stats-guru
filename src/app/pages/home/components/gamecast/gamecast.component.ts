@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, model } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
 import { CellEditingStoppedEvent, ColDef, GridApi } from 'ag-grid-community';
@@ -10,7 +10,7 @@ import { AgGridModule } from 'ag-grid-angular';
 import { GamecastDetailComponent } from '../../../../shared/gamecast-detail/gamecast-detail.component';
 import { FormsModule } from '@angular/forms';
 import { EditPlayerComponent } from '../../../../shared/edit-player/edit-player.component';
-import { NgIf, NgFor, NgClass, SlicePipe, DatePipe } from '@angular/common';
+import { NgClass, SlicePipe, DatePipe } from '@angular/common';
 import { IonPopover, IonicModule } from '@ionic/angular';
 import { BoxScore, GamecastService } from 'src/app/services/gamecast/gamecast.service';
 import { GAME_ACTIONS_MAP, Play, Player, mapGameToDto, mapPlayToDto, mapPlayerToDto, mapStatToDto } from 'src/app/types/models';
@@ -25,9 +25,7 @@ import { GameActions } from '@tanager/tgs';
 	standalone: true,
 	imports: [
 		IonicModule,
-		NgIf,
 		RouterLink,
-		NgFor,
 		EditPlayerComponent,
 		NgClass,
 		FormsModule,
@@ -36,10 +34,16 @@ import { GameActions } from '@tanager/tgs';
 		AddPlayerComponent,
 		EditPeriodTotalComponent,
 		SlicePipe,
-		DatePipe,
+		DatePipe
 	],
 })
 export class GamecastComponent {
+	//inject
+	private route = inject(ActivatedRoute);
+	private api = inject(ApiService);
+	protected sync = inject(SyncService);
+	protected dataService = inject(GamecastService);
+
 	//config
 	private gameId!:number;
   private timerSubscription?: Subscription;
@@ -48,6 +52,9 @@ export class GamecastComponent {
 	private initSub?:Subscription;
 	public actions = GAME_ACTIONS_MAP;
 	public sendingLogs = false;
+	public homeColor = model('blue');
+	public awayColor = model('red');
+	public colorTeam: 'home' | 'away' = 'home';
 
 	//boxscore modal
 	public statsTab: 'home' | 'away' = 'home';
@@ -87,19 +94,8 @@ export class GamecastComponent {
 	private homeTeamPlusOrMinus = 0;
 	private awayTeamPlusOrMinus = 0;
 
-	//color selector
-	public isHomeTeam: boolean|null = null;
-	public awayColor: string = 'danger';
-	public homeColor: string = 'primary';
-
 	//gamecast
 	private interval: any;
-
-	//inject
-	private route = inject(ActivatedRoute);
-	private api = inject(ApiService);
-	protected sync = inject(SyncService);
-	protected dataService = inject(GamecastService);
 
   ngOnInit() {
 		this.sync.gameCastInProgress = true;
@@ -118,6 +114,14 @@ export class GamecastComponent {
 		clearInterval(this.interval);
 		await this.send();
 		this.sync.gameCastInProgress = false;
+  }
+
+  public changeColor(color: string) {
+		if (this.colorTeam == 'home') {
+			this.homeColor.set(color)
+		} else {
+			this.awayColor.set(color)
+		}
   }
 
 	private async send() {
@@ -146,19 +150,6 @@ export class GamecastComponent {
 		}
 		this.sendingLogs = false;
 		po.dismiss();
-	}
-
-	public changeColor(selectedColor: string) {
-		if (this.isHomeTeam == false) {
-			this.awayColor = selectedColor;
-		} else {
-			this.homeColor = selectedColor;
-		}
-
-		if (this.isHomeTeam == undefined) {
-			this.homeColor = 'blue';
-			this.awayColor = 'red';
-		}
 	}
 
 	public async editingStopped(event: CellEditingStoppedEvent<BoxScore>) {
@@ -246,15 +237,14 @@ export class GamecastComponent {
   }
 
   public addPoints(team: 'home' | 'away', points: number, missed: boolean = false) {
-		let updatePlusOrMinus = false;
-
 		if (!missed) {
 			this.dataService.updatePeriodTotal(team, points);
-		}
-		if (!this.timerRunning && !missed) {
-			updatePlusOrMinus = true;
-			this.homeTeamPlusOrMinus = this.dataService.game()!.homeFinal;
-			this.awayTeamPlusOrMinus = this.dataService.game()!.awayFinal;
+
+			if (!this.timerRunning) {
+				this.homeTeamPlusOrMinus = this.dataService.game()!.homeFinal;
+				this.awayTeamPlusOrMinus = this.dataService.game()!.awayFinal;
+				this.calculatePlusOrMinus();
+			}
 		}
 
 		if (points == 1 && missed) {
@@ -301,10 +291,6 @@ export class GamecastComponent {
 					stat.threesMade++
 				}
 			});
-		}
-
-		if (updatePlusOrMinus) {
-			this.calculatePlusOrMinus(); //todo
 		}
   }
 

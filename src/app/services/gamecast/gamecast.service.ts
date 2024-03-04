@@ -1,4 +1,4 @@
-import { Injectable, WritableSignal, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Injectable, WritableSignal, computed, effect, signal, untracked } from '@angular/core';
 import { GameActions, defaultPlayer, defaultStat } from '@tanager/tgs';
 import { database } from 'src/app/app.db';
 import { Game, Play, Player, Stat, SyncState } from 'src/app/types/models';
