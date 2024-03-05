@@ -1,4 +1,6 @@
 import { Injectable, WritableSignal, computed, effect, signal, untracked } from '@angular/core';
+import { InputChangeEventDetail } from '@ionic/angular';
+import { IonInputCustomEvent } from '@ionic/core';
 import { GameActions, defaultPlayer, defaultStat } from '@tanager/tgs';
 import { database } from 'src/app/app.db';
 import { Game, Play, Player, Stat, SyncState } from 'src/app/types/models';
@@ -517,7 +519,7 @@ export class GamecastService {
 		});
 	}
 
-	public async updatePlay(play: Play) {
+	public updatePlay(play: Play) {
 		this.playsSrc.update(plays => {
 			const playToUpdateIndex = plays.findIndex(t => t.id == play.id && t.gameId == play.gameId);
 			const playToUpdate = { ...plays[playToUpdateIndex] };
@@ -898,5 +900,55 @@ export class GamecastService {
 			player: player,
 			updateFn: updateFn
 		});
+	}
+
+	public updateCurrentFouls(team: 'home' | 'away', event: IonInputCustomEvent<InputChangeEventDetail>) {
+		this.gameSrc.update(game => {
+			const { value } = event.detail;
+			var newGame = { ...game! };
+			if (team == 'home') {
+				newGame.homeCurrentFouls = value ? Number(value) : null;
+			} else {
+				newGame.awayCurrentFouls = value ? Number(value) : null;
+			}
+			return newGame;
+		})
+	}
+
+	public updateFullTOLs(team: 'home' | 'away', event: IonInputCustomEvent<InputChangeEventDetail>) {
+		this.gameSrc.update(game => {
+			const { value } = event.detail;
+			var newGame = { ...game! };
+			if (team == 'home') {
+				newGame.homeFullTOL = Number(value!);
+				newGame.homeTeamTOL = newGame.homeFullTOL + newGame.homePartialTOL;
+			} else {
+				newGame.awayFullTOL = Number(value!);
+				newGame.awayTeamTOL = newGame.awayFullTOL + newGame.awayPartialTOL;
+			}
+			return newGame;
+		})
+	}
+
+	public updatePartialTOLs(team: 'home' | 'away', event: IonInputCustomEvent<InputChangeEventDetail>) {
+		this.gameSrc.update(game => {
+			const { value } = event.detail;
+			var newGame = { ...game! };
+			if (team == 'home') {
+				newGame.homePartialTOL = Number(value!);
+				newGame.homeTeamTOL = newGame.homeFullTOL + newGame.homePartialTOL;
+			} else {
+				newGame.awayPartialTOL = Number(value!);
+				newGame.awayTeamTOL = newGame.awayFullTOL + newGame.awayPartialTOL;
+			}
+			return newGame;
+		})
+	}
+
+	public changePeriod(event: IonInputCustomEvent<InputChangeEventDetail>) {
+		const { value } = event.detail;
+		if (value) {
+			this.gameSrc.update(game => ({ ...game!, period: Number(value) }));
+		}
 	}
 }

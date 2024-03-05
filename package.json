@@ -9,7 +9,8 @@
     "test": "ng test",
     "tauri": "tauri",
     "tauri:dev": "npm run tauri dev",
-    "tauri:build": "npm run tauri build"
+    "tauri:build": "npm run tauri build",
+		"awstoken": "aws codeartifact get-authorization-token --domain tanager --domain-owner 473343200218 --region us-east-1 --query authorizationToken --output text"
   },
   "private": true,
   "dependencies": {

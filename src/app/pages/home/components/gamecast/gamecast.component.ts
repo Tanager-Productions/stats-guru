@@ -10,13 +10,13 @@ import { AgGridModule } from 'ag-grid-angular';
 import { GamecastDetailComponent } from '../../../../shared/gamecast-detail/gamecast-detail.component';
 import { FormsModule } from '@angular/forms';
 import { EditPlayerComponent } from '../../../../shared/edit-player/edit-player.component';
-import { NgClass, SlicePipe, DatePipe } from '@angular/common';
+import { NgClass, SlicePipe, DatePipe, NgIf } from '@angular/common';
 import { IonPopover, IonicModule } from '@ionic/angular';
 import { BoxScore, GamecastService } from 'src/app/services/gamecast/gamecast.service';
 import { GAME_ACTIONS_MAP, Play, Player, mapGameToDto, mapPlayToDto, mapPlayerToDto, mapStatToDto } from 'src/app/types/models';
 import { database } from 'src/app/app.db';
 import { SyncMode, SyncResult } from 'src/app/types/sync';
-import { GameActions } from '@tanager/tgs';
+import { GameActions, Team } from '@tanager/tgs';
 
 @Component({
 	selector: 'app-gamecast',
@@ -34,7 +34,8 @@ import { GameActions } from '@tanager/tgs';
 		AddPlayerComponent,
 		EditPeriodTotalComponent,
 		SlicePipe,
-		DatePipe
+		DatePipe,
+		NgIf
 	],
 })
 export class GamecastComponent {
@@ -186,6 +187,14 @@ export class GamecastComponent {
 				player: player,
 				updateFn: stat => stat.onCourt = true
 			});
+		}
+	}
+
+	public setTotals(team: 'home' | 'away') {
+		if (team == 'home') {
+			this.homeStatGridApi.setGridOption('pinnedBottomRowData', [this.dataService.boxScoreTotals().homeTotals])
+		} else {
+			this.awayStatGridApi.setGridOption('pinnedBottomRowData', [this.dataService.boxScoreTotals().awayTotals])
 		}
 	}
 
@@ -380,15 +389,6 @@ export class GamecastComponent {
 		}
 	}
 
-	public getPlayer(play: Play) {
-		const { homeTeamPlayers, awayTeamPlayers, game } = this.dataService;
-		if (play.team?.name == game()?.homeTeam.teamName) {
-			return homeTeamPlayers().find(t => t.id == play.player?.playerId);
-		} else {
-			return awayTeamPlayers().find(t => t.id == play.player?.playerId);
-		}
-	}
-
 	public toggleTimer() {
     if (this.timerRunning) {
       this.stopTimer();
@@ -434,5 +434,17 @@ export class GamecastComponent {
 		this.dataService.updatePlusOrMinus(homePlusOrMinusToAdd, awayPlusOrMinusToAdd);
 		this.homeTeamPlusOrMinus = game.homeFinal;
 		this.awayTeamPlusOrMinus = game.awayFinal;
+	}
+
+	public updatePlay(play: Play, teamId: number, playerId: number | null, action: GameActions) {
+		const player = this.dataService.players().find(t => t.id == playerId);
+		const game = this.dataService.game()!;
+		const team = game.homeTeam.teamId == teamId ? game.homeTeam : game.awayTeam;
+		this.dataService.updatePlay({
+			...play,
+			team: { ...team, name: team.teamName },
+			player: player ? { ...player, playerId: player.id } : null,
+			action: action
+		});
 	}
 }
