@@ -30,7 +30,7 @@ export class CommonService {
 
   public async fetchGames() {
     const res = await database.transaction('r', ['games', 'teams'], async () => {
-			var games = await database.games.toArray();
+			var games = await database.games.orderBy('gameDate').reverse().toArray();
 			var teams = await database.teams.toArray();
 			return games.map(game => ({
 				gameId: game.id,

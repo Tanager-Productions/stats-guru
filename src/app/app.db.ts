@@ -19,10 +19,10 @@ export class StatsGuruDb extends Dexie {
 			syncHistory: '++id',
       seasons: 'year',
       events: '++id',
-			teams: '++id, [seasonId+name+isMale]',
-			plays: '[id+gameId], syncState',
-			stats: '[gameId+playerId], syncState',
-			players: '++id, syncState, [teamId+isMale+firstName+lastName]',
+			teams: '++id, name',
+			plays: '[gameId+id], syncState',
+			stats: '[gameId+playerId], [playerId+gameId], syncState',
+			players: '++id, syncState, [teamId+firstName+lastName]',
 			games: '++id, eventId, [gameDate+homeTeam.teamId+awayTeam.teamId], syncState'
     });
   }

@@ -47,7 +47,7 @@
 	<ion-content class="ion-no-padding" color="light">
 		<ion-grid style="height: 100%; width: 100%">
 			<ion-row>
-				<ion-col class="ion-no-padding ion-text-center" size="0.75">
+				<ion-col class="player-col" size="0.7">
 					@for (player of dataService.homeTeamPlayers(); track player.id) {
 						@if (!dataService.hiddenPlayerIds().includes(player.id) && player.number != -1) {
 							<ion-button
@@ -65,7 +65,7 @@
 						}
 					}
 				</ion-col>
-				<ion-col class="ion-no-padding" size="10.5">
+				<ion-col class="ion-no-padding" size="10.6">
 					<ion-grid class="ion-no-padding">
 						<ion-row>
 							<ion-col>
@@ -491,8 +491,8 @@
 							</ion-col>
 						</ion-row>
 						<ion-row class="ion-justify-content-center">
-							<ion-col class="clickable" id="playsModalTrigger" size="10">
-								<ion-list inset="true" lines="full">
+							<ion-col size="10">
+								<ion-list inset="true" lines="full" class="clickable" id="playsModalTrigger">
 									@for (play of dataService.plays() | slice:0:4; track play.id) {
 										<ion-item>
 											@if (play.turboStatsData) {
@@ -513,7 +513,7 @@
 						</ion-row>
 					</ion-grid>
 				</ion-col>
-				<ion-col class="ion-no-padding ion-text-center" size="0.75">
+				<ion-col class="player-col" size="0.7">
 					@for (player of dataService.awayTeamPlayers(); track player.id) {
 						@if (player.number != -1 && !dataService.hiddenPlayerIds().includes(player.id)) {
 							<ion-button
@@ -540,7 +540,7 @@
 			<app-gamecast-detail [game]="game"></app-gamecast-detail>
 		</ng-template>
 	</ion-popover>
-	<ion-modal [backdropDismiss]="false" #playsModal trigger="playsModalTrigger">
+	<ion-modal [backdropDismiss]="false" #playsModal [keepContentsMounted]="true" trigger="playsModalTrigger">
 		<ng-template>
 			<ion-header>
 				<ion-toolbar color="medium">

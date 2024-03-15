@@ -22,14 +22,14 @@ export class AddPlayerComponent {
 	@Input({ required: true }) stats!: Stat[];
 	@Input({ required: true }) color!: string;
 	@Input({ required: true }) players!: Player[];
-	protected mapping: {stat: Stat, player: Player}[] = [];
+	protected mapping: {stat?: Stat, player: Player}[] = [];
 	@Output() dismiss: EventEmitter<void> = new EventEmitter();
 	@Output() playerAdded: EventEmitter<Player> = new EventEmitter();
 	@Output() playerHiddenChanged: EventEmitter<Player> = new EventEmitter();
 
 	ngOnInit() {
 		this.mapping = this.players.map(player => {
-			const stat = this.stats.find(t => t.playerId == player.id)!;
+			const stat = this.stats.find(t => t.playerId == player.id);
 			return { stat, player };
 		})
 	}

@@ -49,8 +49,7 @@
 			<ion-col size="1" size-lg="2"></ion-col>
 			<ion-col size="10" size-lg="8">
 				@for (item of common.homePageGames(); track $index) {
-					<ion-card *ngFor="let item of common.homePageGames()"
-						[hidden]="filterEventId != 0 && item.eventId != filterEventId" [button]="true"
+					<ion-card [hidden]="filterEventId != 0 && item.eventId != filterEventId" [button]="true"
 						routerLink="/home/gamecast/{{item.gameId}}">
 						<ion-card-header>
 							<ion-grid class="ion-no-padding" style="width: 80%">

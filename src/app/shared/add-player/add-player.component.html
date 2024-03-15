@@ -55,7 +55,7 @@
 									</ion-thumbnail>
 									<ion-label>{{map.player.number}} {{map.player.firstName}} {{map.player.lastName}}</ion-label>
 									<ion-button color="tertiary" slot="end" fill="clear" (click)="playerHiddenChanged.emit(map.player)">
-										{{ map.stat.playerHidden ? 'Unhide' : 'Hide' }}
+										{{ (map.stat?.playerHidden || false) ? 'Unhide' : 'Hide' }}
 									</ion-button>
 								</ion-item>
 							}

@@ -162,7 +162,7 @@ export class GamecastService {
 		const players = this.players();
 		const stats = this.stats();
 		const game = untracked(this.game);
-		return players.filter(t => t.teamId == game?.homeTeam.teamId && stats.find(s => s.playerId == t.id)?.onCourt);
+		return players.filter(t => t.teamId == game?.awayTeam.teamId && stats.find(s => s.playerId == t.id)?.onCourt);
 	});
 
 	public homeTeamPlayers = computed(() => {
@@ -227,14 +227,12 @@ export class GamecastService {
 		let homeTeamPlayer = await database.players.where({
 			teamId: game.homeTeam.teamId,
 			firstName: 'team',
-			lastName: 'team',
-			isMale: game.homeTeam.isMale
+			lastName: 'team'
 		}).first();
 		let awayTeamPlayer = await database.players.where({
 			teamId: game.awayTeam.teamId,
 			firstName: 'team',
-			lastName: 'team',
-			isMale: game.awayTeam.isMale
+			lastName: 'team'
 		}).first();
 
 		if (!homeTeamPlayer) {

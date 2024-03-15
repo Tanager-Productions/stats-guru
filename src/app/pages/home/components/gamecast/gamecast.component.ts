@@ -101,7 +101,7 @@ export class GamecastComponent {
   ngOnInit() {
 		this.sync.gameCastInProgress = true;
 		this.route.params.subscribe(async params => {
-			this.gameId = params['gameId'];
+			this.gameId = Number(params['gameId']);
 			await this.dataService.setGame(this.gameId);
 			if (this.sync.online) {
 				this.interval = setInterval(async () => await this.send(), 15000);
