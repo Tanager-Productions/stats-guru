@@ -238,11 +238,11 @@ export class GamecastComponent {
   public removeFromCourt(player: Player) {
 		if (this.dataService.selectedPlayerId() == player.id) {
 			this.dataService.selectedPlayerId.set(null);
-			this.dataService.updateStat({
-				player: player,
-				updateFn: stat => stat.onCourt = false
-			});
 		}
+		this.dataService.updateStat({
+			player: player,
+			updateFn: stat => stat.onCourt = false
+		});
   }
 
   public addPoints(team: 'home' | 'away', points: number, missed: boolean = false) {

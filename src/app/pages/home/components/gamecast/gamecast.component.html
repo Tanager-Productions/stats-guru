@@ -569,12 +569,12 @@
 
 								<ion-popover trigger="playTrigger{{play.id}}">
 									<ng-template>
-										<ion-content>
-											<ion-select [value]="play.team?.teamId" #teamId>
+										<ion-content class="ion-padding">
+											<ion-select label="Team" [value]="play.team?.teamId" #teamId>
 												<ion-select-option [value]="game.homeTeam.teamId">{{ game.homeTeam.teamName }}</ion-select-option>
 												<ion-select-option [value]="game.awayTeam.teamId">{{ game.awayTeam.teamName }}</ion-select-option>
 											</ion-select>
-											<ion-select #playerId [value]="play.player ? play.player.playerId : null">
+											<ion-select label="Player" #playerId [value]="play.player ? play.player.playerId : null">
 												<ion-select-option [value]="null">Null</ion-select-option>
 												@for (item of dataService.players(); track item.id) {
 													@if (item.teamId == teamId.value) {
@@ -582,12 +582,12 @@
 													}
 												}
 											</ion-select>
-											<ion-select [value]="play.action" #action>
+											<ion-select label="Action" [value]="play.action" #action>
 												@for (action of actions.keys(); track $index) {
 													<ion-select-option [value]="action">{{ actions.get(action) }}</ion-select-option>
 												}
 											</ion-select>
-											<ion-button expand="true" color="tertiary" (click)="updatePlay(play, teamId.value, playerId.value, action.value)">Save</ion-button>
+											<ion-button expand="block" color="tertiary" (click)="updatePlay(play, teamId.value, playerId.value, action.value)">Save</ion-button>
 										</ion-content>
 									</ng-template>
 								</ion-popover>

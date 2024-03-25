@@ -67,7 +67,7 @@ export class SyncService {
 					if (res.statsSynced && res.playersSynced && res.gamesSynced && res.playsSynced) {
 						const tablesToClear = database.tables.filter(t => t.name !== 'syncHistory')
 						for (let table of tablesToClear) {
-							table.clear();
+							await table.clear();
 						}
 						await this.getData();
 					}

@@ -31,6 +31,7 @@ export class AddGamesComponent {
 	async addGame() {
 		await database.games.add({
 			...defaultGame,
+			id: undefined!,
 			syncState: SyncState.Added,
 			eventId: this.eventId,
 			gameDate: new Date(this.date).toJSON(),

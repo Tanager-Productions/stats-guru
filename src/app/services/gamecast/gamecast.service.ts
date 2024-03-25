@@ -74,12 +74,12 @@ const mapStatToBoxScore = (stat: Stat, players: Player[]): BoxScore => {
 		offensiveRebounds: stat.offensiveRebounds,
 		fieldGoalsMade: stat.fieldGoalsMade,
 		fieldGoalsAttempted: stat.fieldGoalsAttempted,
-		threesMade: stat.fieldGoalsMade,
-		threesAttempted: stat.fieldGoalsAttempted,
-		freeThrowsMade: stat.fieldGoalsMade,
-		freeThrowsAttempted: stat.fieldGoalsAttempted,
+		threesMade: stat.threesMade,
+		threesAttempted: stat.threesAttempted,
+		freeThrowsMade: stat.freeThrowsMade,
+		freeThrowsAttempted: stat.freeThrowsAttempted,
 		blocks: stat.blocks,
-		steals: stat.turnovers,
+		steals: stat.steals,
 		points: stat.points,
 		turnovers: stat.turnovers,
 		fouls: stat.fouls,
@@ -211,7 +211,11 @@ export class GamecastService {
 		const stats = await database.stats.where({ gameId: gameId }).toArray();
 		this.statsSrc.set(stats);
 
-		const plays = await database.plays.where({ gameId: gameId }).toArray();
+		const plays = (await database.plays
+			.where({ gameId: gameId })
+			.and(t => t.syncState != SyncState.Deleted)
+			.sortBy('id'))
+			.reverse();
 		this.playsSrc.set(plays);
 
 		const players = await database.players
@@ -504,15 +508,15 @@ export class GamecastService {
 		});
 	}
 
-	public async removeLastPlay() {
+	public removeLastPlay() {
 		let play = this.plays()[0];
 		this.undoAction(play);
 		this.playsSrc.update(plays => plays.slice(1));
-		database.transaction('rw', 'plays', () => {
+		database.transaction('rw', 'plays', async () => {
 			if (play.syncState == SyncState.Added) {
-				database.plays.delete({ id: play.id, gameId: play.gameId });
+				database.plays.where({ gameId: play.gameId, id: play.id }).delete();
 			} else {
-				database.plays.update({ id: play.id, gameId: play.gameId }, { syncState: SyncState.Deleted });
+				database.plays.update(play, { syncState: SyncState.Deleted });
 			}
 		});
 	}

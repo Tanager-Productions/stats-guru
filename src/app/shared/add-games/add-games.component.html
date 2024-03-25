@@ -17,7 +17,7 @@
 		<ion-item>
 			<ion-select class="ion-margin-vertical" label="Away Team" labelPlacement="floating" interface="popover" [(ngModel)]="awayTeam">
 				<div *ngFor="let team of teams">
-					<ion-select-option *ngIf="team.isMale == isMale" [value]="team.id">{{team.name}}</ion-select-option>
+					<ion-select-option *ngIf="team.isMale == isMale" [value]="team">{{team.name}}</ion-select-option>
 				</div>
 			</ion-select>
 		</ion-item>
