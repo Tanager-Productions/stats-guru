@@ -953,4 +953,8 @@ export class GamecastService {
 			this.gameSrc.update(game => ({ ...game!, period: Number(value) }));
 		}
 	}
+
+	public updatePeriod(period: number) {
+		this.gameSrc.update(game => ({ ...game!, period: period }));
+	}
 }
