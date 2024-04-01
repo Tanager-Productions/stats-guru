@@ -273,7 +273,17 @@ export class GamecastService {
 	}
 
 	public async addPlayer(player: Player) {
-		const id = await database.transaction('rw', 'players', () => database.players.add(player));
+		const newPlyaer = {
+			...defaultPlayer,
+			id: undefined!,
+			syncState: SyncState.Added,
+			firstName: player.firstName,
+			lastName: player.lastName,
+			isMale: player.isMale,
+			number: player.number,
+			teamId: player.teamId
+		};
+		const id = await database.transaction('rw', 'players', () => database.players.add(newPlyaer));
 		player.id = id;
 		this.playersSrc.update(players => [...players, player]);
 	}
@@ -636,7 +646,7 @@ export class GamecastService {
 				player: player,
 				updateFn: stat => {
 					stat.fieldGoalsAttempted--
-					stat.fieldGoalsMade
+					stat.fieldGoalsMade--
 				}
 			});
 			if (player?.teamId == game.homeTeam.teamId) {

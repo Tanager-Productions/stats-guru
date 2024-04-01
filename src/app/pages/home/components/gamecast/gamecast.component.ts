@@ -259,14 +259,14 @@ export class GamecastComponent {
 		if (points == 1 && missed) {
 			this.dataService.addPlay(team, GameActions.FreeThrowMissed);
 			this.dataService.updateStat({
-				updateFn: stat => stat.fieldGoalsAttempted++
+				updateFn: stat => stat.freeThrowsAttempted++
 			});
 		} else if (points == 1 && !missed) {
 			this.dataService.addPlay(team, GameActions.FreeThrowMade);
 			this.dataService.updateStat({
 				updateFn: stat => {
-					stat.fieldGoalsAttempted++
-					stat.fieldGoalsMade++
+					stat.freeThrowsAttempted++
+					stat.freeThrowsMade++
 				}
 			});
 		} else if (points == 2 && missed) {
