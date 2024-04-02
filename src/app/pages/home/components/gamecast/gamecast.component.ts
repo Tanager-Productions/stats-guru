@@ -400,7 +400,7 @@ export class GamecastComponent {
   private startTimer() {
 		const game = { ...this.dataService.game()! };
 		if (game.clock == "00:00") {
-			if (game.period < (game.hasFourQuarters ? 4 : 2)) {
+			if (game.period <= (game.hasFourQuarters ? 4 : 2)) {
 				this.timerDuration = game.minutesPerPeriod! * 60;
 				game.period++;
 				this.dataService.updatePeriod(game.period);
