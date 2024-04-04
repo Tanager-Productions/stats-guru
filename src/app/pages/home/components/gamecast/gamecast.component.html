@@ -631,7 +631,6 @@
 						[rowSelection]="'single'"
 						[pagination]="true"
 						[suppressCellFocus]="true"
-						[pinnedBottomRowData]="[this.dataService.boxScoreTotals().homeTotals]"
 						(cellEditingStopped)="editingStopped($event)"
 						(gridReady)="homeStatGridApi = $event.api; setTotals('home')">
 					</ag-grid-angular>
@@ -645,7 +644,6 @@
 						[rowSelection]="'single'"
 						[pagination]="true"
 						[suppressCellFocus]="true"
-						[pinnedBottomRowData]="[this.dataService.boxScoreTotals().awayTotals]"
 						(cellEditingStopped)="editingStopped($event)"
 						(gridReady)="awayStatGridApi = $event.api; setTotals('away')">
 					</ag-grid-angular>
