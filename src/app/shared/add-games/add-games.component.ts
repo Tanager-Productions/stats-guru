@@ -35,6 +35,9 @@ export class AddGamesComponent {
 			syncState: SyncState.Added,
 			eventId: this.eventId,
 			gameDate: new Date(this.date).toJSON(),
+			minutesPerOvertime: 4,
+			minutesPerPeriod: 9,
+			period: 0,
 			homeTeam: {
 				teamId: this.homeTeam!.id,
 				teamName: this.homeTeam!.name,
