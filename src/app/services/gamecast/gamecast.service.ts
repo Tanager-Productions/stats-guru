@@ -89,29 +89,48 @@ const mapStatToBoxScore = (stat: Stat, players: Player[]): BoxScore => {
 }
 
 const sumBoxScores = (boxScores: BoxScore[]): BoxScore => {
-	return boxScores.reduce((total, boxScore) => {
-		total.name = 'Totals';
-		total.playerId = 0;
-		total.number = 0;
-		total.assists += boxScore.assists;
-		total.rebounds += boxScore.rebounds;
-		total.defensiveRebounds += boxScore.defensiveRebounds;
-		total.offensiveRebounds += boxScore.offensiveRebounds;
-		total.fieldGoalsMade += boxScore.fieldGoalsMade;
-		total.fieldGoalsAttempted += boxScore.fieldGoalsAttempted;
-		total.threesMade += boxScore.threesMade;
-		total.threesAttempted += boxScore.threesAttempted;
-		total.freeThrowsMade += boxScore.freeThrowsMade;
-		total.freeThrowsAttempted += boxScore.freeThrowsAttempted;
-		total.blocks += boxScore.blocks;
-		total.steals += boxScore.steals;
-		total.fouls += boxScore.fouls;
-		total.technicalFouls += boxScore.technicalFouls;
-		total.plusOrMinus += boxScore.plusOrMinus;
-		total.points += boxScore.points;
-		total.turnovers += boxScore.turnovers;
-		return total;
-	});
+	let total: BoxScore = {
+		number: 0,
+		name: 'Totals',
+		playerId: 0,
+		assists: 0,
+		rebounds: 0,
+		defensiveRebounds: 0,
+		offensiveRebounds: 0,
+		fieldGoalsMade: 0,
+		fieldGoalsAttempted: 0,
+		blocks: 0,
+		steals: 0,
+		fouls: 0,
+		technicalFouls: 0,
+		plusOrMinus: 0,
+		points: 0,
+		turnovers: 0,
+		threesMade: 0,
+		threesAttempted: 0,
+		freeThrowsMade: 0,
+		freeThrowsAttempted: 0
+	}
+	return boxScores.reduce((result, curr) => {
+		result.assists += curr.assists;
+		result.rebounds += curr.rebounds;
+		result.defensiveRebounds += curr.defensiveRebounds;
+		result.offensiveRebounds += curr.offensiveRebounds;
+		result.fieldGoalsMade += curr.fieldGoalsMade;
+		result.fieldGoalsAttempted += curr.fieldGoalsAttempted;
+		result.threesMade += curr.threesMade;
+		result.threesAttempted += curr.threesAttempted;
+		result.freeThrowsMade += curr.freeThrowsMade;
+		result.freeThrowsAttempted += curr.freeThrowsAttempted;
+		result.blocks += curr.blocks;
+		result.steals += curr.steals;
+		result.fouls += curr.fouls;
+		result.technicalFouls += curr.technicalFouls;
+		result.plusOrMinus += curr.plusOrMinus;
+		result.points += curr.points;
+		result.turnovers += curr.turnovers;
+		return result;
+	}, total);
 }
 
 @Injectable({

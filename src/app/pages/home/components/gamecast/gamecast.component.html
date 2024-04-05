@@ -81,7 +81,7 @@
 														fill="clear"
 														shape="round"
 														expand="block"
-														(tap)="selectPlayer('home', player.id)">
+														(tap)="selectPlayer(player.id)">
 														<ion-label>T</ion-label>
 													</ion-button>
 												} @else {
@@ -92,7 +92,7 @@
 														fill="clear"
 														shape="round"
 														expand="block"
-														(tap)="selectPlayer('home', player.id)"
+														(tap)="selectPlayer(player.id)"
 														(doubleTap)="removeFromCourt(player)">
 														<ion-label>{{player.number}}</ion-label>
 													</ion-button>
@@ -306,47 +306,55 @@
 									<ion-row style="height: 30%; align-items: center;">
 										<ion-col size="1"></ion-col>
 										<ion-col size="10">
-											<ion-item color="light" *ngIf="assistDisplay" lines="none">
-												<ion-label>
-													<h1>Assist?</h1>
-												</ion-label>
-												<ion-button size="large" (click)="this.assistDisplay = false" fill="clear">
-													<ion-icon color="medium" size="large" slot="icon-only" name="close"></ion-icon>
-												</ion-button>
-											</ion-item>
-											<ion-item color="light" *ngIf="foulDisplay" lines="none">
-												<ion-label>
-													<h2>Technical?</h2>
-												</ion-label>
-												<ion-buttons slot="end">
-													<ion-button (click)="addTechnical()" fill="clear">Yes</ion-button>
-													<ion-button (click)="this.foulDisplay = false" fill="clear">No</ion-button>
-												</ion-buttons>
-											</ion-item>
-											<ion-item color="light" *ngIf="stealDisplay" lines="none">
-												<ion-label>
-													<h1>Turnover?</h1>
-												</ion-label>
-												<ion-button size="large" (click)="this.stealDisplay = false" fill="clear">
-													<ion-icon color="medium" size="large" slot="icon-only" name="close"></ion-icon>
-												</ion-button>
-											</ion-item>
-											<ion-item color="light" *ngIf="reboundDisplay" lines="none">
-												<ion-label>
-													<h1>Rebound?</h1>
-												</ion-label>
-												<ion-button (click)="this.reboundDisplay = false" size="large" fill="clear">
-													<ion-icon color="medium" size="large" slot="icon-only" name="close"></ion-icon>
-												</ion-button>
-											</ion-item>
-											<ion-item color="light" *ngIf="missedDisplay" lines="none">
-												<ion-label>
-													<h1>Missed?</h1>
-												</ion-label>
-												<ion-button (click)="this.missedDisplay = false" size="large" fill="clear">
-													<ion-icon color="medium" size="large" slot="icon-only" name="close"></ion-icon>
-												</ion-button>
-											</ion-item>
+											@if (autocomplete(); as ac) {
+												@switch (ac) {
+													@case ('assist') {
+														<ion-item color="light" lines="none">
+															<ion-label>
+																<h1>Assist?</h1>
+															</ion-label>
+															<ion-button size="large" (click)="dismissAutocomplete()" fill="clear">
+																<ion-icon color="medium" size="large" slot="icon-only" name="close"></ion-icon>
+															</ion-button>
+														</ion-item>
+													} @case ('technical') {
+														<ion-item color="light" lines="none">
+															<ion-label>
+																<h1>Technical?</h1>
+															</ion-label>
+															<ion-button size="large" color="tertiary" (click)="addTechnical()" fill="clear">Yes</ion-button>
+															<ion-button size="large" color="tertiary" (click)="dismissAutocomplete()" fill="clear">No</ion-button>
+														</ion-item>
+													} @case ('rebound') {
+														<ion-item color="light" lines="none">
+															<ion-label>
+																<h1>Rebound?</h1>
+															</ion-label>
+															<ion-button (click)="dismissAutocomplete()" size="large" fill="clear">
+																<ion-icon color="medium" size="large" slot="icon-only" name="close"></ion-icon>
+															</ion-button>
+														</ion-item>
+													} @case ('missed') {
+														<ion-item color="light" lines="none">
+															<ion-label>
+																<h1>Missed?</h1>
+															</ion-label>
+															<ion-button (click)="dismissAutocomplete()" size="large" fill="clear">
+																<ion-icon color="medium" size="large" slot="icon-only" name="close"></ion-icon>
+															</ion-button>
+														</ion-item>
+													} @case ('turnover') {
+														<ion-item color="light" lines="none">
+															<ion-label>
+																<h1>Turnover?</h1>
+															</ion-label>
+															<ion-button size="large" (click)="dismissAutocomplete()" fill="clear">
+																<ion-icon color="medium" size="large" slot="icon-only" name="close"></ion-icon>
+															</ion-button>
+														</ion-item>
+													}
+												}
+											}
 										</ion-col>
 										<ion-col size="1"></ion-col>
 									</ion-row>
@@ -364,7 +372,7 @@
 														color="{{awayColor()}}" fill="clear"
 														shape="round"
 														expand="block"
-														(tap)="selectPlayer('away', player.id)">
+														(tap)="selectPlayer(player.id)">
 														<ion-label>T</ion-label>
 													</ion-button>
 												} @else {
@@ -374,7 +382,7 @@
 														color="{{awayColor()}}" fill="clear"
 														shape="round"
 														expand="block"
-														(tap)="selectPlayer('away', player.id)"
+														(tap)="selectPlayer(player.id)"
 														(doubleTap)="removeFromCourt(player)">
 														<ion-label>{{player.number}}</ion-label>
 													</ion-button>
@@ -628,12 +636,11 @@
 						[columnDefs]="teamStats"
 						[defaultColDef]="{sortable: true, filter: true, editable: true}"
 						[rowData]="dataService.boxScore().homeBoxScore"
-						rowSelection="single"
+						[rowSelection]="'single'"
 						[pagination]="true"
 						[suppressCellFocus]="true"
 						[pinnedBottomRowData]="[dataService.boxScoreTotals().homeTotals]"
-						(cellEditingStopped)="editingStopped($event)"
-						(gridReady)="homeStatGridApi = $event.api">
+						(cellEditingStopped)="editingStopped($event)">
 					</ag-grid-angular>
 				} @else {
 					<ag-grid-angular
@@ -642,12 +649,11 @@
 						[columnDefs]="teamStats"
 						[defaultColDef]="{sortable: true, filter: true, editable: true}"
 						[rowData]="dataService.boxScore().awayBoxScore"
-						rowSelection="single"
+						[rowSelection]="'single'"
 						[pagination]="true"
 						[suppressCellFocus]="true"
 						[pinnedBottomRowData]="[dataService.boxScoreTotals().awayTotals]"
-						(cellEditingStopped)="editingStopped($event)"
-						(gridReady)="awayStatGridApi = $event.api">
+						(cellEditingStopped)="editingStopped($event)">
 					</ag-grid-angular>
 				}
 			</ion-content>
@@ -712,7 +718,7 @@
 			<ion-grid>
 				<ion-row>
 					<ion-col>
-						<ion-radio-group [(ngModel)]="colorTeam">
+						<ion-radio-group style="display: flex; justify-content: space-around;" [(ngModel)]="colorTeam">
 							<ion-radio value="home" labelPlacement="end">Home</ion-radio>
 							<ion-radio value="away" labelPlacement="end">Away</ion-radio>
 						</ion-radio-group>

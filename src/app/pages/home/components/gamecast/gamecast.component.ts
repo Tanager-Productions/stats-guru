@@ -1,7 +1,7 @@
-import { Component, inject, model } from '@angular/core';
+import { Component, WritableSignal, effect, inject, model, signal, untracked } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
-import { CellEditingStoppedEvent, ColDef, GridApi } from 'ag-grid-community';
+import { CellEditingStoppedEvent, ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { ApiService } from 'src/app/services/api/api.service';
 import { SyncService } from 'src/app/services/sync/sync.service';
 import { EditPeriodTotalComponent } from '../../../../shared/edit-period-total/edit-period-total.component';
@@ -18,6 +18,8 @@ import { GAME_ACTIONS_MAP, Play, Player, mapGameToDto, mapPlayToDto, mapPlayerTo
 import { database } from 'src/app/app.db';
 import { SyncMode, SyncResult } from 'src/app/types/sync';
 import { GameActions, Team } from '@tanager/tgs';
+
+type AutoComplete = 'rebound' | 'assist' | 'technical' | 'missed' | 'turnover' | null;
 
 @Component({
 	selector: 'app-gamecast',
@@ -60,8 +62,6 @@ export class GamecastComponent {
 
 	//boxscore modal
 	public statsTab: 'home' | 'away' = 'home';
-	public homeStatGridApi!: GridApi<BoxScore>;
-	public awayStatGridApi!: GridApi<BoxScore>;
 	public teamStats: ColDef[] = [
 		{field: 'number', headerName: 'NUM', pinned: true, editable: false},
 		{field: 'name', editable: false, pinned: true},
@@ -85,12 +85,41 @@ export class GamecastComponent {
 	];
 
 	//Displaying Auto-Complete Options:
-	public reboundDisplay: boolean = false;
-	public stealDisplay: boolean = false;
-	public assistDisplay: boolean = false;
-	public foulDisplay: boolean = false;
-	public missedDisplay: boolean = false;
 	private previousPlayerWasHome = false;
+	public autocomplete: WritableSignal<AutoComplete> = signal(null);
+	private autocompleteEffect = effect(() => {
+		const selectedPlayer = this.dataService.selectedPlayer();
+		const autocomplete = untracked(this.autocomplete);
+		if (selectedPlayer && autocomplete) {
+			const game = untracked(this.dataService.game);
+			let team: 'home' | 'away' = 'away';
+			if (selectedPlayer.teamId === game?.homeTeam.teamId) {
+				team = 'home';
+			}
+			switch (autocomplete) {
+				case 'rebound':
+					if ((this.previousPlayerWasHome && team == 'home') || (!this.previousPlayerWasHome && team == 'away')) {
+						this.addRebound(team, true);
+					} else if ((this.previousPlayerWasHome && team == 'away') || (!this.previousPlayerWasHome && team == 'home')) {
+						this.addRebound(team, false);
+					}
+					break;
+				case 'assist':
+					this.addAssist(team);
+					break;
+				case 'technical':
+					this.addTechnical();
+					break;
+				case 'missed':
+					this.addPoints(team, 2, true);
+					break;
+				case 'turnover':
+					this.addTurnover(team);
+					break;
+			}
+			this.autocomplete.set(null);
+		}
+	}, { allowSignalWrites: true });
 
 	//plusOrMinus
 	private homeTeamPlusOrMinus = 0;
@@ -191,7 +220,7 @@ export class GamecastComponent {
 		}
 	}
 
-	public selectPlayer(team: 'home' | 'away', playerId: number) {
+	public selectPlayer(playerId: number) {
 		const { players, selectedPlayer, game } = this.dataService;
 		this.previousPlayerWasHome = players().find(t => t.id == selectedPlayer()?.id)?.teamId == game()?.homeTeam.teamId;
 		if (selectedPlayer()?.id == playerId) {
@@ -199,33 +228,13 @@ export class GamecastComponent {
 		} else {
 			this.dataService.selectedPlayerId.set(playerId);
 		}
-
-		//auto complete
-		if (this.stealDisplay) {
-			this.addTurnover(team);
-			this.stealDisplay = false;
-		} else if (this.reboundDisplay) {
-			if ((this.previousPlayerWasHome && team == 'home') || (!this.previousPlayerWasHome && team == 'away')) {
-				this.addRebound(team, true);
-			} else if ((this.previousPlayerWasHome && team == 'away') || (!this.previousPlayerWasHome && team == 'home')) {
-				this.addRebound(team, false);
-			}
-			this.reboundDisplay = false;
-		} else if (this.assistDisplay) {
-			this.addAssist(team);
-			this.assistDisplay = false;
-		} else if (this.missedDisplay) {
-			this.addPoints(team, 2, true);
-			this.missedDisplay = false;
-			this.reboundDisplay = true;
-		}
 	}
 
 	public addTechnical() {
 		this.dataService.updateStat({
 			updateFn: stat => stat.technicalFouls = stat.technicalFouls == null ? 1 : stat.technicalFouls + 1
 		})
-		this.foulDisplay = false;
+		this.autocomplete.set(null);
 	}
 
   public removeFromCourt(player: Player) {
@@ -239,6 +248,10 @@ export class GamecastComponent {
   }
 
   public addPoints(team: 'home' | 'away', points: number, missed: boolean = false) {
+		if (this.dataService.selectedPlayer() === undefined) {
+			throw 'No player selected!!'
+		}
+
 		if (!missed) {
 			this.dataService.updatePeriodTotal(team, points);
 
@@ -294,7 +307,17 @@ export class GamecastComponent {
 				}
 			});
 		}
+
+		if (missed) {
+			this.autocomplete.set('rebound')
+		} else if (!missed) {
+			this.autocomplete.set('assist');
+		}
   }
+
+	public dismissAutocomplete() {
+		this.autocomplete.set(null);
+	}
 
   public addFoul(team: 'home' | 'away') {
 		let player = this.dataService.selectedPlayer();
@@ -305,7 +328,7 @@ export class GamecastComponent {
 			this.dataService.updateStat({
 				updateFn: stat => stat.fouls++
 			});
-			this.foulDisplay = true;
+			this.autocomplete.set('technical');
 		}
   }
 
@@ -322,7 +345,7 @@ export class GamecastComponent {
 			this.dataService.updateStat({
 				updateFn: stat => stat.steals++
 			});
-			this.stealDisplay = true;
+			this.autocomplete.set('turnover');
 		}
 	}
 
@@ -339,13 +362,13 @@ export class GamecastComponent {
 	public addPassback(team: 'home' | 'away', made: boolean) {
 		this.addRebound(team, true);
 		this.addPoints(team, 2, !made);
-		this.reboundDisplay = false;
-		this.assistDisplay = false;
+		this.autocomplete.set(null);
 	}
 
 	public addRebound(team: 'home' | 'away', offensive: boolean) {
 		let player = this.dataService.selectedPlayer();
 		if (player) {
+			this.autocomplete.set('missed');
 			this.dataService.updateStat({
 				updateFn: stat => {
 					stat.rebounds++;
@@ -368,7 +391,7 @@ export class GamecastComponent {
 			this.dataService.updateStat({
 				updateFn: stat => stat.blocks++
 			});
-			this.missedDisplay = true;
+			this.autocomplete.set('missed');
 		}
 	}
 
