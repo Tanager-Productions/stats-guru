@@ -190,14 +190,6 @@ export class GamecastComponent {
 		}
 	}
 
-	public setTotals(team: 'home' | 'away') {
-		if (team == 'home') {
-			this.homeStatGridApi.setGridOption('pinnedBottomRowData', [this.dataService.boxScoreTotals().homeTotals])
-		} else {
-			this.awayStatGridApi.setGridOption('pinnedBottomRowData', [this.dataService.boxScoreTotals().awayTotals])
-		}
-	}
-
 	public selectPlayer(team: 'home' | 'away', playerId: number) {
 		const { players, selectedPlayer, game } = this.dataService;
 		this.previousPlayerWasHome = players().find(t => t.id == selectedPlayer()?.id)?.teamId == game()?.homeTeam.teamId;

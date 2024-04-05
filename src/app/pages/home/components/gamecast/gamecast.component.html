@@ -628,12 +628,12 @@
 						[columnDefs]="teamStats"
 						[defaultColDef]="{sortable: true, filter: true, editable: true}"
 						[rowData]="dataService.boxScore().homeBoxScore"
-						[rowSelection]="'single'"
+						rowSelection="single"
 						[pagination]="true"
 						[suppressCellFocus]="true"
-						[pinnedBottomRowData]="[this.dataService.boxScoreTotals().homeTotals]"
+						[pinnedBottomRowData]="[dataService.boxScoreTotals().homeTotals]"
 						(cellEditingStopped)="editingStopped($event)"
-						(gridReady)="homeStatGridApi = $event.api; setTotals('home')">
+						(gridReady)="homeStatGridApi = $event.api">
 					</ag-grid-angular>
 				} @else {
 					<ag-grid-angular
@@ -642,12 +642,12 @@
 						[columnDefs]="teamStats"
 						[defaultColDef]="{sortable: true, filter: true, editable: true}"
 						[rowData]="dataService.boxScore().awayBoxScore"
-						[rowSelection]="'single'"
+						rowSelection="single"
 						[pagination]="true"
 						[suppressCellFocus]="true"
-						[pinnedBottomRowData]="[this.dataService.boxScoreTotals().awayTotals]"
+						[pinnedBottomRowData]="[dataService.boxScoreTotals().awayTotals]"
 						(cellEditingStopped)="editingStopped($event)"
-						(gridReady)="awayStatGridApi = $event.api; setTotals('away')">
+						(gridReady)="awayStatGridApi = $event.api">
 					</ag-grid-angular>
 				}
 			</ion-content>
