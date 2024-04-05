@@ -957,13 +957,6 @@ export class GamecastService {
 		})
 	}
 
-	public changePeriod(event: IonInputCustomEvent<InputChangeEventDetail>) {
-		const { value } = event.detail;
-		if (value) {
-			this.gameSrc.update(game => ({ ...game!, period: Number(value) }));
-		}
-	}
-
 	public updatePeriod(period: number) {
 		this.gameSrc.update(game => ({ ...game!, period: period }));
 	}

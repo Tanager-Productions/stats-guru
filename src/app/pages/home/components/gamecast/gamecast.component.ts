@@ -11,7 +11,8 @@ import { GamecastDetailComponent } from '../../../../shared/gamecast-detail/game
 import { FormsModule } from '@angular/forms';
 import { EditPlayerComponent } from '../../../../shared/edit-player/edit-player.component';
 import { NgClass, SlicePipe, DatePipe, NgIf } from '@angular/common';
-import { IonPopover, IonicModule } from '@ionic/angular';
+import { InputChangeEventDetail, IonPopover, IonicModule } from '@ionic/angular';
+import { IonInputCustomEvent } from '@ionic/core';
 import { BoxScore, GamecastService } from 'src/app/services/gamecast/gamecast.service';
 import { GAME_ACTIONS_MAP, Play, Player, mapGameToDto, mapPlayToDto, mapPlayerToDto, mapStatToDto } from 'src/app/types/models';
 import { database } from 'src/app/app.db';
@@ -414,6 +415,13 @@ export class GamecastComponent {
       }
     });
   }
+
+	public changePeriod(event: IonInputCustomEvent<InputChangeEventDetail>) {
+		const { value } = event.detail;
+		if (value) {
+			this.dataService.updatePeriod(Number(value));
+		}
+	}
 
   private stopTimer() {
     this.timerRunning = false;
