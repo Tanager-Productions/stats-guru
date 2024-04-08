@@ -545,7 +545,7 @@
 
 	<ion-popover trigger="detailModal" #settingsModal>
 		<ng-template>
-			<app-gamecast-detail [game]="game"></app-gamecast-detail>
+			<app-gamecast-detail [game]="game" (dismiss)="settingsModal.dismiss()"></app-gamecast-detail>
 		</ng-template>
 	</ion-popover>
 	<ion-modal [backdropDismiss]="false" #playsModal [keepContentsMounted]="true" trigger="playsModalTrigger">

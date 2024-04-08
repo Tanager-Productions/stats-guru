@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { database } from 'src/app/app.db';
@@ -13,8 +13,10 @@ import { Game } from 'src/app/types/models';
 })
 export class GamecastDetailComponent {
 	@Input() game!: Game;
+	@Output() dismiss: EventEmitter<void> = new EventEmitter();
 
 	async save() {
 		await database.games.put(this.game);
+		this.dismiss.emit();
 	}
 }
