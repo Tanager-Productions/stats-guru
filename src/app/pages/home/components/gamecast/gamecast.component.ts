@@ -1,7 +1,7 @@
-import { Component, WritableSignal, effect, inject, model, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, WritableSignal, effect, inject, model, signal, untracked } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
-import { CellEditingStoppedEvent, ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
+import { CellEditingStoppedEvent, ColDef } from 'ag-grid-community';
 import { ApiService } from 'src/app/services/api/api.service';
 import { SyncService } from 'src/app/services/sync/sync.service';
 import { EditPeriodTotalComponent } from '../../../../shared/edit-period-total/edit-period-total.component';
@@ -10,14 +10,14 @@ import { AgGridModule } from 'ag-grid-angular';
 import { GamecastDetailComponent } from '../../../../shared/gamecast-detail/gamecast-detail.component';
 import { FormsModule } from '@angular/forms';
 import { EditPlayerComponent } from '../../../../shared/edit-player/edit-player.component';
-import { NgClass, SlicePipe, DatePipe, NgIf } from '@angular/common';
+import { NgClass, SlicePipe, DatePipe } from '@angular/common';
 import { InputChangeEventDetail, IonPopover, IonicModule } from '@ionic/angular';
 import { IonInputCustomEvent } from '@ionic/core';
 import { BoxScore, GamecastService } from 'src/app/services/gamecast/gamecast.service';
 import { GAME_ACTIONS_MAP, Play, Player, mapGameToDto, mapPlayToDto, mapPlayerToDto, mapStatToDto } from 'src/app/types/models';
 import { database } from 'src/app/app.db';
 import { SyncMode, SyncResult } from 'src/app/types/sync';
-import { GameActions, Team } from '@tanager/tgs';
+import { GameActions } from '@tanager/tgs';
 
 type AutoComplete = 'rebound' | 'assist' | 'technical' | 'missed' | 'turnover' | null;
 
@@ -26,6 +26,7 @@ type AutoComplete = 'rebound' | 'assist' | 'technical' | 'missed' | 'turnover' |
 	templateUrl: './gamecast.component.html',
 	styleUrls: ['./gamecast.component.scss'],
 	standalone: true,
+	changeDetection: ChangeDetectionStrategy.OnPush,
 	imports: [
 		IonicModule,
 		RouterLink,
@@ -37,8 +38,7 @@ type AutoComplete = 'rebound' | 'assist' | 'technical' | 'missed' | 'turnover' |
 		AddPlayerComponent,
 		EditPeriodTotalComponent,
 		SlicePipe,
-		DatePipe,
-		NgIf
+		DatePipe
 	],
 })
 export class GamecastComponent {
@@ -59,11 +59,19 @@ export class GamecastComponent {
 	public homeColor = model('blue');
 	public awayColor = model('red');
 	public colorTeam: 'home' | 'away' = 'home';
+	public clock = model("00:00");
+	private clockEffect = effect(() => {
+		const clock = this.clock();
+		const game = untracked(this.dataService.game);
+		if (game) {
+			game.clock = clock;
+		}
+	})
 
 	//boxscore modal
 	public statsTab: 'home' | 'away' = 'home';
-	public teamStats: ColDef[] = [
-		{field: 'number', headerName: 'NUM', pinned: true, editable: false},
+	public teamStats: ColDef<BoxScore>[] = [
+		{field: 'number', headerName: 'NUM', pinned: true, editable: false, width: 110},
 		{field: 'name', editable: false, pinned: true},
 		{field: 'points', headerName: 'PTS', width: 80, editable: false},
 		{field: 'rebounds', headerName: 'REB', width: 80, editable: false},
@@ -133,6 +141,7 @@ export class GamecastComponent {
 		this.route.params.subscribe(async params => {
 			this.gameId = Number(params['gameId']);
 			await this.dataService.setGame(this.gameId);
+			this.clock.set(this.dataService.game()!.clock);
 			if (this.sync.online) {
 				this.interval = setInterval(async () => await this.send(), 15000);
 			}
@@ -143,6 +152,7 @@ export class GamecastComponent {
 		this.initSub?.unsubscribe();
     this.stopTimer();
 		clearInterval(this.interval);
+		this.dataService.destroy();
 		await this.send();
 		this.sync.gameCastInProgress = false;
   }
@@ -414,30 +424,36 @@ export class GamecastComponent {
   }
 
   private startTimer() {
-		const game = { ...this.dataService.game()! };
-		if (game.clock == "00:00") {
+		const game = this.dataService.game()!;
+		const clock = this.clock();
+		if (clock == "00:00") {
 			if (game.period <= (game.hasFourQuarters ? 4 : 2)) {
 				this.timerDuration = game.minutesPerPeriod! * 60;
-				game.period++;
-				this.dataService.updatePeriod(game.period);
+				this.dataService.updatePeriod(game.period + 1);
 			} else {
 				this.timerDuration = game.minutesPerOvertime! * 60;
 			}
 			this.dataService.resetTOs();
 		} else {
-			let times = game.clock.split(':');
+			let times = clock.split(':');
 			this.timerDuration = Number(times[0].startsWith('0') ? times[0].charAt(1) : times[0]) * 60 + Number(times[1].startsWith('0') ? times[1].charAt(1) : times[1]);
 		}
     this.timerRunning = true;
-    this.timerSubscription = interval(1000).subscribe(async () => {
+    this.timerSubscription = interval(1000).subscribe(() => {
       if (this.timerDuration > 0) {
         this.timerDuration--;
-        this.dataService.updateClock(this.timerDuration);
+        this.clock.set(this.getClock());
       } else {
         this.stopTimer();
       }
     });
   }
+
+	private getClock() {
+		const minutes = Math.floor(this.timerDuration / 60);
+		const seconds = this.timerDuration % 60;
+		return `${minutes < 10 ? '0' + minutes : minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+	}
 
 	public changePeriod(event: IonInputCustomEvent<InputChangeEventDetail>) {
 		const { value } = event.detail;

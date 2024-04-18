@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { Player, Stat, SyncState } from 'src/app/types/models';
@@ -9,6 +9,7 @@ import { defaultPlayer } from '@tanager/tgs';
 	templateUrl: './add-player.component.html',
 	styleUrls: ['./add-player.component.scss'],
 	standalone: true,
+	changeDetection: ChangeDetectionStrategy.OnPush,
 	imports: [IonicModule, FormsModule]
 })
 export class AddPlayerComponent {
@@ -16,23 +17,22 @@ export class AddPlayerComponent {
 	protected newPlayerNumber: number = 0;
 	protected newPlayerFirstName!: string;
 	protected newPlayerLastName!: string;
-	@Input({ required: true }) team!: 'home' | 'away';
-	@Input({ required: true }) teamId!: number;
-	@Input({ required: true }) isMale!: boolean;
-	@Input({ required: true }) stats!: Stat[];
-	@Input({ required: true }) color!: string;
-	@Input({ required: true }) players!: Player[];
-	protected mapping: {stat?: Stat, player: Player}[] = [];
-	@Output() dismiss: EventEmitter<void> = new EventEmitter();
-	@Output() playerAdded: EventEmitter<Player> = new EventEmitter();
-	@Output() playerHiddenChanged: EventEmitter<Player> = new EventEmitter();
-
-	ngOnInit() {
-		this.mapping = this.players.map(player => {
-			const stat = this.stats.find(t => t.playerId == player.id);
+	public teamId = input.required<number>();
+	public isMale = input.required<boolean>();
+	public stats = input.required<Stat[]>();
+	public color = input.required<string>();
+	public players = input.required<Player[]>();
+	public dismiss = output();
+	public playerAdded = output<Player>();
+	public playerHiddenChanged = output<Player>();
+	public mapping = computed(() => {
+		const players = this.players();
+		const stats = this.stats();
+		return players.map(player => {
+			const stat = stats.find(t => t.playerId == player.id);
 			return { stat, player };
 		})
-	}
+	});
 
 	public addToTeam() {
 		this.playerAdded.emit({
@@ -41,8 +41,8 @@ export class AddPlayerComponent {
 			firstName: this.newPlayerFirstName,
 			lastName: this.newPlayerLastName,
 			number: this.newPlayerNumber,
-			teamId: this.teamId,
-			isMale: this.isMale
+			teamId: this.teamId(),
+			isMale: this.isMale()
 		});
 		this.dismiss.emit();
 	}

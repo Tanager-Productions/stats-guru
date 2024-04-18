@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject, input, output } from '@angular/core';
 import { ModalController, IonicModule } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
 import { Game } from 'src/app/types/models';
@@ -9,13 +9,14 @@ import { ChangePeriodTotalsConfig } from 'src/app/services/gamecast/gamecast.ser
 	templateUrl: './edit-period-total.component.html',
 	styleUrls: ['./edit-period-total.component.scss'],
 	standalone: true,
+	changeDetection: ChangeDetectionStrategy.OnPush,
 	imports: [IonicModule, FormsModule]
 })
 export class EditPeriodTotalComponent {
-	@Input({ required: true }) team!: 'home' | 'away';
-	@Input({ required: true }) color!:string;
-	@Input({ required: true }) game!: Game;
-	@Output() update = new EventEmitter<ChangePeriodTotalsConfig>()
+	public team = input.required<'home' | 'away'>();
+	public color = input.required<string>();
+	public game = input.required<Game>();
+	public update = output<ChangePeriodTotalsConfig>();
 	protected firstPeriodPoints!: number;
 	protected secondPeriodPoints!: number;
 	protected thirdPeriodPoints!: number;
@@ -24,25 +25,26 @@ export class EditPeriodTotalComponent {
 	protected modalCtrl = inject(ModalController);
 
 	ngOnInit() {
-		if (this.team == 'home') {
-			this.firstPeriodPoints = this.game.homePointsQ1;
-			this.secondPeriodPoints = this.game.homePointsQ2;
-			this.thirdPeriodPoints = this.game.homePointsQ3;
-			this.fourthPeriodPoints = this.game.homePointsQ4;
-			this.overtimePoints = this.game.homePointsOT;
+		const game = this.game();
+		if (this.team() == 'home') {
+			this.firstPeriodPoints = game.homePointsQ1;
+			this.secondPeriodPoints = game.homePointsQ2;
+			this.thirdPeriodPoints = game.homePointsQ3;
+			this.fourthPeriodPoints = game.homePointsQ4;
+			this.overtimePoints = game.homePointsOT;
 		}
 		else {
-			this.firstPeriodPoints = this.game.awayPointsQ1;
-			this.secondPeriodPoints = this.game.awayPointsQ2;
-			this.thirdPeriodPoints = this.game.awayPointsQ3;
-			this.fourthPeriodPoints = this.game.awayPointsQ4;
-			this.overtimePoints = this.game.awayPointsOT;
+			this.firstPeriodPoints = game.awayPointsQ1;
+			this.secondPeriodPoints = game.awayPointsQ2;
+			this.thirdPeriodPoints = game.awayPointsQ3;
+			this.fourthPeriodPoints = game.awayPointsQ4;
+			this.overtimePoints = game.awayPointsOT;
 		}
 	}
 
 	async submitPoints() {
 		this.update.emit({
-			team: this.team,
+			team: this.team(),
 			totals: {
 				p1: this.firstPeriodPoints,
 				p2: this.secondPeriodPoints,

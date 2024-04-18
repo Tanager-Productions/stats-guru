@@ -1,5 +1,5 @@
 <ion-header>
-	<ion-toolbar [color]="color">
+	<ion-toolbar [color]="color()">
 		<ion-title>Roster</ion-title>
 		<ion-buttons slot="end">
 			<ion-button (click)="dismiss.emit()">
@@ -8,7 +8,7 @@
 		</ion-buttons>
 	</ion-toolbar>
 	<ion-toolbar>
-		<ion-segment [color]="color" mode="md" [(ngModel)]="tab">
+		<ion-segment [color]="color()" mode="md" [(ngModel)]="tab">
 			<ion-segment-button value="add">Add</ion-segment-button>
 			<ion-segment-button value="hide">Hide</ion-segment-button>
 		</ion-segment>
@@ -43,8 +43,8 @@
 					<ion-button color="tertiary" expand="true" (click)="addToTeam()" [disabled]="!newPlayerFirstName || !newPlayerLastName">Submit</ion-button>
 				} @else {
 					<ion-list>
-						@for (map of mapping; track map.player.id) {
-							@if (map.player.teamId == teamId) {
+						@for (map of mapping(); track map.player.id) {
+							@if (map.player.teamId == teamId()) {
 								<ion-item>
 									<ion-thumbnail slot="start">
 										@if (map.player.picture) {

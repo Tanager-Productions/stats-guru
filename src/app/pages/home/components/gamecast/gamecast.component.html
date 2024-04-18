@@ -219,10 +219,11 @@
 										</ion-col>
 										<ion-col size="6">
 											<ion-input
+												[readonly]="timerRunning"
 												class="ion-text-center"
 												fill="clear"
 												style="color: grey; font-size: xx-large; font-weight: bolder; margin-bottom: 4px;"
-												[(ngModel)]="game.clock"
+												[(ngModel)]="clock"
 											></ion-input>
 											<ion-input
 												style="color: grey"
@@ -637,7 +638,7 @@
 						[defaultColDef]="{sortable: true, filter: true, editable: true}"
 						[rowData]="dataService.boxScore().homeBoxScore"
 						[rowSelection]="'single'"
-						[pagination]="true"
+						[pagination]="false"
 						[suppressCellFocus]="true"
 						[pinnedBottomRowData]="[dataService.boxScoreTotals().homeTotals]"
 						(cellEditingStopped)="editingStopped($event)">
@@ -650,7 +651,7 @@
 						[defaultColDef]="{sortable: true, filter: true, editable: true}"
 						[rowData]="dataService.boxScore().awayBoxScore"
 						[rowSelection]="'single'"
-						[pagination]="true"
+						[pagination]="false"
 						[suppressCellFocus]="true"
 						[pinnedBottomRowData]="[dataService.boxScoreTotals().awayTotals]"
 						(cellEditingStopped)="editingStopped($event)">
@@ -662,7 +663,6 @@
 	<ion-modal trigger="addHomePlayer" #addHomePlayerModal [backdropDismiss]="false">
 		<ng-template>
 			<app-add-player
-				team="home"
 				[teamId]="game.homeTeam.teamId"
 				[isMale]="game.homeTeam.isMale"
 				[players]="dataService.players()"
@@ -677,7 +677,6 @@
 	<ion-modal trigger="addAwayPlayer" #addAwayPlayerModal [backdropDismiss]="false">
 		<ng-template>
 			<app-add-player
-				team="away"
 				[teamId]="game.awayTeam.teamId"
 				[isMale]="game.awayTeam.isMale"
 				[players]="dataService.players()"

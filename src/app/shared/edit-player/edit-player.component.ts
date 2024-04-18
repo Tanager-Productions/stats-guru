@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { Player } from 'src/app/types/models';
@@ -8,10 +8,11 @@ import { Player } from 'src/app/types/models';
 	templateUrl: './edit-player.component.html',
 	styleUrls: ['./edit-player.component.scss'],
 	standalone: true,
+	changeDetection: ChangeDetectionStrategy.OnPush,
 	imports: [IonicModule, FormsModule]
 })
 export class EditPlayerComponent {
-	@Input({ required: true }) player!: Player;
-	protected editPlayer: boolean = false;
-	@Output() savePlayer: EventEmitter<void> = new EventEmitter();
+	public player = input.required<Player>();
+	protected editPlayer = false;
+	public savePlayer = output();
 }

@@ -1,33 +1,35 @@
-<ion-content class="ion-padding">
-	<ion-input
-		[(ngModel)]="player.firstName"
-		labelPlacement="stacked"
-		label="First Name"
-		fill="outline"
-		[readonly]="!editPlayer"
-	></ion-input>
-	<ion-input
-		[(ngModel)]="player.lastName"
-		fill="outline"
-		labelPlacement="stacked"
-		label="Last Name"
-		[readonly]="!editPlayer"
-	></ion-input>
-	<ion-input
-		type="number"
-		[(ngModel)]="player.number"
-		fill="outline"
-		labelPlacement="stacked"
-		label="Number"
-		[readonly]="!editPlayer"
-	></ion-input>
-	@if (editPlayer) {
-		<ion-button class="ion-float-right" fill="clear" (click)="savePlayer.emit(); editPlayer = false;">
-			<ion-icon size="large" slot="icon-only" name="checkmark"></ion-icon>
-		</ion-button>
-	} @else {
-		<ion-button class="ion-float-right" fill="clear" (click)="editPlayer = true;">
-			<ion-icon size="large" slot="icon-only" name="pencil"></ion-icon>
-		</ion-button>
-	}
-</ion-content>
+@if (player(); as player) {
+	<ion-content class="ion-padding">
+		<ion-input
+			[(ngModel)]="player.firstName"
+			labelPlacement="stacked"
+			label="First Name"
+			fill="outline"
+			[readonly]="!editPlayer"
+		></ion-input>
+		<ion-input
+			[(ngModel)]="player.lastName"
+			fill="outline"
+			labelPlacement="stacked"
+			label="Last Name"
+			[readonly]="!editPlayer"
+		></ion-input>
+		<ion-input
+			type="number"
+			[(ngModel)]="player.number"
+			fill="outline"
+			labelPlacement="stacked"
+			label="Number"
+			[readonly]="!editPlayer"
+		></ion-input>
+		@if (editPlayer) {
+			<ion-button color="tertiary" class="ion-float-right" fill="clear" (click)="savePlayer.emit(); editPlayer = false;">
+				<ion-icon size="large" slot="icon-only" name="checkmark"></ion-icon>
+			</ion-button>
+		} @else {
+			<ion-button color="tertiary" class="ion-float-right" fill="clear" (click)="editPlayer = true;">
+				<ion-icon size="large" slot="icon-only" name="pencil"></ion-icon>
+			</ion-button>
+		}
+	</ion-content>
+}

@@ -223,19 +223,16 @@ export class GamecastService {
 		}
 	});
 
+	/**
+	 * Forces a final game save before they leave the page
+	 */
+	public destroy() {
+		this.gameSrc.update(game => ({ ...game! }));
+	}
+
 	public async setGame(gameId: number) {
 		const game = (await database.games.get(gameId))!;
 		this.gameSrc.set(game);
-
-		const stats = await database.stats.where({ gameId: gameId }).toArray();
-		this.statsSrc.set(stats);
-
-		const plays = (await database.plays
-			.where({ gameId: gameId })
-			.and(t => t.syncState != SyncState.Deleted)
-			.sortBy('id'))
-			.reverse();
-		this.playsSrc.set(plays);
 
 		const players = await database.players
 			.where('teamId').equals(game.homeTeam.teamId)
@@ -244,6 +241,26 @@ export class GamecastService {
 		this.playersSrc.set(players);
 
 		await this.setTeamPlayers(game);
+
+		let stats = await database.stats.where({ gameId: gameId }).toArray();
+		for (let player of players) {
+			if (!stats.find(t => t.playerId == player.id)) {
+				stats.push({
+					...defaultStat,
+					playerId: player.id,
+					gameId: gameId,
+					syncState: SyncState.Added
+				});
+			}
+		}
+		this.statsSrc.set(stats);
+
+		const plays = (await database.plays
+			.where({ gameId: gameId })
+			.and(t => t.syncState != SyncState.Deleted)
+			.sortBy('id'))
+			.reverse();
+		this.playsSrc.set(plays);
 	}
 
 	private async setTeamPlayers(game: Game) {
@@ -305,6 +322,12 @@ export class GamecastService {
 		const id = await database.transaction('rw', 'players', () => database.players.add(newPlyaer));
 		player.id = id;
 		this.playersSrc.update(players => [...players, player]);
+		this.statsSrc.update(stats => [...stats, {
+			...defaultStat,
+			playerId: id,
+			gameId: this.game()!.id,
+			syncState: SyncState.Added
+		}]);
 	}
 
 	public async updatePlayer(playerToUpdate: Player) {
@@ -444,13 +467,6 @@ export class GamecastService {
 		}
 	}
 
-	/** Does not trigger game update for performance. Clock will naturally get synced up as other changes happen. */
-	public updateClock(duration: number) {
-		const minutes = Math.floor(duration / 60);
-		const seconds = duration % 60;
-		this.gameSrc()!.clock = `${minutes < 10 ? '0' + minutes : minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
-	}
-
 	public addPlay(team: 'home' | 'away', action: GameActions, player?: Player) {
 		const plays = this.plays();
 		const game = this.game()!;
@@ -528,12 +544,12 @@ export class GamecastService {
 				.where('playerId')
 				.anyOf(this.homePlayersOnCourt().map(t => t.id))
 				.and(t => t.gameId == game.id)
-				.modify((stat: Stat) => stat.plusOrMinus += homePOMToAdd);
+				.modify(stat => { stat.plusOrMinus += homePOMToAdd });
 			database.stats
 				.where('playerId')
 				.anyOf(this.awayPlayersOnCourt().map(t => t.id))
 				.and(t => t.gameId == game.id)
-				.modify((stat: Stat) => stat.plusOrMinus += awayPOMToAdd)
+				.modify(stat => { stat.plusOrMinus += awayPOMToAdd })
 		});
 	}
 
