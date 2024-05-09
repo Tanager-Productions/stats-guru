@@ -47,10 +47,11 @@
 	<ion-content class="ion-no-padding" color="light">
 		<ion-grid style="height: 100%; width: 100%">
 			<ion-row>
-				<ion-col class="player-col" size="0.7">
+				<ion-col class="player-col" size="0.9">
 					@for (player of dataService.homeTeamPlayers(); track player.id) {
 						@if (!dataService.hiddenPlayerIds().includes(player.id) && player.number != -1) {
 							<ion-button
+								size="large"
 								[fill]="dataService.homePlayersOnCourt().includes(player) ? 'outline' : 'clear'"
 								id="context-menu-trigger{{$index}}"
 								color="{{homeColor()}}"
@@ -65,7 +66,7 @@
 						}
 					}
 				</ion-col>
-				<ion-col class="ion-no-padding" size="10.6">
+				<ion-col class="ion-no-padding" size="10.2">
 					<ion-grid class="ion-no-padding">
 						<ion-row>
 							<ion-col>
@@ -522,10 +523,11 @@
 						</ion-row>
 					</ion-grid>
 				</ion-col>
-				<ion-col class="player-col" size="0.7">
+				<ion-col class="player-col" size="0.9">
 					@for (player of dataService.awayTeamPlayers(); track player.id) {
 						@if (player.number != -1 && !dataService.hiddenPlayerIds().includes(player.id)) {
 							<ion-button
+								size="large"
 								[fill]="dataService.awayPlayersOnCourt().includes(player) ? 'outline' : 'clear'"
 								color="{{awayColor()}}"
 								id="context-menu-trigger-away{{$index}}"
