@@ -125,6 +125,7 @@ export class GamecastComponent {
 					this.addTurnover(team);
 					break;
 			}
+			this.deselectPlayer(selectedPlayer.id);
 			this.autocomplete.set(null);
 		}
 	}, { allowSignalWrites: true });
@@ -240,11 +241,21 @@ export class GamecastComponent {
 		}
 	}
 
+	public deselectPlayer(playerId: number) {
+		const { selectedPlayer } = this.dataService;
+		this.previousPlayerWasHome = false;
+		if (selectedPlayer()?.id == playerId) {
+			this.dataService.selectedPlayerId.set(null);
+		}
+	}
+
 	public addTechnical() {
 		this.dataService.updateStat({
 			updateFn: stat => stat.technicalFouls = stat.technicalFouls == null ? 1 : stat.technicalFouls + 1
 		})
 		this.autocomplete.set(null);
+		const selectedPlayer = this.dataService.selectedPlayer();
+		this.deselectPlayer(selectedPlayer!.id);
 	}
 
   public removeFromCourt(player: Player) {
@@ -323,6 +334,7 @@ export class GamecastComponent {
 		} else if (!missed) {
 			this.autocomplete.set('assist');
 		}
+		this.deselectPlayer(this.dataService.selectedPlayer()!.id);
   }
 
 	public dismissAutocomplete() {
@@ -356,6 +368,7 @@ export class GamecastComponent {
 				updateFn: stat => stat.steals++
 			});
 			this.autocomplete.set('turnover');
+
 		}
 	}
 
