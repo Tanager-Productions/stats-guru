@@ -249,6 +249,14 @@ export class GamecastComponent {
 		}
 	}
 
+	public clearAllPlayersOnCourt(team: 'home' | 'away') {
+		if(team =='home') {
+			this.dataService.homePlayersOnCourt().forEach(t => { if(t.number !=-1) {this.removeFromCourt(t);}	})
+		} else {
+			this.dataService.awayPlayersOnCourt().forEach(t => { if(t.number !=-1) {this.removeFromCourt(t);}	})
+		}
+	}
+
 	public addTechnical() {
 		this.dataService.updateStat({
 			updateFn: stat => stat.technicalFouls = stat.technicalFouls == null ? 1 : stat.technicalFouls + 1

@@ -214,6 +214,7 @@
 										<ion-col size="3">
 											<ion-button fill="clear" expand="block" color="{{homeColor()}}" (click)="addTimeout('home', true)">T30</ion-button>
 											<ion-button fill="clear" expand="block" color="{{homeColor()}}" (click)="addTimeout('home', false)">T60</ion-button>
+											<ion-button fill="clear" expand="block" color="{{homeColor()}}" (click)="clearAllPlayersOnCourt('home')">Clear</ion-button>
 											<ion-button id="addHomePlayer" fill="clear" expand="block" color="{{homeColor()}}">
 												<ion-icon size="large" slot="icon-only" name="add-circle-sharp"></ion-icon>
 											</ion-button>
@@ -238,6 +239,7 @@
 										<ion-col size="3">
 											<ion-button fill="clear" expand="block" color="{{awayColor()}}" (click)="addTimeout('away', true)">T30</ion-button>
 											<ion-button fill="clear" expand="block" color="{{awayColor()}}" (click)="addTimeout('away', false)">T60</ion-button>
+											<ion-button fill="clear" expand="block" color="{{awayColor()}}" (click)="clearAllPlayersOnCourt('away')">Clear</ion-button>
 											<ion-button id="addAwayPlayer" fill="clear" expand="block" color="{{awayColor()}}">
 												<ion-icon size="large" slot="icon-only" name="add-circle-sharp"></ion-icon>
 											</ion-button>
