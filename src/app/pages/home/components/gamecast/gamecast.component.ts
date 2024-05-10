@@ -94,6 +94,8 @@ export class GamecastComponent {
 	//Displaying Auto-Complete Options:
 	private previousPlayerWasHome = false;
 	public autocomplete: WritableSignal<AutoComplete> = signal(null);
+	public currentPlayersOnCourt: WritableSignal<Player[] | null> = signal(null);
+	public sixthPlayer: WritableSignal<Player | null> = signal(null);
 	private autocompleteEffect = effect(() => {
 		const selectedPlayer = this.dataService.selectedPlayer();
 		const autocomplete = untracked(this.autocomplete);
@@ -219,12 +221,26 @@ export class GamecastComponent {
 
 	public addToCourt(team: 'home' | 'away', player: Player) {
 		const playersOnCourt = team == 'home' ? this.dataService.homePlayersOnCourt() : this.dataService.awayPlayersOnCourt();
-		if (playersOnCourt.length < 6 && !playersOnCourt.find(t => t.id == player.id)) {
-			this.dataService.updateStat({
-				player: player,
-				updateFn: stat => stat.onCourt = true
-			});
+		if(!playersOnCourt.find(t => t.id == player.id)){
+			if (playersOnCourt.length < 6) {
+				this.dataService.updateStat({
+					player: player,
+					updateFn: stat => stat.onCourt = true
+				});
+			}
+			if(playersOnCourt.length == 6) {
+				this.currentPlayersOnCourt.set(team == 'home' ? this.dataService.homePlayersOnCourt() : this.dataService.awayPlayersOnCourt());
+				this.sixthPlayer.set(player);
+			}
 		}
+	}
+
+	public subOut(player : Player) {
+		const team = this.dataService.homePlayersOnCourt().includes(player)? 'home' : 'away';
+		this.removeFromCourt(player);
+		this.addToCourt(team, this.sixthPlayer()!);
+		this.currentPlayersOnCourt.set(null);
+		this.sixthPlayer.set(null);
 	}
 
 	public selectPlayer(playerId: number) {
