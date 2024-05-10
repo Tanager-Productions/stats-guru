@@ -19,7 +19,7 @@ import { database } from 'src/app/app.db';
 import { SyncMode, SyncResult } from 'src/app/types/sync';
 import { GameActions } from '@tanager/tgs';
 
-type AutoComplete = 'rebound' | 'assist' | 'technical' | 'missed' | 'turnover' | null;
+type AutoComplete = 'rebound' | 'assist' | 'missed' | 'turnover' | null;
 
 @Component({
 	selector: 'app-gamecast',
@@ -89,7 +89,6 @@ export class GamecastComponent {
 		{field: 'turnovers', headerName: 'TO', width: 80},
 		{field: 'fouls', headerName: 'FOUL', width: 90},
 		{field: 'plusOrMinus', headerName: '+/-', width: 80},
-		{field: 'technicalFouls', headerName: 'TECH', width: 90},
 	];
 
 	//Displaying Auto-Complete Options:
@@ -114,9 +113,6 @@ export class GamecastComponent {
 					break;
 				case 'assist':
 					this.addAssist(team);
-					break;
-				case 'technical':
-					this.addTechnical();
 					break;
 				case 'missed':
 					this.addPoints(team, 2, true);
@@ -257,15 +253,6 @@ export class GamecastComponent {
 		}
 	}
 
-	public addTechnical() {
-		this.dataService.updateStat({
-			updateFn: stat => stat.technicalFouls = stat.technicalFouls == null ? 1 : stat.technicalFouls + 1
-		})
-		this.autocomplete.set(null);
-		const selectedPlayer = this.dataService.selectedPlayer();
-		this.deselectPlayer(selectedPlayer!.id);
-	}
-
   public removeFromCourt(player: Player) {
 		if (this.dataService.selectedPlayerId() == player.id) {
 			this.dataService.selectedPlayerId.set(null);
@@ -358,7 +345,6 @@ export class GamecastComponent {
 			this.dataService.updateStat({
 				updateFn: stat => stat.fouls++
 			});
-			this.autocomplete.set('technical');
 		}
   }
 
