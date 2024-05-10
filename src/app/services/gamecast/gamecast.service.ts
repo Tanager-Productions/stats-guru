@@ -478,7 +478,7 @@ export class GamecastService {
 			sgLegacyData: null,
 			syncState: SyncState.Added,
 			period: game.period,
-			player: selectedPlayer ? { ...selectedPlayer, playerId: selectedPlayer.id } : null,
+			player: selectedPlayer && (action != GameActions.FullTO && action != GameActions.PartialTO) ? { ...selectedPlayer, playerId: selectedPlayer.id } : null,
 			team: team == 'home' ? { ...game.homeTeam, name: game.homeTeam.teamName } : { ...game.awayTeam, name: game.awayTeam.teamName },
 			score: `${game.homeFinal} - ${game.awayFinal}`,
 			timeStamp: new Date().toJSON(),
