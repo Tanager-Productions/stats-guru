@@ -453,10 +453,12 @@ export class GamecastComponent {
 			if (game.period <= (game.hasFourQuarters ? 4 : 2)) {
 				this.timerDuration = game.settings?.minutesPerPeriod! * 60;
 				this.dataService.updatePeriod(game.period + 1);
+				if(game.period == ((game.hasFourQuarters ? 4 : 2) / 2)) {
+					this.dataService.resetTOs();
+				}
 			} else {
 				this.timerDuration = game.settings?.minutesPerOvertime! * 60;
 			}
-			this.dataService.resetTOs();
 		} else {
 			let times = clock.split(':');
 			this.timerDuration = Number(times[0].startsWith('0') ? times[0].charAt(1) : times[0]) * 60 + Number(times[1].startsWith('0') ? times[1].charAt(1) : times[1]);
