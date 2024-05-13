@@ -35,22 +35,24 @@ export class AddGamesComponent {
 			syncState: SyncState.Added,
 			eventId: this.eventId,
 			gameDate: new Date(this.date).toJSON(),
-			minutesPerOvertime: 4,
-			minutesPerPeriod: 9,
+			settings: {
+				resetTimeoutsAtHalf: false,
+				fullTimeouts: 0,
+				partialTimeouts: 0,
+				minutesPerOvertime: 4,
+				minutesPerPeriod: 9,
+				resetFouls: 0
+			},
 			period: 0,
 			homeTeam: {
 				teamId: this.homeTeam!.id,
 				teamName: this.homeTeam!.name,
-				isMale: this.homeTeam!.isMale,
-				seasonId: this.homeTeam!.seasonId,
-				teamType: this.homeTeam!.teamType
+				isMale: this.homeTeam!.isMale
 			},
 			awayTeam: {
 				teamId: this.awayTeam!.id,
 				teamName: this.awayTeam!.name,
-				isMale: this.awayTeam!.isMale,
-				seasonId: this.awayTeam!.seasonId,
-				teamType: this.awayTeam!.teamType
+				isMale: this.awayTeam!.isMale
 			}
 		});
 		this.dismiss.emit();

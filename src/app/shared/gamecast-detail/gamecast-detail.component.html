@@ -7,7 +7,7 @@
 				labelPlacement="start"
 				label="Full Timeouts"
 				type="number"
-				[(ngModel)]="game.fullTimeoutsPerGame"
+				[(ngModel)]="game.settings!.fullTimeouts"
 			></ion-input>
 		</ion-item>
 		<ion-item>
@@ -15,7 +15,7 @@
 				class="ion-text-right"
 				labelPlacement="start"
 				label="Partial Timeouts"
-				[(ngModel)]="game.partialTimeoutsPerGame"
+				[(ngModel)]="game.settings!.partialTimeouts"
 				type="number"
 			></ion-input>
 		</ion-item>
@@ -27,7 +27,7 @@
 				class="ion-text-right"
 				labelPlacement="start"
 				label="Minutes/Period"
-				[(ngModel)]="game.minutesPerPeriod"
+				[(ngModel)]="game.settings!.minutesPerPeriod"
 				type="number"
 			></ion-input>
 		</ion-item>
@@ -36,12 +36,19 @@
 				class="ion-text-right"
 				labelPlacement="start"
 				label="Minutes/Overtime"
-				[(ngModel)]="game.minutesPerOvertime"
+				[(ngModel)]="game.settings!.minutesPerOvertime"
 				type="number"
 			></ion-input>
 		</ion-item>
 		<ion-item>
-			<ion-checkbox [(ngModel)]="game.resetTimeoutsEveryPeriod">Reset TOs/Period</ion-checkbox>
+			<ion-checkbox [(ngModel)]="game.settings!.resetTimeoutsAtHalf">Reset TOs/Period</ion-checkbox>
+		</ion-item>
+		<ion-item>
+			<ion-select label="Fouls" class="ion-no-padding" [(ngModel)]="game.settings!.resetFouls">
+				<ion-select-option [value]="0">No Reset</ion-select-option>
+				<ion-select-option [value]="1">Reset Every Period</ion-select-option>
+				<ion-select-option [value]="2">Reset At Half</ion-select-option>
+			</ion-select>
 		</ion-item>
 	</ion-list>
 	<ion-button expand="block" (click)="save()">Save</ion-button>

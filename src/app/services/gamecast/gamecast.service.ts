@@ -458,11 +458,11 @@ export class GamecastService {
 
 	public resetTOs() {
 		const game = { ...this.game()! };
-		if (game.resetTimeoutsEveryPeriod) {
-			game.homeFullTOL = game.fullTimeoutsPerGame ?? 0;
-			game.awayFullTOL = game.fullTimeoutsPerGame ?? 0;
-			game.homePartialTOL = game.partialTimeoutsPerGame ?? 0;
-			game.awayPartialTOL = game.partialTimeoutsPerGame ?? 0;
+		if (game.settings?.resetTimeoutsAtHalf) {
+			game.homeFullTOL = game.settings?.fullTimeouts ?? 0;
+			game.awayFullTOL = game.settings?.fullTimeouts ?? 0;
+			game.homePartialTOL = game.settings?.partialTimeouts ?? 0;
+			game.awayPartialTOL = game.settings?.partialTimeouts ?? 0;
 			this.gameSrc.set(game);
 		}
 	}
