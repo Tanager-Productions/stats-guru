@@ -449,11 +449,12 @@ export class GamecastComponent {
   private startTimer() {
 		const game = this.dataService.game()!;
 		const clock = this.clock();
+		const numOfQuaters = game.hasFourQuarters ? 4 : 2;
 		if (clock == "00:00") {
-			if (game.period <= (game.hasFourQuarters ? 4 : 2)) {
+			if (game.period <= numOfQuaters) {
 				this.timerDuration = game.settings?.minutesPerPeriod! * 60;
 				this.dataService.updatePeriod(game.period + 1);
-				if(game.period == ((game.hasFourQuarters ? 4 : 2) / 2)) {
+				if(game.period == (numOfQuaters / 2)) {
 					this.dataService.resetTOs();
 				}
 			} else {
