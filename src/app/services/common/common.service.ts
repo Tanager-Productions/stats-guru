@@ -4,11 +4,12 @@ import { database } from 'src/app/app.db';
 
 export type HomePageGame = {
 	gameId:number,
-	gameDate:string,
+	gameDay:string,
+	gameDate:Date,
 	homeTeamName:string,
 	awayTeamName:string,
-	homeTeamLogo:string|null,
-	awayTeamLogo:string|null,
+	homeTeamScore:number,
+	awayTeamScore:number,
 	eventId:number|null
 };
 
@@ -31,15 +32,16 @@ export class CommonService {
   public async fetchGames() {
     const res = await database.transaction('r', ['games', 'teams'], async () => {
 			var games = await database.games.orderBy('gameDate').reverse().toArray();
-			var teams = await database.teams.toArray();
+			var weekday = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 			return games.map(game => ({
 				gameId: game.id,
-				gameDate: game.gameDate,
+				gameDay: weekday[new Date(game.gameDate).getDay()],
+				gameDate: new Date(game.gameDate),
 				eventId: game.eventId,
 				homeTeamName: game.homeTeam.teamName,
 				awayTeamName: game.awayTeam.teamName,
-				homeTeamLogo: teams.find(t => t.id == game.homeTeam.teamId)!.defaultLogo,
-				awayTeamLogo: teams.find(t => t.id == game.awayTeam.teamId)!.defaultLogo
+				homeTeamScore: game.homeFinal,
+				awayTeamScore: game.awayFinal,
 			}))
 		});
 		this.homePageGamesSrc.set(res);
