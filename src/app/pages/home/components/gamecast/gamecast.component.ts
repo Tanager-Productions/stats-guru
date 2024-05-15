@@ -192,6 +192,10 @@ export class GamecastComponent {
 		po.dismiss();
 	}
 
+	public findStat(playerid: number) {
+		return this.dataService.stats().find(t => t.playerId == playerid)!;
+	}
+
 	public async editingStopped(event: CellEditingStoppedEvent<BoxScore>) {
 		const { data } = event;
 		if (data) {
@@ -361,6 +365,7 @@ export class GamecastComponent {
 			this.dataService.updateStat({
 				updateFn: stat => stat.fouls++
 			});
+			this.deselectPlayer(player.id);
 		}
   }
 
@@ -378,7 +383,7 @@ export class GamecastComponent {
 				updateFn: stat => stat.steals++
 			});
 			this.autocomplete.set('turnover');
-
+			this.deselectPlayer(player.id);
 		}
 	}
 
@@ -389,6 +394,7 @@ export class GamecastComponent {
 			this.dataService.updateStat({
 				updateFn: stat => stat.assists++
 			});
+			this.deselectPlayer(player.id);
 		}
 	}
 
@@ -414,6 +420,7 @@ export class GamecastComponent {
 					}
 				}
 			});
+			this.deselectPlayer(player.id);
 		}
 	}
 
@@ -425,6 +432,7 @@ export class GamecastComponent {
 				updateFn: stat => stat.blocks++
 			});
 			this.autocomplete.set('missed');
+			this.deselectPlayer(player.id);
 		}
 	}
 
@@ -435,6 +443,7 @@ export class GamecastComponent {
 			this.dataService.updateStat({
 				updateFn: stat => stat.turnovers++
 			});
+			this.deselectPlayer(player.id);
 		}
 	}
 

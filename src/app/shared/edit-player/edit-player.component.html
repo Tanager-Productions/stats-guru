@@ -22,8 +22,17 @@
 			label="Number"
 			[readonly]="!editPlayer"
 		></ion-input>
+		<ion-input
+			type="text"
+			fill="outline"
+			labelPlacement="stacked"
+			label="Temporary Number"
+			[value]="stat()?.playerNumber"
+			[readonly]="!editPlayer"
+			#temporaryNum
+		></ion-input>
 		@if (editPlayer) {
-			<ion-button color="tertiary" class="ion-float-right" fill="clear" (click)="savePlayer.emit(); editPlayer = false;">
+			<ion-button color="tertiary" class="ion-float-right" fill="clear" (click)="this.updateTemporaryPlayerNumber(player, temporaryNum.value); savePlayer.emit(); editPlayer = false;">
 				<ion-icon size="large" slot="icon-only" name="checkmark"></ion-icon>
 			</ion-button>
 		} @else {

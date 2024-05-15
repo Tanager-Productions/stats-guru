@@ -73,11 +73,11 @@
 								id="context-menu-trigger{{$index}}"
 								color="{{homeColor()}}"
 								(click)="addToCourt('home', player)">
-								{{player.number}}
+								{{this.findStat(player.id).playerNumber ? this.findStat(player.id).playerNumber : player.number}}
 							</ion-button>
 							<ion-popover trigger="context-menu-trigger{{$index}}" [showBackdrop]="false" triggerAction="context-menu">
 								<ng-template>
-									<app-edit-player [player]="player" (savePlayer)="dataService.updatePlayer(player)"></app-edit-player>
+									<app-edit-player [player]="player" [stat]="this.findStat(player.id)" (savePlayer)="dataService.updatePlayer(player)"></app-edit-player>
 								</ng-template>
 							</ion-popover>
 						}
@@ -544,11 +544,11 @@
 								color="{{awayColor()}}"
 								id="context-menu-trigger-away{{$index}}"
 								(click)="addToCourt('away', player)">
-								{{player.number}}
+								{{this.findStat(player.id).playerNumber ? this.findStat(player.id).playerNumber : player.number}}
 							</ion-button>
 							<ion-popover trigger="context-menu-trigger-away{{$index}}" [showBackdrop]="false" triggerAction="context-menu">
 								<ng-template>
-									<app-edit-player [player]="player" (savePlayer)="dataService.updatePlayer(player)"></app-edit-player>
+									<app-edit-player [player]="player" [stat]="this.findStat(player.id)" (savePlayer)="dataService.updatePlayer(player)"></app-edit-player>
 								</ng-template>
 							</ion-popover>
 						}
