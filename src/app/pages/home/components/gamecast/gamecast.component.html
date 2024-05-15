@@ -114,7 +114,7 @@
 														expand="block"
 														(tap)="selectPlayer(player.id)"
 														(doubleTap)="removeFromCourt(player)">
-														<ion-label>{{player.number}}</ion-label>
+														<ion-label>{{this.findStat(player.id).playerNumber ? this.findStat(player.id).playerNumber : player.number}}</ion-label>
 													</ion-button>
 												}
 											</ion-col>
@@ -410,7 +410,7 @@
 														expand="block"
 														(tap)="selectPlayer(player.id)"
 														(doubleTap)="removeFromCourt(player)">
-														<ion-label>{{player.number}}</ion-label>
+														<ion-label>{{this.findStat(player.id).playerNumber ? this.findStat(player.id).playerNumber : player.number}}</ion-label>
 													</ion-button>
 												}
 											</ion-col>
