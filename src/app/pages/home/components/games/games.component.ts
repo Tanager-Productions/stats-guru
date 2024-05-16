@@ -31,12 +31,12 @@ export class GamesComponent {
 	private router = inject(Router);
   public filterEventId:number|null = 0;
 	public gameStats: ColDef<HomePageGame>[] = [
-		{field: 'gameDay', headerName: 'Date', width: 200},
-		{field: 'gameDate', headerName: 'Date', width: 200},
-		{field: 'homeTeamName', headerName: 'Home Team', width: 200},
-		{field: 'homeTeamScore', headerName: 'Score', width: 100},
-		{field: 'awayTeamName', headerName: 'Home Team', width: 200},
-		{field: 'awayTeamScore', headerName: 'Score', width: 100},
+		{field: 'gameDay', headerName: 'Date'},
+		{field: 'gameDate', headerName: 'Date'},
+		{field: 'homeTeamName', headerName: 'Home Team'},
+		{field: 'homeTeamScore', headerName: 'Score'},
+		{field: 'awayTeamName', headerName: 'Home Team'},
+		{field: 'awayTeamScore', headerName: 'Score'},
 	]
 
 	public gridOption = {
