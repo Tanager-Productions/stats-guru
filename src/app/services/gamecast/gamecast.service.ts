@@ -31,11 +31,11 @@ const newTeamPlayer: Player = {
 	syncState: SyncState.Added,
 	firstName: 'team',
 	lastName: 'team',
-	number: -1
+	number: '-1'
 }
 
 export type BoxScore = {
-	number: number;
+	number: string;
 	name: string;
 	playerId: number;
 	assists: number;
@@ -90,7 +90,7 @@ const mapStatToBoxScore = (stat: Stat, players: Player[]): BoxScore => {
 
 const sumBoxScores = (boxScores: BoxScore[]): BoxScore => {
 	let total: BoxScore = {
-		number: 0,
+		number: '0',
 		name: 'Totals',
 		playerId: 0,
 		assists: 0,

@@ -66,7 +66,7 @@
 			<ion-row>
 				<ion-col class="player-col" size="0.9">
 					@for (player of dataService.homeTeamPlayers(); track player.id) {
-						@if (!dataService.hiddenPlayerIds().includes(player.id) && player.number != -1) {
+						@if (!dataService.hiddenPlayerIds().includes(player.id) && player.number != '-1') {
 							<ion-button
 								size="large"
 								[fill]="dataService.homePlayersOnCourt().includes(player) ? 'outline' : 'clear'"
@@ -91,7 +91,7 @@
 									<ion-row>
 										@for (player of dataService.homePlayersOnCourt(); track player.id) {
 											<ion-col id="context-menu-trigger-homeCourt{{$index}}">
-												@if (player.number == -1) {
+												@if (player.number == '-1') {
 													<ion-button
 														size="large"
 														style="border-radius: 50px; --padding-start: 0px; --padding-end: 0px;"
@@ -373,7 +373,7 @@
 												<ion-label>Which one do you want to sub out?</ion-label>
 												<ion-buttons style="justify-content: center;">
 													@for(player of currentPlayersOnCourt(); track $index) {
-														@if(player.number != -1) {
+														@if(player.number != '-1') {
 															<ion-button (click)="subOut(player)">{{player.number}}</ion-button>
 														}
 													}
@@ -389,7 +389,7 @@
 									<ion-row>
 										@for (player of dataService.awayPlayersOnCourt(); track player.id) {
 											<ion-col id="context-menu-trigger-awayCourt{{$index}}">
-												@if (player.number == -1) {
+												@if (player.number == '-1') {
 													<ion-button
 														size="large"
 														style="border-radius: 50px; --padding-start: 0px; --padding-end: 0px;"
@@ -537,7 +537,7 @@
 				</ion-col>
 				<ion-col class="player-col" size="0.9">
 					@for (player of dataService.awayTeamPlayers(); track player.id) {
-						@if (player.number != -1 && !dataService.hiddenPlayerIds().includes(player.id)) {
+						@if (player.number != '-1' && !dataService.hiddenPlayerIds().includes(player.id)) {
 							<ion-button
 								size="large"
 								[fill]="dataService.awayPlayersOnCourt().includes(player) ? 'outline' : 'clear'"

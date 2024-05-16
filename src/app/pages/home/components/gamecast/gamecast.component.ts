@@ -267,9 +267,9 @@ export class GamecastComponent {
 
 	public clearAllPlayersOnCourt(team: 'home' | 'away') {
 		if(team =='home') {
-			this.dataService.homePlayersOnCourt().forEach(t => { if(t.number !=-1) {this.removeFromCourt(t);}	})
+			this.dataService.homePlayersOnCourt().forEach(t => { if(t.number !='-1') {this.removeFromCourt(t);}	})
 		} else {
-			this.dataService.awayPlayersOnCourt().forEach(t => { if(t.number !=-1) {this.removeFromCourt(t);}	})
+			this.dataService.awayPlayersOnCourt().forEach(t => { if(t.number !='-1') {this.removeFromCourt(t);}	})
 		}
 	}
 

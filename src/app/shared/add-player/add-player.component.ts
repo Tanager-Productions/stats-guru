@@ -14,7 +14,7 @@ import { defaultPlayer } from '@tanager/tgs';
 })
 export class AddPlayerComponent {
 	protected tab: "add" | "hide" = "add";
-	protected newPlayerNumber: number = 0;
+	protected newPlayerNumber: string = '0';
 	protected newPlayerFirstName!: string;
 	protected newPlayerLastName!: string;
 	public teamId = input.required<number>();
