@@ -366,19 +366,38 @@
 										</ion-col>
 										<ion-col size="1"></ion-col>
 									</ion-row>
-									<ion-row style="height: 20%; align-items: center;">
+									<ion-row style="height: 20%; align-items: center; ">
 										<ion-col size="1"></ion-col>
-										<ion-col size="10">
+										<ion-col size="10" style="justify-content: center;">
 											@if (currentPlayersOnCourt()) {
 												<ion-label>Which one do you want to sub out?</ion-label>
-												<ion-buttons style="justify-content: center;">
+												<ion-item style="justify-content: center;">
 													@for(player of currentPlayersOnCourt(); track $index) {
 														@if(player.number != '-1') {
-															<ion-button (click)="subOut(player)">{{player.number}}</ion-button>
+															@if($index < 3) {
+																<ion-button fill="outline" size="default" (click)="subOut(player)">{{player.number}}</ion-button>
+															}
+
 														}
 													}
-												</ion-buttons>
+												</ion-item>
 											}
+										</ion-col>
+										<ion-col size="1"></ion-col>
+										<ion-col size="1"></ion-col>
+										<ion-col size="10">
+											<ion-item style="justify-content: center;">
+												@if (currentPlayersOnCourt()) {
+													@for(player of currentPlayersOnCourt(); track $index) {
+														@if(player.number != '-1') {
+															@if($index >= 3) {
+																<ion-button fill="outline" size="default" (click)="subOut(player)">{{player.number}}</ion-button>
+															}
+														}
+													}
+												}
+											</ion-item>
+											<ion-button size="small" (click)="subOutExit()">X</ion-button>
 										</ion-col>
 										<ion-col size="1"></ion-col>
 									</ion-row>

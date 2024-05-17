@@ -247,6 +247,11 @@ export class GamecastComponent {
 		this.sixthPlayer.set(null);
 	}
 
+	public subOutExit() {
+		this.currentPlayersOnCourt.set(null);
+		this.sixthPlayer.set(null);
+	}
+
 	public selectPlayer(playerId: number) {
 		const { players, selectedPlayer, game } = this.dataService;
 		this.previousPlayerWasHome = players().find(t => t.id == selectedPlayer()?.id)?.teamId == game()?.homeTeam.teamId;
