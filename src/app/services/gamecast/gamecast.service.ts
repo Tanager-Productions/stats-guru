@@ -1,18 +1,10 @@
-import { Injectable, WritableSignal, computed, effect, signal, untracked } from '@angular/core';
+import { Injectable, computed, effect, signal, untracked } from '@angular/core';
 import { InputChangeEventDetail } from '@ionic/angular';
 import { IonInputCustomEvent } from '@ionic/core';
 import { GameActions, defaultPlayer, defaultStat } from '@tanager/tgs';
 import { database } from 'src/app/app.db';
 import { Game, Play, Player, Stat, SyncState } from 'src/app/types/models';
-
-const playerSort = (a: Player, b: Player) => {
-	if (a.number == b.number)
-		return 0;
-	else if (a.number < b.number)
-		return -1;
-	else
-		return 1;
-}
+import { sortBy } from 'lodash';
 
 const calculateStatColumns = (model: Stat) => {
 	const {
@@ -137,16 +129,16 @@ const sumBoxScores = (boxScores: BoxScore[]): BoxScore => {
 	providedIn: 'root'
 })
 export class GamecastService {
-	private statsSrc: WritableSignal<Stat[]> = signal([]);
+	private statsSrc = signal<Stat[]>([]);
 	public stats = this.statsSrc.asReadonly();
 
-	private playsSrc: WritableSignal<Play[]> = signal([]);
+	private playsSrc = signal<Play[]>([]);
 	public plays = this.playsSrc.asReadonly();
 
-	private playersSrc: WritableSignal<Player[]> = signal([]);
+	private playersSrc = signal<Player[]>([]);
 	public players = this.playersSrc.asReadonly();
 
-	private gameSrc: WritableSignal<Game | null> = signal(null);
+	private gameSrc = signal<Game | null>(null);
 	public game = this.gameSrc.asReadonly();
 	private gameEffect = effect(async () => {
 		const game = this.game();
@@ -156,7 +148,7 @@ export class GamecastService {
 		}
 	});
 
-	public selectedPlayerId: WritableSignal<number | null> = signal(null);
+	public selectedPlayerId = signal<number | null>(null);
 
 	public selectedPlayer = computed(() => {
 		const players = this.players();
@@ -186,14 +178,22 @@ export class GamecastService {
 
 	public homeTeamPlayers = computed(() => {
 		const players = this.players();
+		const stats = this.stats();
 		const game = untracked(this.game);
-		return players.filter(t => t.teamId == game?.homeTeam.teamId).sort(playerSort);
+		return sortBy(players.filter(t => t.teamId == game?.homeTeam.teamId), t => {
+			const numberOverride = stats.find(x => x.playerId == t.id)?.playerNumber;
+			return Number(numberOverride ?? t.number) || 0;
+		});
 	});
 
 	public awayTeamPlayers = computed(() => {
 		const players = this.players();
+		const stats = this.stats();
 		const game = untracked(this.game);
-		return players.filter(t => t.teamId == game?.awayTeam.teamId).sort(playerSort);
+		return sortBy(players.filter(t => t.teamId == game?.awayTeam.teamId), t => {
+			const numberOverride = stats.find(x => x.playerId == t.id)?.playerNumber;
+			return Number(numberOverride ?? t.number) || 0;
+		});
 	});
 
 	public hiddenPlayerIds = computed(() => {

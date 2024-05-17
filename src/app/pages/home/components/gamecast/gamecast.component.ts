@@ -193,7 +193,7 @@ export class GamecastComponent {
 	}
 
 	public findStat(playerid: number) {
-		return this.dataService.stats().find(t => t.playerId == playerid)!;
+		return this.dataService.stats().find(t => t.playerId == playerid);
 	}
 
 	public async editingStopped(event: CellEditingStoppedEvent<BoxScore>) {
