@@ -386,8 +386,8 @@
 										<ion-col size="1"></ion-col>
 										<ion-col size="1"></ion-col>
 										<ion-col size="10">
-											<ion-item style="justify-content: center;">
-												@if (currentPlayersOnCourt()) {
+											@if (currentPlayersOnCourt()) {
+												<ion-item style="justify-content: center;">
 													@for(player of currentPlayersOnCourt(); track $index) {
 														@if(player.number != '-1') {
 															@if($index >= 3) {
@@ -395,9 +395,9 @@
 															}
 														}
 													}
-												}
-											</ion-item>
-											<ion-button size="small" (click)="subOutExit()">X</ion-button>
+												</ion-item>
+												<ion-button size="small" (click)="subOutExit()">X</ion-button>
+											}
 										</ion-col>
 										<ion-col size="1"></ion-col>
 									</ion-row>

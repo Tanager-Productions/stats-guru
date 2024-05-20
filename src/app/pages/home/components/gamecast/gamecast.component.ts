@@ -175,7 +175,6 @@ export class GamecastComponent {
 			plays: this.dataService.plays().map(mapPlayToDto)
 		});
 		let result:SyncResult = response.data;
-		console.log(result);
 		if (result.errorMessages.length > 0) {
 			console.error("GameCast had errors!", result.errorMessages);
 		}
