@@ -462,13 +462,20 @@ export class GamecastComponent {
   private startTimer() {
 		const game = this.dataService.game()!;
 		const clock = this.clock();
+		const resetFouls = game.settings?.resetFouls;
 		const numOfQuaters = game.hasFourQuarters ? 4 : 2;
 		if (clock == "00:00") {
 			if (game.period <= numOfQuaters) {
 				this.timerDuration = game.settings?.minutesPerPeriod! * 60;
 				this.dataService.updatePeriod(game.period + 1);
+				if(resetFouls == 1){
+					this.dataService.resetFouls();
+				}
 				if(game.period == (numOfQuaters / 2)) {
 					this.dataService.resetTOs();
+					if(resetFouls == 2) {
+						this.dataService.resetFouls();
+					}
 				}
 			} else {
 				this.timerDuration = game.settings?.minutesPerOvertime! * 60;

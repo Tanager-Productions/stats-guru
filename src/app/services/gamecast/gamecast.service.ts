@@ -467,6 +467,13 @@ export class GamecastService {
 		}
 	}
 
+	public resetFouls() {
+		const game = { ...this.game()! };
+		game.homeCurrentFouls = 0;
+		game.awayCurrentFouls = 0;
+		this.gameSrc.set(game);
+	}
+
 	public addPlay(team: 'home' | 'away', action: GameActions, player?: Player) {
 		const plays = this.plays();
 		const game = this.game()!;
