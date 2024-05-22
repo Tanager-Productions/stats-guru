@@ -80,6 +80,7 @@ export class LoginPage {
       this.authService.storeUser(res.data);
 			this.authService.showPopover = true;
       this.router.navigateByUrl('/home');
+  		await this.sync.beginSync(true);
     } else {
       (await this.toastCtrl.create({message: res.data, color: 'danger', duration: 2500})).present();
     }
