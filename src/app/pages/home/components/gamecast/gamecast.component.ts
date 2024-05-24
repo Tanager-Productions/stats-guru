@@ -465,9 +465,9 @@ export class GamecastComponent {
 		const resetFouls = game.settings?.resetFouls;
 		const numOfQuaters = game.hasFourQuarters ? 4 : 2;
 		if (clock == "00:00") {
-			if (game.period <= numOfQuaters) {
+			this.dataService.updatePeriod(game.period + 1);
+			if (game.period < numOfQuaters) {
 				this.timerDuration = game.settings?.minutesPerPeriod! * 60;
-				this.dataService.updatePeriod(game.period + 1);
 				if(resetFouls == 1){
 					this.dataService.resetFouls();
 				}
@@ -512,6 +512,7 @@ export class GamecastComponent {
     this.timerRunning = false;
 		this.timerSubscription?.unsubscribe();
 		this.calculatePlusOrMinus();
+		this.calculateMinutes();
   }
 
 	private calculatePlusOrMinus() {
@@ -521,6 +522,33 @@ export class GamecastComponent {
 		this.dataService.updatePlusOrMinus(homePlusOrMinusToAdd, awayPlusOrMinusToAdd);
 		this.homeTeamPlusOrMinus = game.homeFinal;
 		this.awayTeamPlusOrMinus = game.awayFinal;
+	}
+
+	private calculateMinutes() {
+		const game = this.dataService.game()!;
+		var initialMinutes: number | undefined = 0;
+		if(game.period <= (game.hasFourQuarters ? 4 : 2)) {
+			initialMinutes = game.settings?.minutesPerPeriod;
+		} else {
+			initialMinutes = game.settings?.minutesPerOvertime;
+		}
+		var initialSeconds = initialMinutes! * 60;
+		let timeleft = initialSeconds - ((Number(this.clock().substring(0, 2)) * 60) + Number(this.clock().substring(3, 5)));
+		const minutes = Math.floor(timeleft / 60);
+		const seconds = timeleft % 60;
+		let timePlayerStay = minutes + (Math.floor((seconds/60) * 100) / 100);
+		this.dataService.homePlayersOnCourt().forEach((player) => {
+			this.dataService.updateStat({
+				player: player,
+				updateFn: stat => stat.minutes += timePlayerStay
+			});
+		})
+		this.dataService.awayPlayersOnCourt().forEach((player) => {
+			this.dataService.updateStat({
+				player: player,
+				updateFn: stat => stat.minutes += timePlayerStay
+			});
+		})
 	}
 
 	public updatePlay(play: Play, teamId: number, playerId: number | null, action: GameActions) {
