@@ -529,22 +529,24 @@ export class GamecastComponent {
 	}
 
 	private calculateMinutes() {
-		let timeSpent = ((Number(this.clockStarted!.substring(0, 2)) * 60) + Number(this.clockStarted!.substring(3, 5))) - ((Number(this.clock().substring(0, 2)) * 60) + Number(this.clock().substring(3, 5)));
-		const minutes = Math.floor(timeSpent / 60);
-		const seconds = timeSpent % 60;
-		let timePlayerStay = minutes + (Math.floor((seconds/60) * 100) / 100);
-		this.dataService.homePlayersOnCourt().forEach((player) => {
-			this.dataService.updateStat({
-				player: player,
-				updateFn: stat => stat.minutes += timePlayerStay
-			});
-		})
-		this.dataService.awayPlayersOnCourt().forEach((player) => {
-			this.dataService.updateStat({
-				player: player,
-				updateFn: stat => stat.minutes += timePlayerStay
-			});
-		})
+		if(this.clockStarted) {
+			let timeSpent = ((Number(this.clockStarted!.substring(0, 2)) * 60) + Number(this.clockStarted!.substring(3, 5))) - ((Number(this.clock().substring(0, 2)) * 60) + Number(this.clock().substring(3, 5)));
+			const minutes = Math.floor(timeSpent / 60);
+			const seconds = timeSpent % 60;
+			let timePlayerStay = minutes + (Math.floor((seconds/60) * 100) / 100);
+			this.dataService.homePlayersOnCourt().forEach((player) => {
+				this.dataService.updateStat({
+					player: player,
+					updateFn: stat => stat.minutes += timePlayerStay
+				});
+			})
+			this.dataService.awayPlayersOnCourt().forEach((player) => {
+				this.dataService.updateStat({
+					player: player,
+					updateFn: stat => stat.minutes += timePlayerStay
+				});
+			})
+		}
 	}
 
 	public updatePlay(play: Play, teamId: number, playerId: number | null, action: GameActions) {

@@ -29,9 +29,14 @@ export class AddGamesComponent {
 	}
 
 	async addGame() {
+		let currentSeasonId = 0;
+		await database.seasons.orderBy('year').last().then(latestModifiedObject => {
+			currentSeasonId = latestModifiedObject!.year;
+		});
 		await database.games.add({
 			...defaultGame,
 			id: undefined!,
+			seasonId: currentSeasonId,
 			syncState: SyncState.Added,
 			eventId: this.eventId,
 			gameDate: new Date(this.date).toJSON(),
