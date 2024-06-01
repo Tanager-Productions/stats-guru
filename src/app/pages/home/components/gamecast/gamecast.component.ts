@@ -401,7 +401,6 @@ export class GamecastComponent {
 			this.dataService.updateStat({
 				updateFn: stat => stat.assists++
 			});
-			this.deselectPlayer(player.id);
 		}
 	}
 
@@ -427,7 +426,6 @@ export class GamecastComponent {
 					}
 				}
 			});
-			this.deselectPlayer(player.id);
 		}
 	}
 
