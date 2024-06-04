@@ -406,7 +406,7 @@ export class GamecastComponent {
 
 	public addPassback(team: 'home' | 'away', made: boolean) {
 		this.addRebound(team, true);
-		this.addPoints(team, 2, !made);
+		setTimeout(() => this.addPoints(team, 2, !made), 300);
 		this.autocomplete.set(null);
 	}
 
