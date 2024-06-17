@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, untracked, viewChild } from '@angular/core';
 import { CommonService, HomePageGame } from 'src/app/services/common/common.service';
 import { SyncService } from 'src/app/services/sync/sync.service';
 import { RouterLink } from '@angular/router';
@@ -7,9 +7,10 @@ import { AddGamesComponent } from '../../../../shared/add-games/add-games.compon
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
-import { AgGridModule } from 'ag-grid-angular';
+import { AgGridAngular, AgGridModule } from 'ag-grid-angular';
 import { ColDef } from 'ag-grid-community';
-
+import { toSignal } from '@angular/core/rxjs-interop';
+import { debounceTime, distinctUntilChanged, fromEvent } from 'rxjs';
 @Component({
 	selector: 'app-games',
 	templateUrl: './games.component.html',
@@ -29,6 +30,7 @@ export class GamesComponent {
 	private sync = inject(SyncService);
 	public common = inject(CommonService);
 	private router = inject(Router);
+	public grid = viewChild(AgGridAngular);
   public filterEventId:number|null = 0;
 	public gameStats: ColDef<HomePageGame>[] = [
 		{field: 'gameDay', headerName: 'Date'},
@@ -38,6 +40,17 @@ export class GamesComponent {
 		{field: 'awayTeamName', headerName: 'Home Team'},
 		{field: 'awayTeamScore', headerName: 'Score'},
 	]
+
+	public windowResize = toSignal(fromEvent(window, 'resize').pipe(
+		debounceTime(200),
+		distinctUntilChanged()
+	));
+
+  private windowResizeEffect = effect(() => {
+    this.windowResize();
+    const grid = untracked(this.grid);
+		grid?.api.sizeColumnsToFit();
+  })
 
 	public gridOption = {
 		onRowClicked: (event:any) => this.routeToPage(event)
