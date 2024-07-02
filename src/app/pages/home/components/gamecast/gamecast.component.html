@@ -18,6 +18,9 @@
 			<ion-button id="color-trigger">
 				<ion-icon slot="icon-only" name="brush"></ion-icon>
 			</ion-button>
+			<ion-button (click)="this.showPlayers.set(!this.showPlayers())">
+				<ion-icon slot="icon-only" name="people-outline"></ion-icon>
+			</ion-button>
 			<ion-button id="logsButton">
 				<ion-icon name="help" slot="icon-only"></ion-icon>
 			</ion-button>
@@ -62,24 +65,26 @@
 	</ion-header>
 
 	<ion-content class="ion-no-padding" color="light">
-		<ion-grid style="height: 120%; width: 100%">
+		<ion-grid style="width: 100%">
 			<ion-row>
 				<ion-col class="player-col" size="0.9">
-					@for (player of dataService.homeTeamPlayers(); track player.id) {
-						@if (!dataService.hiddenPlayerIds().includes(player.id) && player.number != '-1') {
-							<ion-button
-								size="default"
-								[fill]="dataService.homePlayersOnCourt().includes(player) ? 'outline' : 'clear'"
-								id="context-menu-trigger{{$index}}"
-								color="{{homeColor()}}"
-								(click)="addToCourt('home', player)">
-								{{this.findStat(player.id)?.playerNumber ? this.findStat(player.id)?.playerNumber : player.number}}
-							</ion-button>
-							<ion-popover trigger="context-menu-trigger{{$index}}" [showBackdrop]="false" triggerAction="context-menu">
-								<ng-template>
-									<app-edit-player [player]="player" [stat]="this.findStat(player.id)" (savePlayer)="dataService.updatePlayer(player)"></app-edit-player>
-								</ng-template>
-							</ion-popover>
+					@if (showPlayers()) {
+						@for (player of dataService.homeTeamPlayers(); track player.id) {
+							@if (!dataService.hiddenPlayerIds().includes(player.id) && player.number != '-1') {
+								<ion-button
+									size="default"
+									[fill]="dataService.homePlayersOnCourt().includes(player) ? 'outline' : 'clear'"
+									id="context-menu-trigger{{$index}}"
+									color="{{homeColor()}}"
+									(click)="addToCourt('home', player)">
+									{{this.findStat(player.id)?.playerNumber ? this.findStat(player.id)?.playerNumber : player.number}}
+								</ion-button>
+								<ion-popover trigger="context-menu-trigger{{$index}}" [showBackdrop]="false" triggerAction="context-menu">
+									<ng-template>
+										<app-edit-player [player]="player" [stat]="this.findStat(player.id)" (savePlayer)="dataService.updatePlayer(player)"></app-edit-player>
+									</ng-template>
+								</ion-popover>
+							}
 						}
 					}
 				</ion-col>
@@ -530,21 +535,23 @@
 					</ion-grid>
 				</ion-col>
 				<ion-col class="player-col" size="0.9">
-					@for (player of dataService.awayTeamPlayers(); track player.id) {
-						@if (player.number != '-1' && !dataService.hiddenPlayerIds().includes(player.id)) {
-							<ion-button
-								size="default"
-								[fill]="dataService.awayPlayersOnCourt().includes(player) ? 'outline' : 'clear'"
-								color="{{awayColor()}}"
-								id="context-menu-trigger-away{{$index}}"
-								(click)="addToCourt('away', player)">
-								{{this.findStat(player.id)?.playerNumber ? this.findStat(player.id)?.playerNumber : player.number}}
-							</ion-button>
-							<ion-popover trigger="context-menu-trigger-away{{$index}}" [showBackdrop]="false" triggerAction="context-menu">
-								<ng-template>
-									<app-edit-player [player]="player" [stat]="this.findStat(player.id)" (savePlayer)="dataService.updatePlayer(player)"></app-edit-player>
-								</ng-template>
-							</ion-popover>
+					@if (showPlayers()) {
+						@for (player of dataService.awayTeamPlayers(); track player.id) {
+							@if (player.number != '-1' && !dataService.hiddenPlayerIds().includes(player.id)) {
+								<ion-button
+									size="default"
+									[fill]="dataService.awayPlayersOnCourt().includes(player) ? 'outline' : 'clear'"
+									color="{{awayColor()}}"
+									id="context-menu-trigger-away{{$index}}"
+									(click)="addToCourt('away', player)">
+									{{this.findStat(player.id)?.playerNumber ? this.findStat(player.id)?.playerNumber : player.number}}
+								</ion-button>
+								<ion-popover trigger="context-menu-trigger-away{{$index}}" [showBackdrop]="false" triggerAction="context-menu">
+									<ng-template>
+										<app-edit-player [player]="player" [stat]="this.findStat(player.id)" (savePlayer)="dataService.updatePlayer(player)"></app-edit-player>
+									</ng-template>
+								</ion-popover>
+							}
 						}
 					}
 				</ion-col>

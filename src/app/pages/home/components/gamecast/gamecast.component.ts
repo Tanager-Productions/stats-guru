@@ -97,6 +97,7 @@ export class GamecastComponent {
 	public autocomplete: WritableSignal<AutoComplete> = signal(null);
 	public currentPlayersOnCourt: WritableSignal<Player[] | null> = signal(null);
 	public sixthPlayer: WritableSignal<Player | null> = signal(null);
+	public showPlayers: WritableSignal<boolean> = signal(false);
 	private autocompleteEffect = effect(() => {
 		const selectedPlayer = this.dataService.selectedPlayer();
 		const autocomplete = untracked(this.autocomplete);
