@@ -19,6 +19,15 @@ ion-modal {
 	--ion-color-tint: var(--ion-color-pink-tint) !important;
 }
 
+.ion-color-missed {
+	--ion-color-base: #d79d9b !important;
+	--ion-color-base-rgb:  #d79d9b !important;
+	--ion-color-contrast:  white !important;
+	--ion-color-contrast-rgb:  #d79d9b !important;
+	--ion-color-shade:  #d79d9b !important;
+	--ion-color-tint:  #d79d9b !important;
+}
+
 .ion-color-blue {
 	--ion-color-base: var(--ion-color-blue) !important;
 	--ion-color-base-rgb: var(--ion-color-blue-rgb) !important;

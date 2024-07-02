@@ -58,6 +58,7 @@ export class GamecastComponent {
 	public sendingLogs = false;
 	public homeColor = model('blue');
 	public awayColor = model('red');
+	public missedColor = model('missed');
 	public colorTeam: 'home' | 'away' = 'home';
 	public clock = model("00:00");
 	private clockEffect = effect(() => {
@@ -257,10 +258,15 @@ export class GamecastComponent {
 	public selectPlayer(playerId: number) {
 		const { players, selectedPlayer, game } = this.dataService;
 		this.previousPlayerWasHome = players().find(t => t.id == selectedPlayer()?.id)?.teamId == game()?.homeTeam.teamId;
-		if (selectedPlayer()?.id == playerId) {
-			this.dataService.selectedPlayerId.set(null);
+		if (this.currentPlayersOnCourt() != null) {
+			const player = players().find(t => t.id == playerId);
+			this.subOut(player!);
 		} else {
-			this.dataService.selectedPlayerId.set(playerId);
+			if (selectedPlayer()?.id == playerId) {
+				this.dataService.selectedPlayerId.set(null);
+			} else {
+				this.dataService.selectedPlayerId.set(playerId);
+			}
 		}
 	}
 

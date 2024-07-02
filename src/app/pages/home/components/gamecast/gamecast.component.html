@@ -68,7 +68,7 @@
 					@for (player of dataService.homeTeamPlayers(); track player.id) {
 						@if (!dataService.hiddenPlayerIds().includes(player.id) && player.number != '-1') {
 							<ion-button
-								size="large"
+								size="default"
 								[fill]="dataService.homePlayersOnCourt().includes(player) ? 'outline' : 'clear'"
 								id="context-menu-trigger{{$index}}"
 								color="{{homeColor()}}"
@@ -190,7 +190,7 @@
 												<ion-button expand="block" color="{{homeColor()}}" (click)="addPoints('home', 3, true)">3</ion-button>
 											</ion-col>
 											<ion-col>
-												<ion-button expand="block" color="{{homeColor()}}" (click)="addPoints('home', 2, true)">MISS</ion-button>
+												<ion-button expand="block" color="{{missedColor()}}" (click)="addPoints('home', 2, true)">MISS</ion-button>
 											</ion-col>
 										</ion-row>
 										<ion-row>
@@ -371,31 +371,6 @@
 										<ion-col size="10" style="justify-content: center;">
 											@if (currentPlayersOnCourt()) {
 												<ion-label>Which one do you want to sub out?</ion-label>
-												<ion-item style="justify-content: center;">
-													@for(player of currentPlayersOnCourt(); track $index) {
-														@if(player.number != '-1') {
-															@if($index < 3) {
-																<ion-button fill="outline" size="default" (click)="subOut(player)">{{player.number}}</ion-button>
-															}
-
-														}
-													}
-												</ion-item>
-											}
-										</ion-col>
-										<ion-col size="1"></ion-col>
-										<ion-col size="1"></ion-col>
-										<ion-col size="10">
-											@if (currentPlayersOnCourt()) {
-												<ion-item style="justify-content: center;">
-													@for(player of currentPlayersOnCourt(); track $index) {
-														@if(player.number != '-1') {
-															@if($index >= 3) {
-																<ion-button fill="outline" size="default" (click)="subOut(player)">{{player.number}}</ion-button>
-															}
-														}
-													}
-												</ion-item>
 												<ion-button size="small" (click)="subOutExit()">X</ion-button>
 											}
 										</ion-col>
@@ -505,7 +480,7 @@
 												<ion-button expand="block" color="{{awayColor()}}" (click)="addPoints('away', 3, true)">3</ion-button>
 											</ion-col>
 											<ion-col>
-												<ion-button expand="block" color="{{awayColor()}}" (click)="addPoints('away', 2, true)">MISS</ion-button>
+												<ion-button expand="block" color="{{missedColor()}}" (click)="addPoints('away', 2, true)">MISS</ion-button>
 											</ion-col>
 										</ion-row>
 										<ion-row>
@@ -558,7 +533,7 @@
 					@for (player of dataService.awayTeamPlayers(); track player.id) {
 						@if (player.number != '-1' && !dataService.hiddenPlayerIds().includes(player.id)) {
 							<ion-button
-								size="large"
+								size="default"
 								[fill]="dataService.awayPlayersOnCourt().includes(player) ? 'outline' : 'clear'"
 								color="{{awayColor()}}"
 								id="context-menu-trigger-away{{$index}}"
