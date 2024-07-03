@@ -49,6 +49,7 @@ export class GamecastComponent {
 	protected dataService = inject(GamecastService);
 
 	//config
+	public fontSize = 16;
 	private gameId!:number;
   private timerSubscription?: Subscription;
   private timerDuration!: number;

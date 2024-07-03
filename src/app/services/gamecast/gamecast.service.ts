@@ -144,6 +144,17 @@ export class GamecastService {
 		const game = this.game();
 		if (game) {
 			game.syncState = game.syncState == SyncState.Added ? SyncState.Added : SyncState.Modified;
+			if (game.settings == null) {
+				game.settings = {
+					resetTimeoutsAtHalf: false,
+					fullTimeouts: 0,
+					partialTimeouts: 0,
+					minutesPerPeriod: 0,
+					minutesPerOvertime: 0,
+					resetFouls: 0
+				};
+			}
+
 			await database.games.put(game);
 		}
 	});

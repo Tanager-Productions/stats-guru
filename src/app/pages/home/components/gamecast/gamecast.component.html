@@ -69,6 +69,10 @@
 			<ion-row>
 				<ion-col class="player-col" size="0.9">
 					@if (showPlayers()) {
+						<div style="display:flex">
+							<ion-button color="{{homeColor()}}" [style.fontSize.px]="1" (click)="this.fontSize = this.fontSize + 2" size="small"><ion-icon name="arrow-up-outline"></ion-icon></ion-button>
+							<ion-button color="{{homeColor()}}" [style.fontSize.px]="1" (click)="this.fontSize = this.fontSize - 2" size="small"><ion-icon name="arrow-down-outline"></ion-icon></ion-button>
+						</div>
 						@for (player of dataService.homeTeamPlayers(); track player.id) {
 							@if (!dataService.hiddenPlayerIds().includes(player.id) && player.number != '-1') {
 								<ion-button
@@ -76,7 +80,8 @@
 									[fill]="dataService.homePlayersOnCourt().includes(player) ? 'outline' : 'clear'"
 									id="context-menu-trigger{{$index}}"
 									color="{{homeColor()}}"
-									(click)="addToCourt('home', player)">
+									(click)="addToCourt('home', player)"
+									[style.fontSize.px]="fontSize">
 									{{this.findStat(player.id)?.playerNumber ? this.findStat(player.id)?.playerNumber : player.number}}
 								</ion-button>
 								<ion-popover trigger="context-menu-trigger{{$index}}" [showBackdrop]="false" triggerAction="context-menu">
@@ -536,6 +541,10 @@
 				</ion-col>
 				<ion-col class="player-col" size="0.9">
 					@if (showPlayers()) {
+						<div style="display:flex">
+							<ion-button color="{{awayColor()}}" [style.fontSize.px]="1" (click)="this.fontSize = this.fontSize + 2" size="small"><ion-icon name="arrow-up-outline"></ion-icon></ion-button>
+							<ion-button color="{{awayColor()}}" [style.fontSize.px]="1" (click)="this.fontSize = this.fontSize - 2" size="small"><ion-icon name="arrow-down-outline"></ion-icon></ion-button>
+						</div>
 						@for (player of dataService.awayTeamPlayers(); track player.id) {
 							@if (player.number != '-1' && !dataService.hiddenPlayerIds().includes(player.id)) {
 								<ion-button
@@ -543,7 +552,8 @@
 									[fill]="dataService.awayPlayersOnCourt().includes(player) ? 'outline' : 'clear'"
 									color="{{awayColor()}}"
 									id="context-menu-trigger-away{{$index}}"
-									(click)="addToCourt('away', player)">
+									(click)="addToCourt('away', player)"
+									[style.fontSize.px]="fontSize">
 									{{this.findStat(player.id)?.playerNumber ? this.findStat(player.id)?.playerNumber : player.number}}
 								</ion-button>
 								<ion-popover trigger="context-menu-trigger-away{{$index}}" [showBackdrop]="false" triggerAction="context-menu">
