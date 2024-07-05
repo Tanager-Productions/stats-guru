@@ -41,12 +41,12 @@ export class AddGamesComponent {
 			eventId: this.eventId,
 			gameDate: new Date(this.date).toJSON(),
 			settings: {
-				resetTimeoutsAtHalf: false,
-				fullTimeouts: 0,
-				partialTimeouts: 0,
+				resetTimeouts: 4,
+				fullTimeouts: 2,
+				partialTimeouts: 1,
 				minutesPerOvertime: 4,
 				minutesPerPeriod: 9,
-				resetFouls: 0
+				resetFouls: 1
 			},
 			period: 0,
 			homeTeam: {

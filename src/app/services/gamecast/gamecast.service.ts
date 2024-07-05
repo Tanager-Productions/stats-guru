@@ -146,12 +146,12 @@ export class GamecastService {
 			game.syncState = game.syncState == SyncState.Added ? SyncState.Added : SyncState.Modified;
 			if (game.settings == null) {
 				game.settings = {
-					resetTimeoutsAtHalf: false,
-					fullTimeouts: 0,
-					partialTimeouts: 0,
-					minutesPerPeriod: 0,
-					minutesPerOvertime: 0,
-					resetFouls: 0
+					resetTimeouts: 4,
+					fullTimeouts: 2,
+					partialTimeouts: 1,
+					minutesPerPeriod: 9,
+					minutesPerOvertime: 4,
+					resetFouls: 1
 				};
 			}
 
@@ -469,11 +469,16 @@ export class GamecastService {
 
 	public resetTOs() {
 		const game = { ...this.game()! };
-		if (game.settings?.resetTimeoutsAtHalf) {
+		if (game.settings?.resetTimeouts == 1 || game.settings?.resetTimeouts == 2) {
 			game.homeFullTOL = game.settings?.fullTimeouts ?? 0;
 			game.awayFullTOL = game.settings?.fullTimeouts ?? 0;
 			game.homePartialTOL = game.settings?.partialTimeouts ?? 0;
 			game.awayPartialTOL = game.settings?.partialTimeouts ?? 0;
+			this.gameSrc.set(game);
+		}
+		if (game.settings?.resetTimeouts == 3 || game.settings?.resetTimeouts == 4) {
+			game.homeFullTOL = game.settings?.fullTimeouts ?? 0;
+			game.awayFullTOL = game.settings?.fullTimeouts ?? 0;
 			this.gameSrc.set(game);
 		}
 	}

@@ -41,7 +41,13 @@
 			></ion-input>
 		</ion-item>
 		<ion-item>
-			<ion-checkbox [(ngModel)]="game.settings!.resetTimeoutsAtHalf">Reset TOs/Half</ion-checkbox>
+			<ion-select label="Timeouts" [(ngModel)]="game.settings!.resetTimeouts">
+				<ion-select-option [value]="0">No Reset</ion-select-option>
+				<ion-select-option [value]="1">Reset Every Period</ion-select-option>
+				<ion-select-option [value]="2">Reset At Half</ion-select-option>
+				<ion-select-option [value]="3">Reset Full Only Every Period</ion-select-option>
+				<ion-select-option [value]="4">Reset Full Only Every Half</ion-select-option>
+			</ion-select>
 		</ion-item>
 		<ion-item>
 			<ion-select label="Fouls" [(ngModel)]="game.settings!.resetFouls">

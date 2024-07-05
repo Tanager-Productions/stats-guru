@@ -24,7 +24,7 @@
     "@angular/router": "^17.3.0",
     "@capacitor/core": "^6.0.0",
     "@ionic/angular": "^8.1.2",
-    "@tanager/tgs": "^2.9.5",
+    "@tanager/tgs": "^2.9.6",
     "@tauri-apps/api": "1.5.3",
     "ag-grid-angular": "^31.3.0",
     "date-fns": "^3.6.0",

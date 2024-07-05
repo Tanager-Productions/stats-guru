@@ -472,18 +472,26 @@ export class GamecastComponent {
 		const game = this.dataService.game()!;
 		const clock = this.clock();
 		const resetFouls = game.settings?.resetFouls;
+		const resetTimeouts = game.settings?.resetTimeouts;
 		const numOfQuaters = game.hasFourQuarters ? 4 : 2;
 		this.clockStarted = this.clock();
 		if (clock == "00:00") {
 			this.dataService.updatePeriod(game.period + 1);
 			if (game.period < numOfQuaters) {
 				this.timerDuration = game.settings?.minutesPerPeriod! * 60;
-				if(resetFouls == 1){
-					this.dataService.resetFouls();
+				if (game.period != 0) {
+					if (resetFouls == 1) {
+						this.dataService.resetFouls();
+					}
+					if (resetTimeouts == 1 || resetTimeouts == 3) {
+						this.dataService.resetTOs();
+					}
 				}
-				if(game.period == (numOfQuaters / 2)) {
-					this.dataService.resetTOs();
-					if(resetFouls == 2) {
+				if (game.period == (numOfQuaters / 2)) {
+					if (resetTimeouts == 2 || resetTimeouts == 4) {
+						this.dataService.resetTOs();
+					}
+					if (resetFouls == 2) {
 						this.dataService.resetFouls();
 					}
 				}
