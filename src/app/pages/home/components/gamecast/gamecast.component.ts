@@ -497,6 +497,9 @@ export class GamecastComponent {
 				}
 			} else {
 				this.timerDuration = game.settings?.minutesPerOvertime! * 60;
+				if (resetFouls != 0) {
+					this.dataService.resetFouls();
+				}
 			}
 		} else {
 			let times = clock.split(':');
