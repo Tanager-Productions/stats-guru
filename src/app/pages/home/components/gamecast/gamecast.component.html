@@ -76,7 +76,7 @@
 						@for (player of dataService.homeTeamPlayers(); track player.id) {
 							@if (!dataService.hiddenPlayerIds().includes(player.id) && player.number != '-1') {
 								<ion-button
-									size="default"
+									size="small"
 									[fill]="dataService.homePlayersOnCourt().includes(player) ? 'outline' : 'clear'"
 									id="context-menu-trigger{{$index}}"
 									color="{{homeColor()}}"
@@ -548,7 +548,7 @@
 						@for (player of dataService.awayTeamPlayers(); track player.id) {
 							@if (player.number != '-1' && !dataService.hiddenPlayerIds().includes(player.id)) {
 								<ion-button
-									size="default"
+									size="small"
 									[fill]="dataService.awayPlayersOnCourt().includes(player) ? 'outline' : 'clear'"
 									color="{{awayColor()}}"
 									id="context-menu-trigger-away{{$index}}"
