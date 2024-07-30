@@ -97,40 +97,6 @@
 					<ion-grid class="ion-no-padding">
 						<ion-row>
 							<ion-col>
-								<ion-grid style="background-color: #eaeaea; border-radius: 5px; width: 100%; padding: 5px;">
-									<ion-row>
-										@for (player of dataService.homePlayersOnCourt(); track player.id) {
-											<ion-col id="context-menu-trigger-homeCourt{{$index}}">
-												@if (player.number == '-1') {
-													<ion-button
-														size="large"
-														style="border-radius: 50px; --padding-start: 0px; --padding-end: 0px;"
-														[ngClass]="{'selectedButton': dataService.selectedPlayerId() == player.id}"
-														color="{{homeColor()}}"
-														fill="clear"
-														shape="round"
-														expand="block"
-														(tap)="selectPlayer(player.id)">
-														<ion-label>T</ion-label>
-													</ion-button>
-												} @else {
-													<ion-button
-														size="large"
-														style="border-radius: 50px; --padding-start: 0px; --padding-end: 0px;"
-														[ngClass]="{'selectedButton': dataService.selectedPlayerId() == player.id}"
-														color="{{homeColor()}}"
-														fill="clear"
-														shape="round"
-														expand="block"
-														(tap)="selectPlayer(player.id)"
-														(doubleTap)="removeFromCourt(player)">
-														<ion-label>{{this.findStat(player.id)?.playerNumber ? this.findStat(player.id)?.playerNumber : player.number}}</ion-label>
-													</ion-button>
-												}
-											</ion-col>
-										}
-									</ion-row>
-								</ion-grid>
 								<ion-card>
 									<ion-card-header>
 										<ion-card-title color="{{homeColor()}}" class="ion-text-center">
@@ -194,10 +160,10 @@
 										</ion-row>
 										<ion-row>
 											<ion-col>
-												<ion-button expand="block" color="{{homeColor()}}" (click)="addPoints('home', 1, true)">1</ion-button>
+												<ion-button expand="block" color="{{missedColor()}}" (click)="addPoints('home', 1, true)">1</ion-button>
 											</ion-col>
 											<ion-col>
-												<ion-button expand="block" color="{{homeColor()}}" (click)="addPoints('home', 3, true)">3</ion-button>
+												<ion-button expand="block" color="{{missedColor()}}" (click)="addPoints('home', 3, true)">3</ion-button>
 											</ion-col>
 											<ion-col>
 												<ion-button expand="block" color="{{missedColor()}}" (click)="addPoints('home', 2, true)">MISS</ion-button>
@@ -236,6 +202,40 @@
 										</ion-row>
 									</ion-grid>
 								</ion-card>
+								<ion-grid style="background-color: #eaeaea; border-radius: 5px; width: 100%; padding: 5px;">
+									<ion-row>
+										@for (player of dataService.homePlayersOnCourt(); track player.id) {
+											<ion-col id="context-menu-trigger-homeCourt{{$index}}">
+												@if (player.number == '-1') {
+													<ion-button
+														size="large"
+														style="border-radius: 50px; --padding-start: 0px; --padding-end: 0px;"
+														[ngClass]="{'selectedButton': dataService.selectedPlayerId() == player.id}"
+														color="{{homeColor()}}"
+														fill="clear"
+														shape="round"
+														expand="block"
+														(tap)="selectPlayer(player.id)">
+														<ion-label>T</ion-label>
+													</ion-button>
+												} @else {
+													<ion-button
+														size="large"
+														style="border-radius: 50px; --padding-start: 0px; --padding-end: 0px;"
+														[ngClass]="{'selectedButton': dataService.selectedPlayerId() == player.id}"
+														color="{{homeColor()}}"
+														fill="clear"
+														shape="round"
+														expand="block"
+														(tap)="selectPlayer(player.id)"
+														(doubleTap)="removeFromCourt(player)">
+														<ion-label>{{this.findStat(player.id)?.playerNumber ? this.findStat(player.id)?.playerNumber : player.number}}</ion-label>
+													</ion-button>
+												}
+											</ion-col>
+										}
+									</ion-row>
+								</ion-grid>
 							</ion-col>
 							<ion-col class="ion-no-padding">
 								<ion-grid style="height: 100%;" class="ion-no-padding">
@@ -389,38 +389,6 @@
 								</ion-grid>
 							</ion-col>
 							<ion-col>
-								<ion-grid style="border-radius: 5px; background-color: #eaeaea; width: 100%; padding: 5px;">
-									<ion-row>
-										@for (player of dataService.awayPlayersOnCourt(); track player.id) {
-											<ion-col id="context-menu-trigger-awayCourt{{$index}}">
-												@if (player.number == '-1') {
-													<ion-button
-														size="large"
-														style="border-radius: 50px; --padding-start: 0px; --padding-end: 0px;"
-														[ngClass]="{'selectedButton': dataService.selectedPlayerId() == player.id}"
-														color="{{awayColor()}}" fill="clear"
-														shape="round"
-														expand="block"
-														(tap)="selectPlayer(player.id)">
-														<ion-label>T</ion-label>
-													</ion-button>
-												} @else {
-													<ion-button
-														size="large"
-														style="border-radius: 50px; --padding-start: 0px; --padding-end: 0px;"
-														[ngClass]="{'selectedButton': dataService.selectedPlayerId() == player.id}"
-														color="{{awayColor()}}" fill="clear"
-														shape="round"
-														expand="block"
-														(tap)="selectPlayer(player.id)"
-														(doubleTap)="removeFromCourt(player)">
-														<ion-label>{{this.findStat(player.id)?.playerNumber ? this.findStat(player.id)?.playerNumber : player.number}}</ion-label>
-													</ion-button>
-												}
-											</ion-col>
-										}
-									</ion-row>
-								</ion-grid>
 								<ion-card>
 									<ion-card-header>
 										<ion-card-title color="{{awayColor()}}" class="ion-text-center ion-no-padding">
@@ -484,10 +452,10 @@
 										</ion-row>
 										<ion-row>
 											<ion-col>
-												<ion-button expand="block" color="{{awayColor()}}" (click)="addPoints('away', 1, true)">1</ion-button>
+												<ion-button expand="block" color="{{missedColor()}}" (click)="addPoints('away', 1, true)">1</ion-button>
 											</ion-col>
 											<ion-col>
-												<ion-button expand="block" color="{{awayColor()}}" (click)="addPoints('away', 3, true)">3</ion-button>
+												<ion-button expand="block" color="{{missedColor()}}" (click)="addPoints('away', 3, true)">3</ion-button>
 											</ion-col>
 											<ion-col>
 												<ion-button expand="block" color="{{missedColor()}}" (click)="addPoints('away', 2, true)">MISS</ion-button>
@@ -526,6 +494,38 @@
 										</ion-row>
 									</ion-grid>
 								</ion-card>
+								<ion-grid style="border-radius: 5px; background-color: #eaeaea; width: 100%; padding: 5px;">
+									<ion-row>
+										@for (player of dataService.awayPlayersOnCourt(); track player.id) {
+											<ion-col id="context-menu-trigger-awayCourt{{$index}}">
+												@if (player.number == '-1') {
+													<ion-button
+														size="large"
+														style="border-radius: 50px; --padding-start: 0px; --padding-end: 0px;"
+														[ngClass]="{'selectedButton': dataService.selectedPlayerId() == player.id}"
+														color="{{awayColor()}}" fill="clear"
+														shape="round"
+														expand="block"
+														(tap)="selectPlayer(player.id)">
+														<ion-label>T</ion-label>
+													</ion-button>
+												} @else {
+													<ion-button
+														size="large"
+														style="border-radius: 50px; --padding-start: 0px; --padding-end: 0px;"
+														[ngClass]="{'selectedButton': dataService.selectedPlayerId() == player.id}"
+														color="{{awayColor()}}" fill="clear"
+														shape="round"
+														expand="block"
+														(tap)="selectPlayer(player.id)"
+														(doubleTap)="removeFromCourt(player)">
+														<ion-label>{{this.findStat(player.id)?.playerNumber ? this.findStat(player.id)?.playerNumber : player.number}}</ion-label>
+													</ion-button>
+												}
+											</ion-col>
+										}
+									</ion-row>
+								</ion-grid>
 							</ion-col>
 						</ion-row>
 						<ion-row>
