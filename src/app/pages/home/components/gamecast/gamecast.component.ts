@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, WritableSignal, effect, inject, model, signal, untracked } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Subscription, interval } from 'rxjs';
+import { Subscription, interval, lastValueFrom } from 'rxjs';
 import { CellEditingStoppedEvent, ColDef } from 'ag-grid-community';
 import { ApiService } from 'src/app/services/api/api.service';
 import { SyncService } from 'src/app/services/sync/sync.service';
@@ -14,10 +14,7 @@ import { NgClass, SlicePipe, DatePipe } from '@angular/common';
 import { InputChangeEventDetail, IonPopover, IonicModule } from '@ionic/angular';
 import { IonInputCustomEvent } from '@ionic/core';
 import { BoxScore, GamecastService } from 'src/app/services/gamecast/gamecast.service';
-import { GAME_ACTIONS_MAP, Play, Player, mapGameToDto, mapPlayToDto, mapPlayerToDto, mapStatToDto } from 'src/app/types/models';
-import { database } from 'src/app/app.db';
-import { SyncMode, SyncResult } from 'src/app/types/sync';
-import { GameActions } from '@tanager/tgs';
+import { GAME_ACTIONS_MAP, GameActions, Play, Player } from 'src/app/app.types';
 
 type AutoComplete = 'rebound' | 'assist' | 'missed' | 'turnover' | null;
 
@@ -147,7 +144,7 @@ export class GamecastComponent {
 			this.gameId = Number(params['gameId']);
 			await this.dataService.setGame(this.gameId);
 			this.clock.set(this.dataService.game()!.clock);
-			if (this.sync.online) {
+			if (this.api.isOnline()) {
 				this.interval = setInterval(async () => await this.send(), 15000);
 			}
 		});
@@ -171,18 +168,15 @@ export class GamecastComponent {
   }
 
 	private async send() {
-		let response = await this.api.gameCast({
-			game: mapGameToDto(this.dataService.game()!),
-			version: database.currentDatabaseVersion,
-			overwrite: null,
-			mode: SyncMode.Full,
-			stats: this.dataService.stats().map(mapStatToDto),
-			players: this.dataService.players().map(mapPlayerToDto),
-			plays: this.dataService.plays().map(mapPlayToDto)
-		});
-		let result:SyncResult = response.data;
-		if (result.errorMessages.length > 0) {
-			console.error("GameCast had errors!", result.errorMessages);
+		try {
+			await lastValueFrom(this.api.data.sync([
+				this.dataService.players(),
+				[this.dataService.game()!],
+				this.dataService.stats(),
+				this.dataService.plays()
+			]));
+		} catch (error) {
+			console.error("GameCast had errors!", error);
 		}
 	}
 

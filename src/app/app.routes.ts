@@ -1,17 +1,19 @@
 import { Routes } from '@angular/router';
+import { isLoggedIn } from './app.guards';
 
 export const routes: Routes = [
   {
     path: 'login',
-    loadChildren: () => import('./pages/login/login.routes').then( m => m.loginRoutes)
+    loadComponent: () => import('./pages/login/login.page').then( m => m.LoginPage)
+  },
+  {
+    path: 'home',
+		canActivate: [isLoggedIn],
+    loadChildren: () => import('./pages/home/home.routes').then( m => m.homeRoutes)
   },
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'login'
-  },
-  {
-    path: 'home',
-    loadChildren: () => import('./pages/home/home.routes').then( m => m.homeRoutes)
-  },
+    redirectTo: 'home'
+  }
 ];

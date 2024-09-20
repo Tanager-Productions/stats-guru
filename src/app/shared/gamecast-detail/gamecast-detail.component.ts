@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { database } from 'src/app/app.db';
-import { Game } from 'src/app/types/models';
+import { Game, SyncState } from 'src/app/app.types';
 
 @Component({
 	selector: 'app-gamecast-detail',
@@ -12,8 +12,8 @@ import { Game } from 'src/app/types/models';
 	imports: [IonicModule, FormsModule]
 })
 export class GamecastDetailComponent {
-	@Input() game!: Game;
-	@Output() dismiss: EventEmitter<void> = new EventEmitter();
+	@Input() game!: Game & { sync_state: SyncState };
+	@Output() dismiss = new EventEmitter<void>();
 
 	async save() {
 		await database.games.put(this.game);

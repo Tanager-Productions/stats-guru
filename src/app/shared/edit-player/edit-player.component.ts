@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject, input, model, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, model, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
-import { Player, Stat } from 'src/app/types/models';
+import { Player, Stat, SyncState } from 'src/app/app.types';
 import { GamecastService } from 'src/app/services/gamecast/gamecast.service';
 @Component({
 	selector: 'app-edit-player',
@@ -17,7 +17,7 @@ export class EditPlayerComponent {
 	public player = input.required<Player>();
 	protected editPlayer = false;
 	public savePlayer = output();
-	public stat = model<Stat>();
+	public stat = model<Stat & { sync_state: SyncState }>();
 
 	public updateTemporaryPlayerNumber(player: Player, $event: any | undefined) {
 		this.dataService.updateStat({

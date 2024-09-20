@@ -1,52 +1,52 @@
 import { Injectable, computed, effect, signal, untracked } from '@angular/core';
 import { InputChangeEventDetail } from '@ionic/angular';
 import { IonInputCustomEvent } from '@ionic/core';
-import { GameActions, defaultPlayer, defaultStat } from '@tanager/tgs';
 import { database } from 'src/app/app.db';
-import { Game, Play, Player, Stat, SyncState } from 'src/app/types/models';
 import { sortBy } from 'lodash';
+import { Stat, Player, SyncState, Play, Game, GameActions } from 'src/app/app.types';
+import { defaultPlayer, defaultStat } from 'src/app/app.utils';
 
 const calculateStatColumns = (model: Stat) => {
 	const {
-		freeThrowsMade, fieldGoalsMade, threesMade,
-		offensiveRebounds, defensiveRebounds,
-		assists, steals, blocks, fieldGoalsAttempted,
-		freeThrowsAttempted, turnovers
+		free_throws_made, field_goals_made, threes_made,
+		offensive_rebounds, defensive_rebounds,
+		assists, steals, blocks, field_goals_attempted,
+		free_throws_attempted, turnovers
 	} = model;
-	model.points = freeThrowsMade + ((fieldGoalsMade - threesMade) * 2) + (threesMade * 3);
-	model.rebounds = offensiveRebounds + defensiveRebounds;
-	model.eff = model.points + model.rebounds + assists + steals + blocks - (fieldGoalsAttempted - fieldGoalsMade) - (freeThrowsAttempted - freeThrowsMade) - turnovers;
+	model.points = free_throws_made + ((field_goals_made - threes_made) * 2) + (threes_made * 3);
+	model.rebounds = offensive_rebounds + defensive_rebounds;
+	model.eff = model.points + model.rebounds + assists + steals + blocks - (field_goals_attempted - field_goals_made) - (free_throws_attempted - free_throws_made) - turnovers;
 }
 
-const newTeamPlayer: Player = {
+const newTeamPlayer: Player & { sync_state: SyncState } = {
 	...defaultPlayer,
-	syncState: SyncState.Added,
-	firstName: 'team',
-	lastName: 'team',
+	sync_state: SyncState.Added,
+	first_name: 'team',
+	last_name: 'team',
 	number: '-1'
 }
 
 export type BoxScore = {
 	number: string;
 	name: string;
-	playerId: number;
+	player_id: number;
 	assists: number;
 	rebounds: number;
-	defensiveRebounds: number;
-	offensiveRebounds: number;
-	fieldGoalsMade: number;
-	fieldGoalsAttempted: number;
+	defensive_rebounds: number;
+	offensive_rebounds: number;
+	field_goals_made: number;
+	field_goals_attempted: number;
 	blocks: number;
 	steals: number;
 	fouls: number;
-	technicalFouls: number;
-	plusOrMinus: number;
+	technical_fouls: number;
+	plus_or_minus: number;
 	points: number;
 	turnovers: number;
-	threesMade: number;
-	threesAttempted: number;
-	freeThrowsMade: number;
-	freeThrowsAttempted: number;
+	threes_made: number;
+	threes_attempted: number;
+	free_throws_made: number;
+	free_throws_attempted: number;
 };
 
 export type ChangePeriodTotalsConfig = {
@@ -55,28 +55,28 @@ export type ChangePeriodTotalsConfig = {
 }
 
 const mapStatToBoxScore = (stat: Stat, players: Player[]): BoxScore => {
-	const player = players.find(t => t.id == stat.playerId)!;
+	const player = players.find(t => t.id == stat.player_id)!;
 	return {
 		number: player.number,
-		name: `${player.firstName} ${player.lastName}`,
-		playerId: player.id,
+		name: `${player.first_name} ${player.last_name}`,
+		player_id: player.id,
 		assists: stat.assists,
 		rebounds: stat.rebounds,
-		defensiveRebounds: stat.defensiveRebounds,
-		offensiveRebounds: stat.offensiveRebounds,
-		fieldGoalsMade: stat.fieldGoalsMade,
-		fieldGoalsAttempted: stat.fieldGoalsAttempted,
-		threesMade: stat.threesMade,
-		threesAttempted: stat.threesAttempted,
-		freeThrowsMade: stat.freeThrowsMade,
-		freeThrowsAttempted: stat.freeThrowsAttempted,
+		defensive_rebounds: stat.defensive_rebounds,
+		offensive_rebounds: stat.offensive_rebounds,
+		field_goals_made: stat.field_goals_made,
+		field_goals_attempted: stat.field_goals_attempted,
+		threes_made: stat.threes_made,
+		threes_attempted: stat.threes_attempted,
+		free_throws_made: stat.free_throws_made,
+		free_throws_attempted: stat.free_throws_attempted,
 		blocks: stat.blocks,
 		steals: stat.steals,
 		points: stat.points,
 		turnovers: stat.turnovers,
 		fouls: stat.fouls,
-		technicalFouls: stat.technicalFouls ?? 0,
-		plusOrMinus: stat.plusOrMinus
+		technical_fouls: stat.technical_fouls ?? 0,
+		plus_or_minus: stat.plus_or_minus
 	}
 }
 
@@ -84,41 +84,41 @@ const sumBoxScores = (boxScores: BoxScore[]): BoxScore => {
 	let total: BoxScore = {
 		number: '0',
 		name: 'Totals',
-		playerId: 0,
+		player_id: 0,
 		assists: 0,
 		rebounds: 0,
-		defensiveRebounds: 0,
-		offensiveRebounds: 0,
-		fieldGoalsMade: 0,
-		fieldGoalsAttempted: 0,
+		defensive_rebounds: 0,
+		offensive_rebounds: 0,
+		field_goals_made: 0,
+		field_goals_attempted: 0,
 		blocks: 0,
 		steals: 0,
 		fouls: 0,
-		technicalFouls: 0,
-		plusOrMinus: 0,
+		technical_fouls: 0,
+		plus_or_minus: 0,
 		points: 0,
 		turnovers: 0,
-		threesMade: 0,
-		threesAttempted: 0,
-		freeThrowsMade: 0,
-		freeThrowsAttempted: 0
+		threes_made: 0,
+		threes_attempted: 0,
+		free_throws_made: 0,
+		free_throws_attempted: 0
 	}
 	return boxScores.reduce((result, curr) => {
 		result.assists += curr.assists;
 		result.rebounds += curr.rebounds;
-		result.defensiveRebounds += curr.defensiveRebounds;
-		result.offensiveRebounds += curr.offensiveRebounds;
-		result.fieldGoalsMade += curr.fieldGoalsMade;
-		result.fieldGoalsAttempted += curr.fieldGoalsAttempted;
-		result.threesMade += curr.threesMade;
-		result.threesAttempted += curr.threesAttempted;
-		result.freeThrowsMade += curr.freeThrowsMade;
-		result.freeThrowsAttempted += curr.freeThrowsAttempted;
+		result.defensive_rebounds += curr.defensive_rebounds;
+		result.offensive_rebounds += curr.offensive_rebounds;
+		result.field_goals_made += curr.field_goals_made;
+		result.field_goals_attempted += curr.field_goals_attempted;
+		result.threes_made += curr.threes_made;
+		result.threes_attempted += curr.threes_attempted;
+		result.free_throws_made += curr.free_throws_made;
+		result.free_throws_attempted += curr.free_throws_attempted;
 		result.blocks += curr.blocks;
 		result.steals += curr.steals;
 		result.fouls += curr.fouls;
-		result.technicalFouls += curr.technicalFouls;
-		result.plusOrMinus += curr.plusOrMinus;
+		result.technical_fouls += curr.technical_fouls;
+		result.plus_or_minus += curr.plus_or_minus;
 		result.points += curr.points;
 		result.turnovers += curr.turnovers;
 		return result;
@@ -129,29 +129,29 @@ const sumBoxScores = (boxScores: BoxScore[]): BoxScore => {
 	providedIn: 'root'
 })
 export class GamecastService {
-	private statsSrc = signal<Stat[]>([]);
+	private statsSrc = signal<(Stat & { sync_state: SyncState })[]>([]);
 	public stats = this.statsSrc.asReadonly();
 
-	private playsSrc = signal<Play[]>([]);
+	private playsSrc = signal<(Play & { sync_state: SyncState })[]>([]);
 	public plays = this.playsSrc.asReadonly();
 
-	private playersSrc = signal<Player[]>([]);
+	private playersSrc = signal<(Player & { sync_state: SyncState })[]>([]);
 	public players = this.playersSrc.asReadonly();
 
-	private gameSrc = signal<Game | null>(null);
+	private gameSrc = signal<(Game & { sync_state: SyncState }) | null>(null);
 	public game = this.gameSrc.asReadonly();
 	private gameEffect = effect(async () => {
 		const game = this.game();
 		if (game) {
-			game.syncState = game.syncState == SyncState.Added ? SyncState.Added : SyncState.Modified;
+			game.sync_state = game.sync_state == SyncState.Added ? SyncState.Added : SyncState.Modified;
 			if (game.settings == null) {
 				game.settings = {
-					resetTimeouts: 4,
-					fullTimeouts: 2,
-					partialTimeouts: 1,
-					minutesPerPeriod: 9,
-					minutesPerOvertime: 4,
-					resetFouls: 1
+					reset_timeouts: 4,
+					full_timeouts: 2,
+					partial_timeouts: 1,
+					minutes_per_period: 9,
+					minutes_per_overtime: 4,
+					reset_fouls: 1
 				};
 			}
 
@@ -159,40 +159,40 @@ export class GamecastService {
 		}
 	});
 
-	public selectedPlayerId = signal<number | null>(null);
+	public selectedplayer_id = signal<number | null>(null);
 
 	public selectedPlayer = computed(() => {
 		const players = this.players();
-		const playerId = this.selectedPlayerId();
-		return players.find(t => t.id === playerId);
+		const player_id = this.selectedplayer_id();
+		return players.find(t => t.id === player_id);
 	});
 
 	public selectedPlayerStat = computed(() => {
 		const stats = this.stats();
-		const playerId = this.selectedPlayerId();
-		return stats.find(t => t.playerId == playerId);
+		const player_id = this.selectedplayer_id();
+		return stats.find(t => t.player_id == player_id);
 	});
 
 	public homePlayersOnCourt = computed(() => {
 		const players = this.players();
 		const stats = this.stats();
 		const game = untracked(this.game);
-		return players.filter(t => t.teamId == game?.homeTeam.teamId && stats.find(s => s.playerId == t.id)?.onCourt);
+		return players.filter(t => t.team_id == game?.home_team_id && stats.find(s => s.player_id == t.id)?.on_court);
 	});
 
 	public awayPlayersOnCourt = computed(() => {
 		const players = this.players();
 		const stats = this.stats();
 		const game = untracked(this.game);
-		return players.filter(t => t.teamId == game?.awayTeam.teamId && stats.find(s => s.playerId == t.id)?.onCourt);
+		return players.filter(t => t.team_id == game?.away_team_id && stats.find(s => s.player_id == t.id)?.on_court);
 	});
 
 	public homeTeamPlayers = computed(() => {
 		const players = this.players();
 		const stats = this.stats();
 		const game = untracked(this.game);
-		return sortBy(players.filter(t => t.teamId == game?.homeTeam.teamId), t => {
-			const numberOverride = stats.find(x => x.playerId == t.id)?.playerNumber;
+		return sortBy(players.filter(t => t.team_id == game?.home_team_id), t => {
+			const numberOverride = stats.find(x => x.player_id == t.id)?.player_number;
 			return Number(numberOverride ?? t.number) || 0;
 		});
 	});
@@ -201,15 +201,15 @@ export class GamecastService {
 		const players = this.players();
 		const stats = this.stats();
 		const game = untracked(this.game);
-		return sortBy(players.filter(t => t.teamId == game?.awayTeam.teamId), t => {
-			const numberOverride = stats.find(x => x.playerId == t.id)?.playerNumber;
+		return sortBy(players.filter(t => t.team_id == game?.away_team_id), t => {
+			const numberOverride = stats.find(x => x.player_id == t.id)?.player_number;
 			return Number(numberOverride ?? t.number) || 0;
 		});
 	});
 
-	public hiddenPlayerIds = computed(() => {
+	public hiddenplayer_ids = computed(() => {
 		const stats = this.stats();
-		return stats.filter(t => t.playerHidden).map(t => t.playerId);
+		return stats.filter(t => t.player_hidden).map(t => t.player_id);
 	});
 
 	public boxScore = computed(() => {
@@ -218,10 +218,10 @@ export class GamecastService {
 		const stats = this.stats();
 		return {
 			homeBoxScore: stats
-				.filter(t => homeTeamPlayers.find(p => p.id == t.playerId))
+				.filter(t => homeTeamPlayers.find(p => p.id == t.player_id))
 				.map(t => mapStatToBoxScore(t, homeTeamPlayers)),
 			awayBoxScore: stats
-				.filter(t => awayTeamPlayers.find(p => p.id == t.playerId))
+				.filter(t => awayTeamPlayers.find(p => p.id == t.player_id))
 				.map(t => mapStatToBoxScore(t, awayTeamPlayers))
 		}
 	});
@@ -246,8 +246,8 @@ export class GamecastService {
 		this.gameSrc.set(game);
 
 		const players = await database.players
-			.where('teamId').equals(game.homeTeam.teamId)
-			.or('teamId').equals(game.awayTeam.teamId)
+			.where('team_id').equals(game.home_team_id)
+			.or('team_id').equals(game.away_team_id)
 			.toArray();
 		this.playersSrc.set(players);
 
@@ -255,12 +255,12 @@ export class GamecastService {
 
 		let stats = await database.stats.where({ gameId: gameId }).toArray();
 		for (let player of players) {
-			if (!stats.find(t => t.playerId == player.id)) {
+			if (!stats.find(t => t.player_id == player.id)) {
 				stats.push({
 					...defaultStat,
-					playerId: player.id,
-					gameId: gameId,
-					syncState: SyncState.Added
+					player_id: player.id,
+					game_id: game.sync_id,
+					sync_state: SyncState.Added
 				});
 			}
 		}
@@ -268,7 +268,7 @@ export class GamecastService {
 
 		const plays = (await database.plays
 			.where({ gameId: gameId })
-			.and(t => t.syncState != SyncState.Deleted)
+			.and(t => t.sync_state != SyncState.Deleted)
 			.sortBy('id'))
 			.reverse();
 		this.playsSrc.set(plays);
@@ -276,21 +276,21 @@ export class GamecastService {
 
 	private async setTeamPlayers(game: Game) {
 		let homeTeamPlayer = await database.players.where({
-			teamId: game.homeTeam.teamId,
-			firstName: 'team',
-			lastName: 'team'
+			team_id: game.home_team_id,
+			first_name: 'team',
+			last_name: 'team'
 		}).first();
 		let awayTeamPlayer = await database.players.where({
-			teamId: game.awayTeam.teamId,
-			firstName: 'team',
-			lastName: 'team'
+			team_id: game.away_team_id,
+			first_name: 'team',
+			last_name: 'team'
 		}).first();
 
 		if (!homeTeamPlayer) {
 			homeTeamPlayer = {
 				...newTeamPlayer,
-				isMale: game.homeTeam.isMale,
-				teamId: game.homeTeam.teamId
+				is_male: game.homeTeam.isMale,
+				team_id: game.home_team_id
 			}
 			await this.addPlayer(homeTeamPlayer);
 		}
@@ -299,7 +299,7 @@ export class GamecastService {
 			awayTeamPlayer = {
 				...newTeamPlayer,
 				isMale: game.awayTeam.isMale,
-				teamId: game.awayTeam.teamId
+				team_id: game.away_team_id
 			}
 			await this.addPlayer(awayTeamPlayer);
 		}
@@ -307,14 +307,14 @@ export class GamecastService {
 		if (!this.homePlayersOnCourt().find(t => t.id == homeTeamPlayer!.id)) {
 			this.updateStat({
 				player: homeTeamPlayer,
-				updateFn: stat => stat.onCourt = true
+				updateFn: stat => stat.on_court = true
 			});
 		}
 
 		if (!this.awayPlayersOnCourt().find(t => t.id == awayTeamPlayer!.id)) {
 			this.updateStat({
 				player: awayTeamPlayer,
-				updateFn: stat => stat.onCourt = true
+				updateFn: stat => stat.on_court = true
 			});
 		}
 	}
@@ -323,26 +323,26 @@ export class GamecastService {
 		const newPlyaer = {
 			...defaultPlayer,
 			id: undefined!,
-			syncState: SyncState.Added,
-			firstName: player.firstName,
-			lastName: player.lastName,
-			isMale: player.isMale,
+			sync_state: SyncState.Added,
+			first_name: player.first_name,
+			last_name: player.last_name,
+			isMale: player.is_male,
 			number: player.number,
-			teamId: player.teamId
+			team_id: player.team_id
 		};
 		const id = await database.transaction('rw', 'players', () => database.players.add(newPlyaer));
 		player.id = id;
 		this.playersSrc.update(players => [...players, player]);
 		this.statsSrc.update(stats => [...stats, {
 			...defaultStat,
-			playerId: id,
+			player_id: id,
 			gameId: this.game()!.id,
-			syncState: SyncState.Added
+			sync_state: SyncState.Added
 		}]);
 	}
 
-	public async updatePlayer(playerToUpdate: Player) {
-		playerToUpdate.syncState == SyncState.Added ? SyncState.Added : SyncState.Modified;
+	public async updatePlayer(playerToUpdate: Player & { sync_state: SyncState }) {
+		playerToUpdate.sync_state == SyncState.Added ? SyncState.Added : SyncState.Modified;
 		this.playersSrc.update(players => players.map(player => {
 			if (player.id == playerToUpdate.id) {
 				database.transaction('rw', 'players', () => {
@@ -356,17 +356,17 @@ export class GamecastService {
 	}
 
 	public updateStat(options: { player?: Player, updateFn: (stat: Stat) => void }) {
-		const playerId = options.player ? options.player.id : this.selectedPlayerId();
-		if (playerId == null) {
+		const player_id = options.player ? options.player.id : this.selectedplayer_id();
+		if (player_id == null) {
 			throw 'What exactly are you trying to do?';
 		} else {
-			const prevStat = this.statsSrc().find(t => t.playerId == playerId);
+			const prevStat = this.statsSrc().find(t => t.player_id == player_id);
 			if (prevStat) {
 				this.statsSrc.update(stats => stats.map(stat => {
-					if (stat.playerId == playerId) {
+					if (stat.player_id == player_id) {
 						options.updateFn(stat);
 						calculateStatColumns(stat);
-						stat.syncState = stat.syncState == SyncState.Added ? SyncState.Added : SyncState.Modified;
+						stat.sync_state = stat.sync_state == SyncState.Added ? SyncState.Added : SyncState.Modified;
 						database.transaction('rw', 'stats', () => database.stats.put(stat));
 					}
 					return stat;
@@ -375,9 +375,9 @@ export class GamecastService {
 				const game = this.game()!;
 				const newStat = {
 					...defaultStat,
-					syncState: SyncState.Added,
+					sync_state: SyncState.Added,
 					gameId: game.id,
-					playerId: playerId
+					player_id: player_id
 				};
 				options.updateFn(newStat);
 				calculateStatColumns(newStat);
@@ -390,17 +390,17 @@ export class GamecastService {
 	public switchPossession() {
 		const game = this.game();
 		if (game) {
-			this.gameSrc.set({ ...game, homeHasPossession: !game.homeHasPossession });
+			this.gameSrc.set({ ...game, home_has_possession: !game.home_has_possession });
 		}
 	}
 
 	public togglePlayerHidden(player: Player) {
 		this.statsSrc.update(stats => stats.map(stat => {
-			if (stat.playerId == player.id) {
+			if (stat.player_id == player.id) {
 				database.transaction('rw', 'stats', () => {
-					database.stats.update({ playerId: stat.playerId, gameId: stat.gameId }, { 'playerHidden': !stat.playerHidden });
+					database.stats.update({ player_id: stat.player_id, game_id: stat.game_id }, { 'player_hidden': !stat.player_hidden });
 				});
-				return { ...stat, playerHidden: !stat.playerHidden }
+				return { ...stat, player_hidden: !stat.player_hidden }
 			} else {
 				return stat
 			}
@@ -418,30 +418,30 @@ export class GamecastService {
 		const game = { ...this.game()! };
 		if (team == 'away') {
 			if (game.period == 1) {
-				game.awayPointsQ1 += points;
+				game.away_points_q1 += points;
 			} else if (game.period == 2) {
-				game.awayPointsQ2 += points;
+				game.away_points_q2 += points;
 			} else if (game.period == 3) {
-				game.awayPointsQ3 += points;
+				game.away_points_q3 += points;
 			} else if (game.period == 4) {
-				game.awayPointsQ4 += points;
+				game.away_points_q4 += points;
 			} else {
-				game.awayPointsOT += points;
+				game.away_points_ot += points;
 			}
-			game.awayFinal += points;
+			game.away_final += points;
 		} else {
 			if (game.period == 1) {
-				game.homePointsQ1 += points;
+				game.home_points_q1 += points;
 			} else if (game.period == 2) {
-				game.homePointsQ2 += points;
+				game.home_points_q2 += points;
 			} else if (game.period == 3) {
-				game.homePointsQ3 += points;
+				game.home_points_q3 += points;
 			} else if (game.period == 4) {
-				game.homePointsQ4 += points;
+				game.home_points_q4 += points;
 			} else {
-				game.homePointsOT += points;
+				game.home_points_ot += points;
 			}
-			game.homeFinal += points;
+			game.home_final += points;
 		}
 		this.gameSrc.set(game);
 	}
@@ -450,43 +450,43 @@ export class GamecastService {
 		const game = { ...this.game()! };
 		const { p1, p2, p3, p4, ot } = config.totals;
 		if (config.team == 'away') {
-			game.awayPointsQ1 = p1;
-			game.awayPointsQ2 = p2;
-			game.awayPointsQ3 = p3;
-			game.awayPointsQ4 = p4;
-			game.awayPointsOT = ot;
-			game.awayFinal = p1 + p2 + p2 + p4 + ot;
+			game.away_points_q1 = p1;
+			game.away_points_q2 = p2;
+			game.away_points_q3 = p3;
+			game.away_points_q4 = p4;
+			game.away_points_ot = ot;
+			game.away_final = p1 + p2 + p2 + p4 + ot;
 		} else {
-			game.homePointsQ1 = p1;
-			game.homePointsQ2 = p2;
-			game.homePointsQ3 = p3;
-			game.homePointsQ4 = p4;
-			game.homePointsOT = ot;
-			game.homeFinal = p1 + p2 + p2 + p4 + ot;
+			game.home_points_q1 = p1;
+			game.home_points_q2 = p2;
+			game.home_points_q3 = p3;
+			game.home_points_q4 = p4;
+			game.home_points_ot = ot;
+			game.home_final = p1 + p2 + p2 + p4 + ot;
 		}
 		this.gameSrc.set(game);
 	}
 
 	public resetTOs() {
 		const game = { ...this.game()! };
-		if (game.settings?.resetTimeouts == 1 || game.settings?.resetTimeouts == 2) {
-			game.homeFullTOL = game.settings?.fullTimeouts ?? 0;
-			game.awayFullTOL = game.settings?.fullTimeouts ?? 0;
-			game.homePartialTOL = game.settings?.partialTimeouts ?? 0;
-			game.awayPartialTOL = game.settings?.partialTimeouts ?? 0;
+		if (game.settings?.reset_timeouts == 1 || game.settings?.reset_timeouts == 2) {
+			game.home_full_tol = game.settings?.full_timeouts ?? 0;
+			game.away_full_tol = game.settings?.full_timeouts ?? 0;
+			game.home_partial_tol = game.settings?.partial_timeouts ?? 0;
+			game.away_partial_tol = game.settings?.partial_timeouts ?? 0;
 			this.gameSrc.set(game);
 		}
-		if (game.settings?.resetTimeouts == 3 || game.settings?.resetTimeouts == 4) {
-			game.homeFullTOL = game.settings?.fullTimeouts ?? 0;
-			game.awayFullTOL = game.settings?.fullTimeouts ?? 0;
+		if (game.settings?.reset_timeouts == 3 || game.settings?.reset_timeouts == 4) {
+			game.home_full_tol = game.settings?.full_timeouts ?? 0;
+			game.away_full_tol = game.settings?.full_timeouts ?? 0;
 			this.gameSrc.set(game);
 		}
 	}
 
 	public resetFouls() {
 		const game = { ...this.game()! };
-		game.homeCurrentFouls = 0;
-		game.awayCurrentFouls = 0;
+		game.home_current_fouls = 0;
+		game.away_current_fouls = 0;
 		this.gameSrc.set(game);
 	}
 
@@ -494,24 +494,24 @@ export class GamecastService {
 		const plays = this.plays();
 		const game = this.game()!;
 		const selectedPlayer = player ?? this.selectedPlayer();
-		let play: Play = {
+		let play: Play & { sync_state: SyncState } = {
 			id: plays.length + 1,
-			gameId: game.id,
-			turboStatsData: null,
-			sgLegacyData: null,
-			syncState: SyncState.Added,
+			game_id: game.sync_id,
+			turbo_stats_data: null,
+			sg_legacy_data: null,
+			sync_state: SyncState.Added,
 			period: game.period,
-			player: selectedPlayer && (action != GameActions.FullTO && action != GameActions.PartialTO) ? { ...selectedPlayer, playerId: selectedPlayer.id } : null,
+			player: selectedPlayer && (action != GameActions.FullTO && action != GameActions.PartialTO) ? { ...selectedPlayer, player_id: selectedPlayer.id } : null,
 			team: team == 'home' ? { ...game.homeTeam, name: game.homeTeam.teamName } : { ...game.awayTeam, name: game.awayTeam.teamName },
-			score: `${game.homeFinal} - ${game.awayFinal}`,
+			score: `${game.home_final} - ${game.away_final}`,
 			timeStamp: new Date().toJSON(),
 			action: action,
 			gameClock: game.clock
 		}
 		database.transaction('rw', 'plays', async () => {
 			const existing = await database.plays.get({ gameId: game.id, id: play.id });
-			if (existing && existing.syncState != SyncState.Added) {
-				play.syncState = SyncState.Modified;
+			if (existing && existing.sync_state != SyncState.Added) {
+				play.sync_state = SyncState.Modified;
 			}
 			this.playsSrc.update(plays => [play, ...plays]);
 			database.plays.put(play);
@@ -521,16 +521,16 @@ export class GamecastService {
 	public addFoulToGame(team: 'home' | 'away') {
 		const game = { ...this.game()! };
 		if (team == 'away') {
-			if (game.awayCurrentFouls == null) {
-				game.awayCurrentFouls = 1;
+			if (game.away_current_fouls == null) {
+				game.away_current_fouls = 1;
 			} else {
-				game.awayCurrentFouls++;
+				game.away_current_fouls++;
 			}
 		} else {
-			if (game.homeCurrentFouls == null) {
-				game.homeCurrentFouls = 1;
+			if (game.home_current_fouls == null) {
+				game.home_current_fouls = 1;
 			} else {
-				game.homeCurrentFouls++;
+				game.home_current_fouls++;
 			}
 		}
 		this.gameSrc.set(game);
@@ -539,40 +539,40 @@ export class GamecastService {
 	public addTimeoutToGame(team: 'home' | 'away', partial: boolean) {
 		const game = { ...this.game()! };
 		if (team == 'away') {
-			if (game.awayTeamTOL > 0) {
-				game.awayTeamTOL--;
+			if (game.away_team_tol > 0) {
+				game.away_team_tol--;
 			}
-			if (partial && game.awayPartialTOL != null && game.awayPartialTOL > 0) {
-				game.awayPartialTOL--;
-			} else if (!partial && game.awayFullTOL != null && game.awayFullTOL > 0) {
-				game.awayFullTOL--;
+			if (partial && game.away_partial_tol != null && game.away_partial_tol > 0) {
+				game.away_partial_tol--;
+			} else if (!partial && game.away_full_tol != null && game.away_full_tol > 0) {
+				game.away_full_tol--;
 			}
 		} else {
-			if (game.homeTeamTOL > 0) {
-				game.homeTeamTOL--;
+			if (game.home_team_tol > 0) {
+				game.home_team_tol--;
 			}
-			if (partial && game.homePartialTOL != null && game.homePartialTOL > 0) {
-				game.homePartialTOL--;
-			} else if (!partial && game.homeFullTOL != null && game.homeFullTOL > 0) {
-				game.homeFullTOL--;
+			if (partial && game.home_partial_tol != null && game.home_partial_tol > 0) {
+				game.home_partial_tol--;
+			} else if (!partial && game.home_full_tol != null && game.home_full_tol > 0) {
+				game.home_full_tol--;
 			}
 		}
 		this.gameSrc.set(game);
 	}
 
-	public updatePlusOrMinus(homePOMToAdd: number, awayPOMToAdd: number) {
+	public updateplus_or_minus(homePOMToAdd: number, awayPOMToAdd: number) {
 		const game = this.game()!;
 		database.transaction('rw', 'stats', () => {
 			database.stats
-				.where('playerId')
+				.where('player_id')
 				.anyOf(this.homePlayersOnCourt().map(t => t.id))
-				.and(t => t.gameId == game.id)
-				.modify(stat => { stat.plusOrMinus += homePOMToAdd });
+				.and(t => t.game_id == game.sync_id)
+				.modify(stat => { stat.plus_or_minus += homePOMToAdd });
 			database.stats
-				.where('playerId')
+				.where('player_id')
 				.anyOf(this.awayPlayersOnCourt().map(t => t.id))
-				.and(t => t.gameId == game.id)
-				.modify(stat => { stat.plusOrMinus += awayPOMToAdd })
+				.and(t => t.game_id == game.sync_id)
+				.modify(stat => { stat.plus_or_minus += awayPOMToAdd })
 		});
 	}
 
@@ -581,22 +581,22 @@ export class GamecastService {
 		this.undoAction(play);
 		this.playsSrc.update(plays => plays.slice(1));
 		database.transaction('rw', 'plays', async () => {
-			if (play.syncState == SyncState.Added) {
-				database.plays.where({ gameId: play.gameId, id: play.id }).delete();
+			if (play.sync_state == SyncState.Added) {
+				database.plays.where({ gameId: play.game_id, id: play.id }).delete();
 			} else {
-				database.plays.update(play, { syncState: SyncState.Deleted });
+				database.plays.update(play, { sync_state: SyncState.Deleted });
 			}
 		});
 	}
 
-	public updatePlay(play: Play) {
+	public updatePlay(play: Play & { sync_state: SyncState }) {
 		this.playsSrc.update(plays => {
-			const playToUpdateIndex = plays.findIndex(t => t.id == play.id && t.gameId == play.gameId);
+			const playToUpdateIndex = plays.findIndex(t => t.id == play.id && t.game_id == play.game_id);
 			const playToUpdate = { ...plays[playToUpdateIndex] };
 			this.undoAction(playToUpdate)
 			this.redoAction(play);
-			play.score = `${this.game()?.homeFinal} - ${this.game()?.awayFinal}`;
-			play.syncState = play.syncState == SyncState.Added ? SyncState.Added : SyncState.Modified;
+			play.score = `${this.game()?.home_final} - ${this.game()?.away_final}`;
+			play.sync_state = play.sync_state == SyncState.Added ? SyncState.Added : SyncState.Modified;
 			database.transaction('rw', 'plays', () => database.plays.put(play));
 			return [
 				...plays.slice(0, playToUpdateIndex),
@@ -608,7 +608,7 @@ export class GamecastService {
 
 	private undoAction(play: Play) {
 		const game = { ...this.game()! };
-		const player = this.players().find(t => t.id == play.player?.playerId);
+		const player = this.players().find(t => t.id == play.player?.player_id);
 		if (play.action == GameActions.Assist) {
 			this.updateStat({
 				player: player,
@@ -622,126 +622,126 @@ export class GamecastService {
 		} else if (play.action == GameActions.DefRebound) {
 			this.updateStat({
 				player: player,
-				updateFn: stat => stat.defensiveRebounds--
+				updateFn: stat => stat.defensive_rebounds--
 			});
 		} else if (play.action == GameActions.Foul) {
 			this.updateStat({
 				player: player,
 				updateFn: stat => stat.fouls--
 			});
-			if (player?.teamId === game.homeTeam.teamId) {
-				game.homeCurrentFouls!--;
+			if (player?.team_id === game.home_team_id) {
+				game.home_current_fouls!--;
 			} else {
-				game.awayCurrentFouls!--;
+				game.away_current_fouls!--;
 			}
 		} else if (play.action == GameActions.FreeThrowMade) {
 			this.updateStat({
 				player: player,
 				updateFn: stat => {
-					stat.freeThrowsMade--
-					stat.freeThrowsAttempted--
+					stat.free_throws_made--
+					stat.free_throws_attempted--
 				}
 			});
-			if (player?.teamId == game.homeTeam.teamId) {
+			if (player?.team_id == game.home_team_id) {
 				if (play.period == 1) {
-					game.homePointsQ1--;
+					game.home_points_q1--;
 				} else if (play.period == 2) {
-					game.homePointsQ2--;
-				} else if (play.period == 3 && !game.hasFourQuarters) {
-					game.homePointsOT--;
-				} else if (play.period == 3 && game.hasFourQuarters) {
-					game.homePointsQ3--;
+					game.home_points_q2--;
+				} else if (play.period == 3 && !game.has_four_quarters) {
+					game.home_points_ot--;
+				} else if (play.period == 3 && game.has_four_quarters) {
+					game.home_points_q3--;
 				} else if (play.period == 4) {
-					game.homePointsQ4--;
+					game.home_points_q4--;
 				} else if (play.period == 5) {
-					game.homePointsOT--;
+					game.home_points_ot--;
 				}
-				game.homeFinal--;
+				game.home_final--;
 			} else {
 				if (play.period == 1) {
-					game.awayPointsQ1--;
+					game.away_points_q1--;
 				} else if (play.period == 2) {
-					game.awayPointsQ2--;
-				} else if (play.period == 3 && !game.hasFourQuarters) {
-					game.awayPointsOT--;
-				} else if (play.period == 3 && game.hasFourQuarters) {
-					game.awayPointsQ3--;
+					game.away_points_q2--;
+				} else if (play.period == 3 && !game.has_four_quarters) {
+					game.away_points_ot--;
+				} else if (play.period == 3 && game.has_four_quarters) {
+					game.away_points_q3--;
 				} else if (play.period == 4) {
-					game.awayPointsQ4--;
+					game.away_points_q4--;
 				} else if (play.period == 5) {
-					game.awayPointsOT--;
+					game.away_points_ot--;
 				}
-				game.awayFinal--;
+				game.away_final--;
 			}
 		} else if (play.action == GameActions.FreeThrowMissed) {
 			this.updateStat({
 				player: player,
-				updateFn: stat => stat.freeThrowsAttempted--
+				updateFn: stat => stat.free_throws_attempted--
 			});
 		} else if (play.action == GameActions.FullTO) {
-			if (play.team?.teamId == game.homeTeam.teamId) {
-				game.homeTeamTOL++;
-				game.homeFullTOL!++;
+			if (play.team?.team_id == game.home_team_id) {
+				game.home_team_tol++;
+				game.home_full_tol!++;
 			} else {
-				game.awayTeamTOL++;
-				game.awayFullTOL!++;
+				game.away_team_tol++;
+				game.away_full_tol!++;
 			}
 		} else if (play.action == GameActions.OffRebound) {
 			this.updateStat({
 				player: player,
-				updateFn: stat => stat.offensiveRebounds--
+				updateFn: stat => stat.offensive_rebounds--
 			});
 		} else if (play.action == GameActions.PartialTO) {
-			if (play.team?.teamId == game.homeTeam.teamId) {
-				game.homeTeamTOL++;
-				game.homePartialTOL!++;
+			if (play.team?.team_id == game.home_team_id) {
+				game.home_team_tol++;
+				game.home_partial_tol!++;
 			} else {
-				game.awayTeamTOL++;
-				game.awayPartialTOL!++;
+				game.away_team_tol++;
+				game.away_partial_tol!++;
 			}
 		} else if (play.action == GameActions.ShotMade) {
 			this.updateStat({
 				player: player,
 				updateFn: stat => {
-					stat.fieldGoalsAttempted--
-					stat.fieldGoalsMade--
+					stat.field_goals_attempted--
+					stat.field_goals_made--
 				}
 			});
-			if (player?.teamId == game.homeTeam.teamId) {
+			if (player?.team_id == game.home_team_id) {
 				if (play.period == 1) {
-					game.homePointsQ1 -= 2;
+					game.home_points_q1 -= 2;
 				} else if (play.period == 2) {
-					game.homePointsQ2 -= 2;
-				} else if (play.period == 3 && !game.hasFourQuarters) {
-					game.homePointsOT -= 2;
-				} else if (play.period == 3 && game.hasFourQuarters) {
-					game.homePointsQ3 -= 2;
+					game.home_points_q2 -= 2;
+				} else if (play.period == 3 && !game.has_four_quarters) {
+					game.home_points_ot -= 2;
+				} else if (play.period == 3 && game.has_four_quarters) {
+					game.home_points_q3 -= 2;
 				} else if (play.period == 4) {
-					game.homePointsQ4 -= 2;
+					game.home_points_q4 -= 2;
 				} else if (play.period == 5) {
-					game.homePointsOT -= 2;
+					game.home_points_ot -= 2;
 				}
-				game.homeFinal -= 2;
+				game.home_final -= 2;
 			} else {
 				if (play.period == 1) {
-					game.awayPointsQ1 -= 2;
+					game.away_points_q1 -= 2;
 				} else if (play.period == 2) {
-					game.awayPointsQ2 -= 2;
-				} else if (play.period == 3 && !game.hasFourQuarters) {
-					game.awayPointsOT -= 2;
-				} else if (play.period == 3 && game.hasFourQuarters) {
-					game.awayPointsQ3 -= 2;
+					game.away_points_q2 -= 2;
+				} else if (play.period == 3 && !game.has_four_quarters) {
+					game.away_points_ot -= 2;
+				} else if (play.period == 3 && game.has_four_quarters) {
+					game.away_points_q3 -= 2;
 				} else if (play.period == 4) {
-					game.awayPointsQ4 -= 2;
+					game.away_points_q4 -= 2;
 				} else if (play.period == 5) {
-					game.awayPointsOT -= 2;
+					game.away_points_ot -= 2;
 				}
-				game.awayFinal -= 2;
+				game.away_final -= 2;
 			}
 		} else if (play.action == GameActions.ShotMissed) {
 			this.updateStat({
 				player: player,
-				updateFn: stat => stat.fieldGoalsAttempted--
+				updateFn: stat => stat.field_goals_attempted--
 			});
 		} else if (play.action == GameActions.Steal) {
 			this.updateStat({
@@ -752,49 +752,49 @@ export class GamecastService {
 			this.updateStat({
 				player: player,
 				updateFn: stat => {
-					stat.threesAttempted--
-					stat.threesMade--
-					stat.fieldGoalsAttempted--
-					stat.fieldGoalsMade--
+					stat.threes_attempted--
+					stat.threes_made--
+					stat.field_goals_attempted--
+					stat.field_goals_made--
 				}
 			});
-			if (player?.teamId == game.homeTeam.teamId) {
+			if (player?.team_id == game.home_team_id) {
 				if (play.period == 1) {
-					game.homePointsQ1 -= 3;
+					game.home_points_q1 -= 3;
 				} else if (play.period == 2) {
-					game.homePointsQ2 -= 3;
-				} else if (play.period == 3 && !game.hasFourQuarters) {
-					game.homePointsOT -= 3;
-				} else if (play.period == 3 && game.hasFourQuarters) {
-					game.homePointsQ3 -= 3;
+					game.home_points_q2 -= 3;
+				} else if (play.period == 3 && !game.has_four_quarters) {
+					game.home_points_ot -= 3;
+				} else if (play.period == 3 && game.has_four_quarters) {
+					game.home_points_q3 -= 3;
 				} else if (play.period == 4) {
-					game.homePointsQ4 -= 3;
+					game.home_points_q4 -= 3;
 				} else if (play.period == 5) {
-					game.homePointsOT -= 3;
+					game.home_points_ot -= 3;
 				}
-				game.homeFinal -= 3;
+				game.home_final -= 3;
 			} else {
 				if (play.period == 1) {
-					game.awayPointsQ1 -= 3;
+					game.away_points_q1 -= 3;
 				} else if (play.period == 2) {
-					game.awayPointsQ2 -= 3;
-				} else if (play.period == 3 && !game.hasFourQuarters) {
-					game.awayPointsOT -= 3;
-				} else if (play.period == 3 && game.hasFourQuarters) {
-					game.awayPointsQ3 -= 3;
+					game.away_points_q2 -= 3;
+				} else if (play.period == 3 && !game.has_four_quarters) {
+					game.away_points_ot -= 3;
+				} else if (play.period == 3 && game.has_four_quarters) {
+					game.away_points_q3 -= 3;
 				} else if (play.period == 4) {
-					game.awayPointsQ4 -= 3;
+					game.away_points_q4 -= 3;
 				} else if (play.period == 5) {
-					game.awayPointsOT -= 3;
+					game.away_points_ot -= 3;
 				}
-				game.awayFinal -= 3;
+				game.away_final -= 3;
 			}
 		} else if (play.action == GameActions.ThreeMissed) {
 			this.updateStat({
 				player: player,
 				updateFn: stat => {
-					stat.threesAttempted--
-					stat.fieldGoalsAttempted--
+					stat.threes_attempted--
+					stat.field_goals_attempted--
 				}
 			});
 		} else if (play.action == GameActions.Turnover) {
@@ -808,159 +808,159 @@ export class GamecastService {
 
 	private redoAction(play: Play) {
 		const game = { ...this.game()! };
-		const player = this.players().find(t => t.id == play.player?.playerId);
+		const player = this.players().find(t => t.id == play.player?.player_id);
 		let updateFn: (stat: Stat) => void = () => { };
 		if (play.action == GameActions.Assist) {
 			updateFn = stat => stat.assists++
 		} else if (play.action == GameActions.Block) {
 			updateFn = stat => stat.blocks++
 		} else if (play.action == GameActions.DefRebound) {
-			updateFn = stat => stat.defensiveRebounds++
+			updateFn = stat => stat.defensive_rebounds++
 		} else if (play.action == GameActions.Foul) {
 			updateFn = stat => stat.fouls++
-			if (player?.teamId == game.homeTeam.teamId) {
-				game.homeCurrentFouls!++;
+			if (player?.team_id == game.home_team_id) {
+				game.home_current_fouls!++;
 			} else {
-				game.awayCurrentFouls!++;
+				game.away_current_fouls!++;
 			}
 		} else if (play.action == GameActions.FreeThrowMade) {
 			updateFn = stat => {
-				stat.freeThrowsAttempted++
-				stat.freeThrowsMade++
+				stat.free_throws_attempted++
+				stat.free_throws_made++
 			}
-			if (player?.teamId == game.homeTeam.teamId) {
+			if (player?.team_id == game.home_team_id) {
 				if (play.period == 1) {
-					game.homePointsQ1++;
+					game.home_points_q1++;
 				} else if (play.period == 2) {
-					game.homePointsQ2++;
-				} else if (play.period == 3 && !game.hasFourQuarters) {
-					game.homePointsOT++;
-				} else if (play.period == 3 && game.hasFourQuarters) {
-					game.homePointsQ3++;
+					game.home_points_q2++;
+				} else if (play.period == 3 && !game.has_four_quarters) {
+					game.home_points_ot++;
+				} else if (play.period == 3 && game.has_four_quarters) {
+					game.home_points_q3++;
 				} else if (play.period == 4) {
-					game.homePointsQ4++;
+					game.home_points_q4++;
 				} else if (play.period == 5) {
-					game.homePointsOT++;
+					game.home_points_ot++;
 				}
-				game.homeFinal++;
+				game.home_final++;
 			} else {
 				if (play.period == 1) {
-					game.awayPointsQ1++;
+					game.away_points_q1++;
 				} else if (play.period == 2) {
-					game.awayPointsQ2++;
-				} else if (play.period == 3 && !game.hasFourQuarters) {
-					game.awayPointsOT++;
-				} else if (play.period == 3 && game.hasFourQuarters) {
-					game.awayPointsQ3++;
+					game.away_points_q2++;
+				} else if (play.period == 3 && !game.has_four_quarters) {
+					game.away_points_ot++;
+				} else if (play.period == 3 && game.has_four_quarters) {
+					game.away_points_q3++;
 				} else if (play.period == 4) {
-					game.awayPointsQ4++;
+					game.away_points_q4++;
 				} else if (play.period == 5) {
-					game.awayPointsOT++;
+					game.away_points_ot++;
 				}
-				game.awayFinal++;
+				game.away_final++;
 			}
 		} else if (play.action == GameActions.FreeThrowMissed) {
-			updateFn = stat => stat.freeThrowsAttempted++
+			updateFn = stat => stat.free_throws_attempted++
 		} else if (play.action == GameActions.FullTO) {
 			if (play.team?.name == game.homeTeam.teamName) {
-				game.homeTeamTOL--;
-				game.homeFullTOL!--;
+				game.home_team_tol--;
+				game.home_full_tol!--;
 			} else {
-				game.awayTeamTOL--;
-				game.awayFullTOL!--;
+				game.away_team_tol--;
+				game.away_full_tol!--;
 			}
 		} else if (play.action == GameActions.OffRebound) {
-			updateFn = stat => stat.offensiveRebounds++
+			updateFn = stat => stat.offensive_rebounds++
 		} else if (play.action == GameActions.PartialTO) {
 			if (play.team?.name == game.homeTeam.teamName) {
-				game.homeTeamTOL--;
-				game.homePartialTOL!--;
+				game.home_team_tol--;
+				game.home_partial_tol!--;
 			} else {
-				game.awayTeamTOL--;
-				game.awayPartialTOL!--;
+				game.away_team_tol--;
+				game.away_partial_tol!--;
 			}
 		} else if (play.action == GameActions.ShotMade) {
 			updateFn = stat => {
-				stat.fieldGoalsAttempted++
-				stat.fieldGoalsMade++
+				stat.field_goals_attempted++
+				stat.field_goals_made++
 			}
-			if (player?.teamId == game.homeTeam.teamId) {
+			if (player?.team_id == game.home_team_id) {
 				if (play.period == 1) {
-					game.homePointsQ1 += 2;
+					game.home_points_q1 += 2;
 				} else if (play.period == 2) {
-					game.homePointsQ2 += 2;
-				} else if (play.period == 3 && !game.hasFourQuarters) {
-					game.homePointsOT += 2;
-				} else if (play.period == 3 && game.hasFourQuarters) {
-					game.homePointsQ3 += 2;
+					game.home_points_q2 += 2;
+				} else if (play.period == 3 && !game.has_four_quarters) {
+					game.home_points_ot += 2;
+				} else if (play.period == 3 && game.has_four_quarters) {
+					game.home_points_q3 += 2;
 				} else if (play.period == 4) {
-					game.homePointsQ4 += 2;
+					game.home_points_q4 += 2;
 				} else if (play.period == 5) {
-					game.homePointsOT += 2;
+					game.home_points_ot += 2;
 				}
-				game.homeFinal += 2;
+				game.home_final += 2;
 			} else {
 				if (play.period == 1) {
-					game.awayPointsQ1 += 2;
+					game.away_points_q1 += 2;
 				} else if (play.period == 2) {
-					game.awayPointsQ2 += 2;
-				} else if (play.period == 3 && !game.hasFourQuarters) {
-					game.awayPointsOT += 2;
-				} else if (play.period == 3 && game.hasFourQuarters) {
-					game.awayPointsQ3 += 2;
+					game.away_points_q2 += 2;
+				} else if (play.period == 3 && !game.has_four_quarters) {
+					game.away_points_ot += 2;
+				} else if (play.period == 3 && game.has_four_quarters) {
+					game.away_points_q3 += 2;
 				} else if (play.period == 4) {
-					game.awayPointsQ4 += 2;
+					game.away_points_q4 += 2;
 				} else if (play.period == 5) {
-					game.awayPointsOT += 2;
+					game.away_points_ot += 2;
 				}
-				game.awayFinal += 2;
+				game.away_final += 2;
 			}
 		} else if (play.action == GameActions.ShotMissed) {
-			updateFn = stat => stat.fieldGoalsAttempted++
+			updateFn = stat => stat.field_goals_attempted++
 		} else if (play.action == GameActions.Steal) {
 			updateFn = stat => stat.steals++
 		} else if (play.action == GameActions.ThreeMade) {
 			updateFn = stat => {
-				stat.fieldGoalsAttempted++
-				stat.fieldGoalsMade++
-				stat.threesAttempted++
-				stat.threesMade++
+				stat.field_goals_attempted++
+				stat.field_goals_made++
+				stat.threes_attempted++
+				stat.threes_made++
 			}
-			if (player?.teamId == game.homeTeam.teamId) {
+			if (player?.team_id == game.home_team_id) {
 				if (play.period == 1) {
-					game.homePointsQ1 += 3;
+					game.home_points_q1 += 3;
 				} else if (play.period == 2) {
-					game.homePointsQ2 += 3;
-				} else if (play.period == 3 && !game.hasFourQuarters) {
-					game.homePointsOT += 3;
-				} else if (play.period == 3 && game.hasFourQuarters) {
-					game.homePointsQ3 += 3;
+					game.home_points_q2 += 3;
+				} else if (play.period == 3 && !game.has_four_quarters) {
+					game.home_points_ot += 3;
+				} else if (play.period == 3 && game.has_four_quarters) {
+					game.home_points_q3 += 3;
 				} else if (play.period == 4) {
-					game.homePointsQ4 += 3;
+					game.home_points_q4 += 3;
 				} else if (play.period == 5) {
-					game.homePointsOT += 3;
+					game.home_points_ot += 3;
 				}
-				game.homeFinal += 3;
+				game.home_final += 3;
 			} else {
 				if (play.period == 1) {
-					game.awayPointsQ1 += 3;
+					game.away_points_q1 += 3;
 				} else if (play.period == 2) {
-					game.awayPointsQ2 += 3;
-				} else if (play.period == 3 && !game.hasFourQuarters) {
-					game.awayPointsOT += 3;
-				} else if (play.period == 3 && game.hasFourQuarters) {
-					game.awayPointsQ3 += 3;
+					game.away_points_q2 += 3;
+				} else if (play.period == 3 && !game.has_four_quarters) {
+					game.away_points_ot += 3;
+				} else if (play.period == 3 && game.has_four_quarters) {
+					game.away_points_q3 += 3;
 				} else if (play.period == 4) {
-					game.awayPointsQ4 += 3;
+					game.away_points_q4 += 3;
 				} else if (play.period == 5) {
-					game.awayPointsOT += 3;
+					game.away_points_ot += 3;
 				}
-				game.awayFinal += 3;
+				game.away_final += 3;
 			}
 		} else if (play.action == GameActions.ThreeMissed) {
 			updateFn = stat => {
-				stat.threesAttempted++
-				stat.fieldGoalsAttempted++
+				stat.threes_attempted++
+				stat.field_goals_attempted++
 			}
 		} else if (play.action == GameActions.Turnover) {
 			updateFn = stat => stat.turnovers++
@@ -977,9 +977,9 @@ export class GamecastService {
 			const { value } = event.detail;
 			var newGame = { ...game! };
 			if (team == 'home') {
-				newGame.homeCurrentFouls = value ? Number(value) : null;
+				newGame.home_current_fouls = value ? Number(value) : null;
 			} else {
-				newGame.awayCurrentFouls = value ? Number(value) : null;
+				newGame.away_current_fouls = value ? Number(value) : null;
 			}
 			return newGame;
 		})
@@ -990,11 +990,11 @@ export class GamecastService {
 			const { value } = event.detail;
 			var newGame = { ...game! };
 			if (team == 'home') {
-				newGame.homeFullTOL = Number(value!);
-				newGame.homeTeamTOL = newGame.homeFullTOL + newGame.homePartialTOL;
+				newGame.home_full_tol = Number(value!);
+				newGame.home_team_tol = newGame.home_full_tol + newGame.home_partial_tol;
 			} else {
-				newGame.awayFullTOL = Number(value!);
-				newGame.awayTeamTOL = newGame.awayFullTOL + newGame.awayPartialTOL;
+				newGame.away_full_tol = Number(value!);
+				newGame.away_team_tol = newGame.away_full_tol + newGame.away_partial_tol;
 			}
 			return newGame;
 		})
@@ -1005,11 +1005,11 @@ export class GamecastService {
 			const { value } = event.detail;
 			var newGame = { ...game! };
 			if (team == 'home') {
-				newGame.homePartialTOL = Number(value!);
-				newGame.homeTeamTOL = newGame.homeFullTOL + newGame.homePartialTOL;
+				newGame.home_partial_tol = Number(value!);
+				newGame.home_team_tol = newGame.home_full_tol + newGame.home_partial_tol;
 			} else {
-				newGame.awayPartialTOL = Number(value!);
-				newGame.awayTeamTOL = newGame.awayFullTOL + newGame.awayPartialTOL;
+				newGame.away_partial_tol = Number(value!);
+				newGame.away_team_tol = newGame.away_full_tol + newGame.away_partial_tol;
 			}
 			return newGame;
 		})

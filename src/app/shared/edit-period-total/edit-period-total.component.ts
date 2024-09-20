@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
 import { ModalController, IonicModule } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
-import { Game } from 'src/app/types/models';
 import { ChangePeriodTotalsConfig } from 'src/app/services/gamecast/gamecast.service';
+import { Game, SyncState } from 'src/app/app.types';
 
 @Component({
 	selector: 'app-edit-period-total',
@@ -15,7 +15,7 @@ import { ChangePeriodTotalsConfig } from 'src/app/services/gamecast/gamecast.ser
 export class EditPeriodTotalComponent {
 	public team = input.required<'home' | 'away'>();
 	public color = input.required<string>();
-	public game = input.required<Game>();
+	public game = input.required<Game & { sync_state: SyncState }>();
 	public update = output<ChangePeriodTotalsConfig>();
 	protected firstPeriodPoints!: number;
 	protected secondPeriodPoints!: number;
@@ -27,18 +27,18 @@ export class EditPeriodTotalComponent {
 	ngOnInit() {
 		const game = this.game();
 		if (this.team() == 'home') {
-			this.firstPeriodPoints = game.homePointsQ1;
-			this.secondPeriodPoints = game.homePointsQ2;
-			this.thirdPeriodPoints = game.homePointsQ3;
-			this.fourthPeriodPoints = game.homePointsQ4;
-			this.overtimePoints = game.homePointsOT;
+			this.firstPeriodPoints = game.home_points_q1;
+			this.secondPeriodPoints = game.home_points_q2;
+			this.thirdPeriodPoints = game.home_points_q3;
+			this.fourthPeriodPoints = game.home_points_q4;
+			this.overtimePoints = game.home_points_ot;
 		}
 		else {
-			this.firstPeriodPoints = game.awayPointsQ1;
-			this.secondPeriodPoints = game.awayPointsQ2;
-			this.thirdPeriodPoints = game.awayPointsQ3;
-			this.fourthPeriodPoints = game.awayPointsQ4;
-			this.overtimePoints = game.awayPointsOT;
+			this.firstPeriodPoints = game.away_points_q1;
+			this.secondPeriodPoints = game.away_points_q2;
+			this.thirdPeriodPoints = game.away_points_q3;
+			this.fourthPeriodPoints = game.away_points_q4;
+			this.overtimePoints = game.away_points_ot;
 		}
 	}
 

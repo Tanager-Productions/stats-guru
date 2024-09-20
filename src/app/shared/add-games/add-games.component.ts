@@ -3,9 +3,9 @@ import { CommonService } from 'src/app/services/common/common.service';
 import { NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
-import { Team, defaultGame } from '@tanager/tgs';
-import { SyncState } from 'src/app/types/models';
 import { database } from 'src/app/app.db';
+import { Team, SyncState } from 'src/app/app.types';
+import { defaultGame } from 'src/app/app.utils';
 
 @Component({
 	selector: 'app-add-games',
@@ -36,29 +36,21 @@ export class AddGamesComponent {
 		await database.games.add({
 			...defaultGame,
 			id: undefined!,
-			seasonId: currentSeasonId,
-			syncState: SyncState.Added,
-			eventId: this.eventId,
-			gameDate: new Date(this.date).toJSON(),
+			season_id: currentSeasonId,
+			sync_state: SyncState.Added,
+			event_id: this.eventId,
+			game_date: new Date(this.date).toJSON(),
 			settings: {
-				resetTimeouts: 4,
-				fullTimeouts: 2,
-				partialTimeouts: 1,
-				minutesPerOvertime: 4,
-				minutesPerPeriod: 9,
-				resetFouls: 1
+				reset_timeouts: 4,
+				full_timeouts: 2,
+				partial_timeouts: 1,
+				minutes_per_overtime: 4,
+				minutes_per_period: 9,
+				reset_fouls: 1
 			},
 			period: 0,
-			homeTeam: {
-				teamId: this.homeTeam!.id,
-				teamName: this.homeTeam!.name,
-				isMale: this.homeTeam!.isMale
-			},
-			awayTeam: {
-				teamId: this.awayTeam!.id,
-				teamName: this.awayTeam!.name,
-				isMale: this.awayTeam!.isMale
-			}
+			home_team_id: this.homeTeam!.id,
+			away_team_id: this.awayTeam!.id,
 		});
 		this.dismiss.emit();
 		this.common.fetchGames();

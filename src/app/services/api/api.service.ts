@@ -1,96 +1,60 @@
-import { Injectable } from '@angular/core';
-import { CapacitorHttp, HttpHeaders, HttpOptions, HttpResponse } from "@capacitor/core";
-import { SyncDto, GamecastDto } from 'src/app/types/sync';
-import { environment } from 'src/environments/environment';
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { catchError, concat, fromEvent, map, merge, of, withLatestFrom } from 'rxjs';
+import { DataDto, Game, Play, Player, Stat } from 'src/app/app.types';
+
+export enum Credentials {
+	ApplicationKey = "statsGuruKey",
+	ApiToken = "statsGuruToken"
+}
+
+export type User = {
+	guid: string,
+	email: string,
+	fullName: string | null
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
-  public readonly serverUrl = environment.serverUrl;
+	private http = inject(HttpClient);
+	private networkStatus$ = merge(
+		fromEvent(window, 'online').pipe(map(() => true)),
+		fromEvent(window, 'offline').pipe(map(() => false))
+	);
+	private ping$ = this.http.get(`ping`, { responseType: 'text' }).pipe(
+		map(() => true),
+		catchError(() => of(false))
+	);
+	private online$ = this.networkStatus$.pipe(
+		withLatestFrom(this.ping$),
+		map(([online, ping]) => online && ping)
+	)
+	public isOnline = toSignal(this.online$, { initialValue: false });
+	public user?: User;
 
-  public getApiToken() {
-    let userString = localStorage.getItem("user");
-    if (userString == null) {
-      return "";
-    } else {
-      let user = JSON.parse(userString);
-      return user.token;
-    }
-  }
+	readonly auth = {
+		getCredential: (key: Credentials) => localStorage.getItem(key),
+		storeCredential: (key: Credentials, value: string) => localStorage.setItem(key, value),
+		fetchUser: () => this.http.get<User>(`rpc/get_current_user`),
+		generateApiToken: (application_key: string) => this.http.post(`rpc/generate_api_token`, { application_key }, { responseType: 'text' })
+	} as const
 
-  public postSync(sync:SyncDto) {
-    let options: HttpOptions = {
-      url: `${this.serverUrl}/StatsGuru/Sync`,
-      data: sync,
-      headers: {"X-ACCESS-TOKEN": this.getApiToken(), "Content-Type": "application/json"}
-    };
-    return CapacitorHttp.post(options);
-  }
-
-	public postLog(log:FormData, admin:string) {
-    let options: HttpOptions = {
-      url: `${this.serverUrl}/Logs`,
-      data: log,
-      headers: {"X-ACCESS-TOKEN": this.getApiToken(), "Content-Type": "multipart/form-data", "ADMIN_ID": admin}
-    };
-    return CapacitorHttp.post(options);
-  }
-
-  public getData() {
-    let options: HttpOptions = {
-      url: `${this.serverUrl}/StatsGuru/GetData`,
-      headers: {"X-ACCESS-TOKEN": this.getApiToken()}
-    };
-    return CapacitorHttp.get(options);
-  }
-
-  public verifyApiKey(key:string, admin:string) {
-    let options: HttpOptions = {
-      url: `${this.serverUrl}/Admins/VerifyApiKey`,
-      headers: {"API_KEY": key, "ADMIN_ID": admin}
-    };
-    return CapacitorHttp.get(options);
-  }
-
-  public generateToken(key:string, admin:string) {
-    let options: HttpOptions = {
-      url: `${this.serverUrl}/Admins/GenerateSgToken`,
-      headers: {"API_KEY": key, "ADMIN_ID": admin}
-    };
-    return CapacitorHttp.post(options);
-  }
-
-	public generateTicket() {
-    let options: HttpOptions = {
-      url: `${this.serverUrl}/WebSocket/GenerateTicket`,
-      headers: {"X-ACCESS-TOKEN": this.getApiToken()}
-    };
-    return CapacitorHttp.get(options);
-  }
-
-  public getUser(token:string) {
-    let options: HttpOptions = {
-      url: `${this.serverUrl}/StatsGuru/GetUser`,
-      headers: {"X-ACCESS-TOKEN": token}
-    };
-    return CapacitorHttp.get(options);
-  }
-
-	public gameCast(dto: GamecastDto) {
-    let options: HttpOptions = {
-      url: `${this.serverUrl}/StatsGuru/GameCast`,
-			data: dto,
-      headers: {"X-ACCESS-TOKEN": this.getApiToken(), "Content-Type": "application/json"}
-    };
-    return CapacitorHttp.post(options);
-	}
-
-	public debug() {
-    let options: HttpOptions = {
-      url: `${this.serverUrl}/Debug`
-    };
-    return CapacitorHttp.get(options);
-	}
-
+	readonly data = {
+		sync: (tables: [Player[], Game[], Stat[], Play[]]) => {
+			const headers = {
+				"Prefer": "resolution=merge-duplicates"
+			}
+			return concat(
+				this.http.post(`players?on_conflict=sync_id`, tables[0], { headers }),
+				this.http.post(`games?on_conflict=sync_id`, tables[1], { headers }),
+				this.http.post(`stats`, tables[2], { headers }),
+				this.http.post(`plays`, tables[3], { headers })
+			)
+		},
+		getCurrentSeason: () => this.http.get<DataDto>(`seasons?order=year.desc&limit=1&select=*,games(*,stats(*),plays(*)),players(*),teams(*),events(*)`),
+		addLog: (form: FormData) => this.http.post(`rpc/add_log`, form)
+	} as const
 }

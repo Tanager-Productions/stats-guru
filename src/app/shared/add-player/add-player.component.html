@@ -43,7 +43,7 @@
 				} @else {
 					<ion-list>
 						@for (map of mapping(); track map.player.id) {
-							@if (map.player.teamId == teamId()) {
+							@if (map.player.team_id == teamId()) {
 								<ion-item>
 									<ion-thumbnail slot="start">
 										@if (map.player.picture) {
@@ -52,9 +52,9 @@
 											<img src="assets/default.png">
 										}
 									</ion-thumbnail>
-									<ion-label>{{map.player.number}} {{map.player.firstName}} {{map.player.lastName}}</ion-label>
+									<ion-label>{{map.player.number}} {{map.player.first_name}} {{map.player.last_name}}</ion-label>
 									<ion-button color="tertiary" slot="end" fill="clear" (click)="playerHiddenChanged.emit(map.player)">
-										{{ (map.stat?.playerHidden || false) ? 'Unhide' : 'Hide' }}
+										{{ (map.stat?.player_hidden || false) ? 'Unhide' : 'Hide' }}
 									</ion-button>
 								</ion-item>
 							}

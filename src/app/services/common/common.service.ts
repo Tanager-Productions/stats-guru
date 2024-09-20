@@ -1,5 +1,5 @@
-import { Injectable, WritableSignal, signal } from '@angular/core';
-import { Event } from '@tanager/tgs';
+import { Injectable, signal } from '@angular/core';
+import { Event } from 'src/app/app.types';
 import { database } from 'src/app/app.db';
 
 export type HomePageGame = {
@@ -17,9 +17,9 @@ export type HomePageGame = {
   providedIn: 'root'
 })
 export class CommonService {
-  private homePageGamesSrc: WritableSignal<HomePageGame[]> = signal([]);
+  private homePageGamesSrc = signal<HomePageGame[]>([]);
 	public homePageGames = this.homePageGamesSrc.asReadonly();
-  private eventsSrc: WritableSignal<Event[]> = signal([]);
+  private eventsSrc = signal<Event[]>([]);
 	public events = this.eventsSrc.asReadonly();
 
   public async initializeService() {
@@ -31,17 +31,18 @@ export class CommonService {
 
   public async fetchGames() {
     const res = await database.transaction('r', ['games', 'teams'], async () => {
-			var games = await database.games.orderBy('gameDate').reverse().toArray();
+			var games = await database.games.orderBy('game_date').reverse().toArray();
+			var teams = await database.teams.toArray();
 			var weekday = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 			return games.map(game => ({
 				gameId: game.id,
-				gameDay: weekday[new Date(game.gameDate).getDay()],
-				gameDate: new Date(game.gameDate),
-				eventId: game.eventId,
-				homeTeamName: game.homeTeam.teamName,
-				awayTeamName: game.awayTeam.teamName,
-				homeTeamScore: game.homeFinal,
-				awayTeamScore: game.awayFinal,
+				gameDay: weekday[new Date(game.game_date).getDay()],
+				gameDate: new Date(game.game_date),
+				eventId: game.event_id,
+				homeTeamName: teams.find(t => t.id == game.home_team_id)!.name,
+				awayTeamName: teams.find(t => t.id == game.away_team_id)!.name,
+				homeTeamScore: game.home_final,
+				awayTeamScore: game.away_final,
 			}))
 		});
 		this.homePageGamesSrc.set(res);

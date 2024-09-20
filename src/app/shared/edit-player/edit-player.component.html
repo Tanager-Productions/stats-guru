@@ -1,14 +1,14 @@
 @if (player(); as player) {
 	<ion-content class="ion-padding">
 		<ion-input
-			[(ngModel)]="player.firstName"
+			[(ngModel)]="player.first_name"
 			labelPlacement="stacked"
 			label="First Name"
 			fill="outline"
 			[readonly]="!editPlayer"
 		></ion-input>
 		<ion-input
-			[(ngModel)]="player.lastName"
+			[(ngModel)]="player.last_name"
 			fill="outline"
 			labelPlacement="stacked"
 			label="Last Name"
@@ -26,7 +26,7 @@
 			fill="outline"
 			labelPlacement="stacked"
 			label="Temporary Number"
-			[value]="stat()?.playerNumber"
+			[value]="stat()?.player_number"
 			[readonly]="!editPlayer"
 			#temporaryNum
 		></ion-input>

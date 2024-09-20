@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
-import { Player, Stat, SyncState } from 'src/app/types/models';
-import { defaultPlayer } from '@tanager/tgs';
+import { Stat, Player, SyncState } from 'src/app/app.types';
+import { defaultPlayer } from 'src/app/app.utils';
 
 @Component({
 	selector: 'app-add-player',
@@ -19,17 +19,17 @@ export class AddPlayerComponent {
 	protected newPlayerLastName!: string;
 	public teamId = input.required<number>();
 	public isMale = input.required<boolean>();
-	public stats = input.required<Stat[]>();
+	public stats = input.required<(Stat & { sync_state: SyncState })[]>();
 	public color = input.required<string>();
-	public players = input.required<Player[]>();
+	public players = input.required<(Player & { sync_state: SyncState })[]>();
 	public dismiss = output();
-	public playerAdded = output<Player>();
-	public playerHiddenChanged = output<Player>();
+	public playerAdded = output<Player & { sync_state: SyncState }>();
+	public playerHiddenChanged = output<Player & { sync_state: SyncState }>();
 	public mapping = computed(() => {
 		const players = this.players();
 		const stats = this.stats();
 		return players.map(player => {
-			const stat = stats.find(t => t.playerId == player.id);
+			const stat = stats.find(t => t.player_id == player.id);
 			return { stat, player };
 		})
 	});
@@ -37,12 +37,12 @@ export class AddPlayerComponent {
 	public addToTeam() {
 		this.playerAdded.emit({
 			...defaultPlayer,
-			syncState: SyncState.Added,
-			firstName: this.newPlayerFirstName,
-			lastName: this.newPlayerLastName,
+			sync_state: SyncState.Added,
+			first_name: this.newPlayerFirstName,
+			last_name: this.newPlayerLastName,
 			number: this.newPlayerNumber,
-			teamId: this.teamId(),
-			isMale: this.isMale()
+			team_id: this.teamId(),
+			is_male: this.isMale()
 		});
 		this.dismiss.emit();
 	}
