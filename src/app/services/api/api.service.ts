@@ -32,14 +32,14 @@ export class ApiService {
 		withLatestFrom(this.ping$),
 		map(([online, ping]) => online && ping)
 	)
-	public isOnline = toSignal(this.online$, { initialValue: false });
+	public isOnline = toSignal(this.online$, { initialValue: true });
 	public user?: User;
 
 	readonly auth = {
 		getCredential: (key: Credentials) => localStorage.getItem(key),
 		storeCredential: (key: Credentials, value: string) => localStorage.setItem(key, value),
 		fetchUser: () => this.http.get<User>(`rpc/get_current_user`),
-		generateApiToken: (application_key: string) => this.http.post(`rpc/generate_api_token`, { application_key }, { responseType: 'text' })
+		generateApiToken: (p_app_key: string) => this.http.post<string>(`rpc/generate_api_token`, { p_app_key })
 	} as const
 
 	readonly data = {

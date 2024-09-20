@@ -12,7 +12,8 @@ import { HeaderComponent } from 'src/app/shared/header/header.component';
 	templateUrl: './login.page.html',
 	styleUrls: ['./login.page.scss'],
 	standalone: true,
-	imports: [IonicModule, NgIf, FormsModule, HeaderComponent]
+	imports: [IonicModule, NgIf, FormsModule, HeaderComponent],
+	host: { class: 'page' }
 })
 export class LoginPage {
 	private server = inject(ApiService);

@@ -3,9 +3,15 @@
 @import 'ag-grid-community/styles/ag-theme-balham.css';
 
 ion-modal {
-  --width: 90%;
-  --height: 90%;
-  --border-radius: 6px;
+	--width: 90%;
+	--height: 90%;
+	--border-radius: 6px;
+}
+
+.page {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
 }
 
 /*Custom colors*/
@@ -20,11 +26,11 @@ ion-modal {
 
 .ion-color-missed {
 	--ion-color-base: #d79d9b !important;
-	--ion-color-base-rgb:  #d79d9b !important;
-	--ion-color-contrast:  white !important;
-	--ion-color-contrast-rgb:  #d79d9b !important;
-	--ion-color-shade:  #d79d9b !important;
-	--ion-color-tint:  #d79d9b !important;
+	--ion-color-base-rgb: #d79d9b !important;
+	--ion-color-contrast: white !important;
+	--ion-color-contrast-rgb: #d79d9b !important;
+	--ion-color-shade: #d79d9b !important;
+	--ion-color-tint: #d79d9b !important;
 }
 
 .ion-color-blue {
@@ -187,7 +193,7 @@ ion-modal {
 }
 
 [hidden] {
-  display: none !important;
+	display: none !important;
 }
 
 ion-popover.scrollable {

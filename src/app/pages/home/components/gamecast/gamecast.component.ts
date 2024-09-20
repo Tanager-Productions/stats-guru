@@ -37,6 +37,7 @@ type AutoComplete = 'rebound' | 'assist' | 'missed' | 'turnover' | null;
 		SlicePipe,
 		DatePipe
 	],
+	host: { class: 'page' },
 })
 export class GamecastComponent {
 	//inject

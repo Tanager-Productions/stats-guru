@@ -12,6 +12,7 @@ import { ColDef } from 'ag-grid-community';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { debounceTime, distinctUntilChanged, fromEvent } from 'rxjs';
 import { ApiService } from 'src/app/services/api/api.service';
+import { HeaderComponent } from 'src/app/shared/header/header.component';
 
 @Component({
 	selector: 'app-games',
@@ -26,7 +27,9 @@ import { ApiService } from 'src/app/services/api/api.service';
 		RouterLink,
 		DatePipe,
 		AgGridModule,
+		HeaderComponent
 	],
+	host: { class: 'page' }
 })
 export class GamesComponent {
 	private server = inject(ApiService)

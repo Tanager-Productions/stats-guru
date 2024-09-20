@@ -22,7 +22,7 @@ export class EditPlayerComponent {
 	public updateTemporaryPlayerNumber(player: Player, $event: any | undefined) {
 		this.dataService.updateStat({
 			player: player,
-			updateFn: stat => stat.playerNumber = $event
+			updateFn: stat => stat.player_number = $event
 		});
 	}
 }
