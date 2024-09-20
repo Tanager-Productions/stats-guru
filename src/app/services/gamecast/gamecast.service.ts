@@ -3,7 +3,7 @@ import { InputChangeEventDetail } from '@ionic/angular';
 import { IonInputCustomEvent } from '@ionic/core';
 import { database } from 'src/app/app.db';
 import { sortBy } from 'lodash';
-import { Stat, Player, SyncState, Play, Game, GameActions } from 'src/app/app.types';
+import { Stat, Player, SyncState, Play, Game, GameActions, Team } from 'src/app/app.types';
 import { defaultPlayer, defaultStat } from 'src/app/app.utils';
 
 const calculateStatColumns = (model: Stat) => {
@@ -159,17 +159,17 @@ export class GamecastService {
 		}
 	});
 
-	public selectedplayer_id = signal<number | null>(null);
+	public selectedPlayerId = signal<number | null>(null);
 
 	public selectedPlayer = computed(() => {
 		const players = this.players();
-		const player_id = this.selectedplayer_id();
+		const player_id = this.selectedPlayerId();
 		return players.find(t => t.id === player_id);
 	});
 
 	public selectedPlayerStat = computed(() => {
 		const stats = this.stats();
-		const player_id = this.selectedplayer_id();
+		const player_id = this.selectedPlayerId();
 		return stats.find(t => t.player_id == player_id);
 	});
 
@@ -207,7 +207,7 @@ export class GamecastService {
 		});
 	});
 
-	public hiddenplayer_ids = computed(() => {
+	public hiddenPlayerIds = computed(() => {
 		const stats = this.stats();
 		return stats.filter(t => t.player_hidden).map(t => t.player_id);
 	});
@@ -234,6 +234,11 @@ export class GamecastService {
 		}
 	});
 
+	private homeTeamSrc = signal<Team | null>(null);
+	public homeTeam = this.homeTeamSrc.asReadonly();
+	private awayTeamSrc = signal<Team | null>(null);
+	public awayTeam = this.awayTeamSrc.asReadonly();
+
 	/**
 	 * Forces a final game save before they leave the page
 	 */
@@ -244,6 +249,9 @@ export class GamecastService {
 	public async setGame(gameId: number) {
 		const game = (await database.games.get(gameId))!;
 		this.gameSrc.set(game);
+
+		this.homeTeamSrc.set(await database.teams.get(game.home_team_id) ?? null);
+		this.awayTeamSrc.set(await database.teams.get(game.away_team_id) ?? null);
 
 		const players = await database.players
 			.where('team_id').equals(game.home_team_id)
@@ -289,7 +297,7 @@ export class GamecastService {
 		if (!homeTeamPlayer) {
 			homeTeamPlayer = {
 				...newTeamPlayer,
-				is_male: game.homeTeam.isMale,
+				is_male: this.homeTeam()!.is_male,
 				team_id: game.home_team_id
 			}
 			await this.addPlayer(homeTeamPlayer);
@@ -298,7 +306,7 @@ export class GamecastService {
 		if (!awayTeamPlayer) {
 			awayTeamPlayer = {
 				...newTeamPlayer,
-				isMale: game.awayTeam.isMale,
+				is_male: this.awayTeam()!.is_male,
 				team_id: game.away_team_id
 			}
 			await this.addPlayer(awayTeamPlayer);
@@ -319,7 +327,7 @@ export class GamecastService {
 		}
 	}
 
-	public async addPlayer(player: Player) {
+	public async addPlayer(player: Player & { sync_state: SyncState }) {
 		const newPlyaer = {
 			...defaultPlayer,
 			id: undefined!,
@@ -356,7 +364,7 @@ export class GamecastService {
 	}
 
 	public updateStat(options: { player?: Player, updateFn: (stat: Stat) => void }) {
-		const player_id = options.player ? options.player.id : this.selectedplayer_id();
+		const player_id = options.player ? options.player.id : this.selectedPlayerId();
 		if (player_id == null) {
 			throw 'What exactly are you trying to do?';
 		} else {
@@ -501,12 +509,12 @@ export class GamecastService {
 			sg_legacy_data: null,
 			sync_state: SyncState.Added,
 			period: game.period,
-			player: selectedPlayer && (action != GameActions.FullTO && action != GameActions.PartialTO) ? { ...selectedPlayer, player_id: selectedPlayer.id } : null,
-			team: team == 'home' ? { ...game.homeTeam, name: game.homeTeam.teamName } : { ...game.awayTeam, name: game.awayTeam.teamName },
+			player_id: selectedPlayer && (action != GameActions.FullTO && action != GameActions.PartialTO) ? selectedPlayer.id : null,
+			team_id: team == 'home' ? game.home_team_id : game.away_team_id,
 			score: `${game.home_final} - ${game.away_final}`,
-			timeStamp: new Date().toJSON(),
+			time_stamp: new Date().toJSON(),
 			action: action,
-			gameClock: game.clock
+			game_clock: game.clock
 		}
 		database.transaction('rw', 'plays', async () => {
 			const existing = await database.plays.get({ gameId: game.id, id: play.id });
@@ -560,7 +568,7 @@ export class GamecastService {
 		this.gameSrc.set(game);
 	}
 
-	public updateplus_or_minus(homePOMToAdd: number, awayPOMToAdd: number) {
+	public updatePlusOrMinus(homePOMToAdd: number, awayPOMToAdd: number) {
 		const game = this.game()!;
 		database.transaction('rw', 'stats', () => {
 			database.stats
@@ -608,7 +616,7 @@ export class GamecastService {
 
 	private undoAction(play: Play) {
 		const game = { ...this.game()! };
-		const player = this.players().find(t => t.id == play.player?.player_id);
+		const player = this.players().find(t => t.id == play.player_id);
 		if (play.action == GameActions.Assist) {
 			this.updateStat({
 				player: player,
@@ -679,7 +687,7 @@ export class GamecastService {
 				updateFn: stat => stat.free_throws_attempted--
 			});
 		} else if (play.action == GameActions.FullTO) {
-			if (play.team?.team_id == game.home_team_id) {
+			if (play.team_id == game.home_team_id) {
 				game.home_team_tol++;
 				game.home_full_tol!++;
 			} else {
@@ -692,7 +700,7 @@ export class GamecastService {
 				updateFn: stat => stat.offensive_rebounds--
 			});
 		} else if (play.action == GameActions.PartialTO) {
-			if (play.team?.team_id == game.home_team_id) {
+			if (play.team_id == game.home_team_id) {
 				game.home_team_tol++;
 				game.home_partial_tol!++;
 			} else {
@@ -808,7 +816,7 @@ export class GamecastService {
 
 	private redoAction(play: Play) {
 		const game = { ...this.game()! };
-		const player = this.players().find(t => t.id == play.player?.player_id);
+		const player = this.players().find(t => t.id == play.player_id);
 		let updateFn: (stat: Stat) => void = () => { };
 		if (play.action == GameActions.Assist) {
 			updateFn = stat => stat.assists++
@@ -862,7 +870,7 @@ export class GamecastService {
 		} else if (play.action == GameActions.FreeThrowMissed) {
 			updateFn = stat => stat.free_throws_attempted++
 		} else if (play.action == GameActions.FullTO) {
-			if (play.team?.name == game.homeTeam.teamName) {
+			if (play.team_id == game.home_team_id) {
 				game.home_team_tol--;
 				game.home_full_tol!--;
 			} else {
@@ -872,7 +880,7 @@ export class GamecastService {
 		} else if (play.action == GameActions.OffRebound) {
 			updateFn = stat => stat.offensive_rebounds++
 		} else if (play.action == GameActions.PartialTO) {
-			if (play.team?.name == game.homeTeam.teamName) {
+			if (play.team_id == game.home_team_id) {
 				game.home_team_tol--;
 				game.home_partial_tol!--;
 			} else {

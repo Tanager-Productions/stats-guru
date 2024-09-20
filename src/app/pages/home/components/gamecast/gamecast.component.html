@@ -3,7 +3,7 @@
 	  <ion-toolbar color="primary">
 		<ion-breadcrumbs>
 		  <ion-breadcrumb routerLink="/home/games">Games</ion-breadcrumb>
-		  <ion-breadcrumb>Gamecast: {{ game.homeTeam.teamName }} VS {{ game.awayTeam.teamName }} ({{game.homeTeam.isMale ? 'Mens' : 'Womens'}})</ion-breadcrumb>
+		  <ion-breadcrumb>Gamecast: {{ dataService.homeTeam()?.name }} VS {{ dataService.awayTeam()?.name }} ({{dataService.homeTeam()?.is_male ? 'Mens' : 'Womens'}})</ion-breadcrumb>
 		</ion-breadcrumbs>
 		<ion-buttons slot="end">
 			<ion-button (click)="dataService.removeLastPlay()">
@@ -48,15 +48,15 @@
 	  <ion-toolbar color="dark" class="clickable" id="playsModalTrigger">
 		<div style="display: flex; flex-direction: column; padding: 8px;">
 			@for (play of dataService.plays() | slice:0:3; track play.id) {
-				@if (play.turboStatsData) {
-					<ion-label>{{play.turboStatsData}}</ion-label>
-				} @else if (play.sgLegacyData) {
+				@if (play.turbo_stats_data) {
+					<ion-label>{{play.turbo_stats_data}}</ion-label>
+				} @else if (play.sg_legacy_data) {
 					<ion-label>
-						{{play.id}} | {{play.sgLegacyData}} | {{actions.get(play.action)}} | P{{play.period}} | {{play.score}} | {{play.gameClock}} | {{play.timeStamp | date: 'shortTime'}}
+						{{play.id}} | {{play.sg_legacy_data}} | {{actions.get(play.action)}} | P{{play.period}} | {{play.score}} | {{play.game_clock}} | {{play.time_stamp | date: 'shortTime'}}
 					</ion-label>
 				} @else {
 					<ion-label>
-						{{play.id}} | {{play.team?.name}} | {{play.player?.number}} {{play.player?.firstName}} {{play.player?.lastName}} | {{actions.get(play.action)}} | P{{play.period}} | {{play.score}} | {{play.gameClock}} | {{play.timeStamp | date: 'shortTime'}}
+						{{play.id}} | {{getPlayDescription(play)}} | {{actions.get(play.action)}} | P{{play.period}} | {{play.score}} | {{play.game_clock}} | {{play.time_stamp | date: 'shortTime'}}
 					</ion-label>
 				}
 			}
@@ -82,7 +82,7 @@
 									color="{{homeColor()}}"
 									(click)="addToCourt('home', player)"
 									[style.fontSize.px]="fontSize">
-									{{this.findStat(player.id)?.playerNumber ? this.findStat(player.id)?.playerNumber : player.number}}
+									{{this.findStat(player.id)?.player_number ? this.findStat(player.id)?.player_number : player.number}}
 								</ion-button>
 								<ion-popover trigger="context-menu-trigger{{$index}}" [showBackdrop]="false" triggerAction="context-menu">
 									<ng-template>
@@ -100,10 +100,10 @@
 								<ion-card>
 									<ion-card-header>
 										<ion-card-title color="{{homeColor()}}" class="ion-text-center">
-											{{ game.homeTeam.teamName }}
+											{{ dataService.homeTeam()?.name }}
 										</ion-card-title>
 										<ion-label class="ion-margin-top ion-text-center">
-											<ion-button id="editHomePeriod" fill="clear" color="{{homeColor()}}" class="team-score digital-number">{{ game.homeFinal }}</ion-button>
+											<ion-button id="editHomePeriod" fill="clear" color="{{homeColor()}}" class="team-score digital-number">{{ game.home_final }}</ion-button>
 											<div class="home-font">
 												<div class="input-div">
 													<div class="input">
@@ -115,7 +115,7 @@
 															id="homeCurrentFouls"
 															(ionChange)="dataService.updateCurrentFouls('home', $event)"
 															[placeholder]="0"
-															[value]="this.game.homeCurrentFouls">
+															[value]="this.game.home_current_fouls">
 														</ion-input>
 													</div>
 													<div class="input">
@@ -127,7 +127,7 @@
 															id="homePartialTOL"
 															(ionChange)="dataService.updatePartialTOLs('home', $event)"
 															[placeholder]="0"
-															[value]="this.game.homePartialTOL">
+															[value]="this.game.home_partial_tol">
 														</ion-input>
 													</div>
 													<div class="input">
@@ -139,7 +139,7 @@
 															id="homeFullTOL"
 															(ionChange)="dataService.updateFullTOLs('home', $event)"
 															[placeholder]="0"
-															[value]="this.game.homeFullTOL">
+															[value]="this.game.home_full_tol">
 														</ion-input>
 													</div>
 												</div>
@@ -229,7 +229,7 @@
 														expand="block"
 														(tap)="selectPlayer(player.id)"
 														(doubleTap)="removeFromCourt(player)">
-														<ion-label>{{this.findStat(player.id)?.playerNumber ? this.findStat(player.id)?.playerNumber : player.number}}</ion-label>
+														<ion-label>{{this.findStat(player.id)?.player_number ? this.findStat(player.id)?.player_number : player.number}}</ion-label>
 													</ion-button>
 												}
 											</ion-col>
@@ -279,11 +279,11 @@
 										<ion-col size="8">
 											<ion-item [button]="true" (click)="dataService.switchPossession()" color="light" class="ion-text-center" lines="none">
 												<ion-button color="warning" slot="start" fill="clear">
-													<ion-icon name="radio-button-{{game.homeHasPossession ? 'on' : 'off'}}" slot="icon-only"></ion-icon>
+													<ion-icon name="radio-button-{{game.home_has_possession ? 'on' : 'off'}}" slot="icon-only"></ion-icon>
 												</ion-button>
 												<ion-label>POSS</ion-label>
 												<ion-button color="warning" slot="end" fill="clear">
-													<ion-icon name="radio-button-{{!game.homeHasPossession ? 'on' : 'off'}}" slot="icon-only"></ion-icon>
+													<ion-icon name="radio-button-{{!game.home_has_possession ? 'on' : 'off'}}" slot="icon-only"></ion-icon>
 												</ion-button>
 											</ion-item>
 										</ion-col>
@@ -296,7 +296,7 @@
 												@if (dataService.selectedPlayerStat(); as selectedPlayerStat) {
 													<ion-card>
 														<ion-card-header>
-															  <ion-card-title>{{ selectedPlayer.firstName }}  {{selectedPlayer.lastName}}</ion-card-title>
+															  <ion-card-title>{{ selectedPlayer.first_name }}  {{selectedPlayer.last_name}}</ion-card-title>
 														</ion-card-header>
 
 														<ion-card-content>
@@ -392,10 +392,10 @@
 								<ion-card>
 									<ion-card-header>
 										<ion-card-title color="{{awayColor()}}" class="ion-text-center ion-no-padding">
-											{{ game.awayTeam.teamName }}
+											{{ dataService.awayTeam()?.name }}
 										</ion-card-title>
 										<ion-label class="ion-margin-top ion-text-center">
-											<ion-button id="editAwayPeriod" fill="clear" color="{{awayColor()}}" class="team-score digital-number">{{ game.awayFinal }}</ion-button>
+											<ion-button id="editAwayPeriod" fill="clear" color="{{awayColor()}}" class="team-score digital-number">{{ game.away_final }}</ion-button>
 											<div class="away-font">
 												<div class="input-div">
 													<div class="input">
@@ -407,7 +407,7 @@
 															id="awayCurrentFouls"
 															(ionChange)="dataService.updateCurrentFouls('away', $event)"
 															[placeholder]="0"
-															[value]="this.game.awayCurrentFouls">
+															[value]="this.game.away_current_fouls">
 														</ion-input>
 													</div>
 													<div class="input">
@@ -419,7 +419,7 @@
 															id="awayPartialTOL"
 															(ionChange)="dataService.updatePartialTOLs('away', $event)"
 															[placeholder]="0"
-															[value]="this.game.awayPartialTOL">
+															[value]="this.game.away_partial_tol">
 														</ion-input>
 													</div>
 													<div class="input">
@@ -431,7 +431,7 @@
 															id="awayFullTOL"
 															(ionChange)="dataService.updateFullTOLs('away', $event)"
 															[placeholder]="0"
-															[value]="this.game.awayFullTOL">
+															[value]="this.game.away_full_tol">
 														</ion-input>
 													</div>
 												</div>
@@ -519,7 +519,7 @@
 														expand="block"
 														(tap)="selectPlayer(player.id)"
 														(doubleTap)="removeFromCourt(player)">
-														<ion-label>{{this.findStat(player.id)?.playerNumber ? this.findStat(player.id)?.playerNumber : player.number}}</ion-label>
+														<ion-label>{{this.findStat(player.id)?.player_number ? this.findStat(player.id)?.player_number : player.number}}</ion-label>
 													</ion-button>
 												}
 											</ion-col>
@@ -554,7 +554,7 @@
 									id="context-menu-trigger-away{{$index}}"
 									(click)="addToCourt('away', player)"
 									[style.fontSize.px]="fontSize">
-									{{this.findStat(player.id)?.playerNumber ? this.findStat(player.id)?.playerNumber : player.number}}
+									{{this.findStat(player.id)?.player_number ? this.findStat(player.id)?.player_number : player.number}}
 								</ion-button>
 								<ion-popover trigger="context-menu-trigger-away{{$index}}" [showBackdrop]="false" triggerAction="context-menu">
 									<ng-template>
@@ -607,31 +607,31 @@
 					</ion-segment>
 					@for (play of dataService.plays(); track play.id) {
 						@if (periods.value == '1') {
-							@if (play.period == 1 || play.turboStatsData?.includes('P1')){
-								<ion-item [button]="!play.turboStatsData && !play.sgLegacyData" id="playTrigger{{play.id}}">
-									@if (play.turboStatsData) {
-										<ion-label>{{play.turboStatsData}}</ion-label>
-									} @else if (play.sgLegacyData) {
+							@if (play.period == 1 || play.turbo_stats_data?.includes('P1')){
+								<ion-item [button]="!play.turbo_stats_data && !play.sg_legacy_data" id="playTrigger{{play.id}}">
+									@if (play.turbo_stats_data) {
+										<ion-label>{{play.turbo_stats_data}}</ion-label>
+									} @else if (play.sg_legacy_data) {
 										<ion-label>
-											{{play.id}} | {{play.sgLegacyData}} | {{actions.get(play.action)}} | P{{play.period}} | {{play.score}} | {{play.gameClock}} | {{play.timeStamp | date: 'shortTime'}}
+											{{play.id}} | {{play.sg_legacy_data}} | {{actions.get(play.action)}} | P{{play.period}} | {{play.score}} | {{play.game_clock}} | {{play.time_stamp | date: 'shortTime'}}
 										</ion-label>
 									} @else {
 										<ion-label>
-											{{play.id}} | {{play.team?.name}} | {{play.player?.number}} {{play.player?.firstName}} {{play.player?.lastName}} | {{actions.get(play.action)}} | P{{play.period}} | {{play.score}} | {{play.gameClock}} | {{play.timeStamp | date: 'shortTime'}}
+											{{play.id}} | {{getPlayDescription(play)}} | {{actions.get(play.action)}} | P{{play.period}} | {{play.score}} | {{play.game_clock}} | {{play.time_stamp | date: 'shortTime'}}
 										</ion-label>
 
 										<ion-popover trigger="playTrigger{{play.id}}">
 											<ng-template>
 												<ion-content class="ion-padding">
-													<ion-select label="Team" [value]="play.team?.teamId" #teamId>
-														<ion-select-option [value]="game.homeTeam.teamId">{{ game.homeTeam.teamName }}</ion-select-option>
-														<ion-select-option [value]="game.awayTeam.teamId">{{ game.awayTeam.teamName }}</ion-select-option>
+													<ion-select label="Team" [value]="play.team_id" #teamId>
+														<ion-select-option [value]="game.home_team_id">{{ dataService.homeTeam()?.name }}</ion-select-option>
+														<ion-select-option [value]="game.away_team_id">{{ dataService.awayTeam()?.name }}</ion-select-option>
 													</ion-select>
-													<ion-select label="Player" #playerId [value]="play.player ? play.player.playerId : null">
+													<ion-select label="Player" #playerId [value]="play.player_id">
 														<ion-select-option [value]="null">Null</ion-select-option>
 														@for (item of dataService.players(); track item.id) {
-															@if (item.teamId == teamId.value) {
-																<ion-select-option [value]="item.id">{{ item.number }} {{ item.firstName }} {{ item.lastName }}</ion-select-option>
+															@if (item.team_id == teamId.value) {
+																<ion-select-option [value]="item.id">{{ item.number }} {{ item.first_name }} {{ item.last_name }}</ion-select-option>
 															}
 														}
 													</ion-select>
@@ -649,31 +649,31 @@
 							}
 						}
 						@else if (periods.value == '2') {
-							@if (play.period == 2 || play.turboStatsData?.includes('P2')){
-								<ion-item [button]="!play.turboStatsData && !play.sgLegacyData" id="playTrigger{{play.id}}">
-									@if (play.turboStatsData) {
-										<ion-label>{{play.turboStatsData}}</ion-label>
-									} @else if (play.sgLegacyData) {
+							@if (play.period == 2 || play.turbo_stats_data?.includes('P2')){
+								<ion-item [button]="!play.turbo_stats_data && !play.sg_legacy_data" id="playTrigger{{play.id}}">
+									@if (play.turbo_stats_data) {
+										<ion-label>{{play.turbo_stats_data}}</ion-label>
+									} @else if (play.sg_legacy_data) {
 										<ion-label>
-											{{play.id}} | {{play.sgLegacyData}} | {{actions.get(play.action)}} | P{{play.period}} | {{play.score}} | {{play.gameClock}} | {{play.timeStamp | date: 'shortTime'}}
+											{{play.id}} | {{play.sg_legacy_data}} | {{actions.get(play.action)}} | P{{play.period}} | {{play.score}} | {{play.game_clock}} | {{play.time_stamp | date: 'shortTime'}}
 										</ion-label>
 									} @else {
 										<ion-label>
-											{{play.id}} | {{play.team?.name}} | {{play.player?.number}} {{play.player?.firstName}} {{play.player?.lastName}} | {{actions.get(play.action)}} | P{{play.period}} | {{play.score}} | {{play.gameClock}} | {{play.timeStamp | date: 'shortTime'}}
+											{{play.id}} | {{getPlayDescription(play)}} | {{actions.get(play.action)}} | P{{play.period}} | {{play.score}} | {{play.game_clock}} | {{play.time_stamp | date: 'shortTime'}}
 										</ion-label>
 
 										<ion-popover trigger="playTrigger{{play.id}}">
 											<ng-template>
 												<ion-content class="ion-padding">
-													<ion-select label="Team" [value]="play.team?.teamId" #teamId>
-														<ion-select-option [value]="game.homeTeam.teamId">{{ game.homeTeam.teamName }}</ion-select-option>
-														<ion-select-option [value]="game.awayTeam.teamId">{{ game.awayTeam.teamName }}</ion-select-option>
+													<ion-select label="Team" [value]="play.team_id" #teamId>
+														<ion-select-option [value]="game.home_team_id">{{ dataService.homeTeam()?.name }}</ion-select-option>
+														<ion-select-option [value]="game.away_team_id">{{ dataService.awayTeam()?.name }}</ion-select-option>
 													</ion-select>
-													<ion-select label="Player" #playerId [value]="play.player ? play.player.playerId : null">
+													<ion-select label="Player" #playerId [value]="play.player_id">
 														<ion-select-option [value]="null">Null</ion-select-option>
 														@for (item of dataService.players(); track item.id) {
-															@if (item.teamId == teamId.value) {
-																<ion-select-option [value]="item.id">{{ item.number }} {{ item.firstName }} {{ item.lastName }}</ion-select-option>
+															@if (item.team_id == teamId.value) {
+																<ion-select-option [value]="item.id">{{ item.number }} {{ item.first_name }} {{ item.last_name }}</ion-select-option>
 															}
 														}
 													</ion-select>
@@ -690,31 +690,31 @@
 								</ion-item>
 							}
 						} @else if (periods.value == '3') {
-							@if (play.period == 3 || play.turboStatsData?.includes('P3')){
-								<ion-item [button]="!play.turboStatsData && !play.sgLegacyData" id="playTrigger{{play.id}}">
-									@if (play.turboStatsData) {
-										<ion-label>{{play.turboStatsData}}</ion-label>
-									} @else if (play.sgLegacyData) {
+							@if (play.period == 3 || play.turbo_stats_data?.includes('P3')){
+								<ion-item [button]="!play.turbo_stats_data && !play.sg_legacy_data" id="playTrigger{{play.id}}">
+									@if (play.turbo_stats_data) {
+										<ion-label>{{play.turbo_stats_data}}</ion-label>
+									} @else if (play.sg_legacy_data) {
 										<ion-label>
-											{{play.id}} | {{play.sgLegacyData}} | {{actions.get(play.action)}} | P{{play.period}} | {{play.score}} | {{play.gameClock}} | {{play.timeStamp | date: 'shortTime'}}
+											{{play.id}} | {{play.sg_legacy_data}} | {{actions.get(play.action)}} | P{{play.period}} | {{play.score}} | {{play.game_clock}} | {{play.time_stamp | date: 'shortTime'}}
 										</ion-label>
 									} @else {
 										<ion-label>
-											{{play.id}} | {{play.team?.name}} | {{play.player?.number}} {{play.player?.firstName}} {{play.player?.lastName}} | {{actions.get(play.action)}} | P{{play.period}} | {{play.score}} | {{play.gameClock}} | {{play.timeStamp | date: 'shortTime'}}
+											{{play.id}} | {{getPlayDescription(play)}} | {{actions.get(play.action)}} | P{{play.period}} | {{play.score}} | {{play.game_clock}} | {{play.time_stamp | date: 'shortTime'}}
 										</ion-label>
 
 										<ion-popover trigger="playTrigger{{play.id}}">
 											<ng-template>
 												<ion-content class="ion-padding">
-													<ion-select label="Team" [value]="play.team?.teamId" #teamId>
-														<ion-select-option [value]="game.homeTeam.teamId">{{ game.homeTeam.teamName }}</ion-select-option>
-														<ion-select-option [value]="game.awayTeam.teamId">{{ game.awayTeam.teamName }}</ion-select-option>
+													<ion-select label="Team" [value]="play.team_id" #teamId>
+														<ion-select-option [value]="game.home_team_id">{{ dataService.homeTeam()?.name }}</ion-select-option>
+														<ion-select-option [value]="game.away_team_id">{{ dataService.awayTeam()?.name }}</ion-select-option>
 													</ion-select>
-													<ion-select label="Player" #playerId [value]="play.player ? play.player.playerId : null">
+													<ion-select label="Player" #playerId [value]="play.player_id">
 														<ion-select-option [value]="null">Null</ion-select-option>
 														@for (item of dataService.players(); track item.id) {
-															@if (item.teamId == teamId.value) {
-																<ion-select-option [value]="item.id">{{ item.number }} {{ item.firstName }} {{ item.lastName }}</ion-select-option>
+															@if (item.team_id == teamId.value) {
+																<ion-select-option [value]="item.id">{{ item.number }} {{ item.first_name }} {{ item.last_name }}</ion-select-option>
 															}
 														}
 													</ion-select>
@@ -732,31 +732,31 @@
 							}
 						}
 						@else if (periods.value == '4') {
-							@if (play.period == 4 || play.turboStatsData?.includes('P4')){
-								<ion-item [button]="!play.turboStatsData && !play.sgLegacyData" id="playTrigger{{play.id}}">
-									@if (play.turboStatsData) {
-										<ion-label>{{play.turboStatsData}}</ion-label>
-									} @else if (play.sgLegacyData) {
+							@if (play.period == 4 || play.turbo_stats_data?.includes('P4')){
+								<ion-item [button]="!play.turbo_stats_data && !play.sg_legacy_data" id="playTrigger{{play.id}}">
+									@if (play.turbo_stats_data) {
+										<ion-label>{{play.turbo_stats_data}}</ion-label>
+									} @else if (play.sg_legacy_data) {
 										<ion-label>
-											{{play.id}} | {{play.sgLegacyData}} | {{actions.get(play.action)}} | P{{play.period}} | {{play.score}} | {{play.gameClock}} | {{play.timeStamp | date: 'shortTime'}}
+											{{play.id}} | {{play.sg_legacy_data}} | {{actions.get(play.action)}} | P{{play.period}} | {{play.score}} | {{play.game_clock}} | {{play.time_stamp | date: 'shortTime'}}
 										</ion-label>
 									} @else {
 										<ion-label>
-											{{play.id}} | {{play.team?.name}} | {{play.player?.number}} {{play.player?.firstName}} {{play.player?.lastName}} | {{actions.get(play.action)}} | P{{play.period}} | {{play.score}} | {{play.gameClock}} | {{play.timeStamp | date: 'shortTime'}}
+											{{play.id}} | {{getPlayDescription(play)}} | {{actions.get(play.action)}} | P{{play.period}} | {{play.score}} | {{play.game_clock}} | {{play.time_stamp | date: 'shortTime'}}
 										</ion-label>
 
 										<ion-popover trigger="playTrigger{{play.id}}">
 											<ng-template>
 												<ion-content class="ion-padding">
-													<ion-select label="Team" [value]="play.team?.teamId" #teamId>
-														<ion-select-option [value]="game.homeTeam.teamId">{{ game.homeTeam.teamName }}</ion-select-option>
-														<ion-select-option [value]="game.awayTeam.teamId">{{ game.awayTeam.teamName }}</ion-select-option>
+													<ion-select label="Team" [value]="play.team_id" #teamId>
+														<ion-select-option [value]="game.home_team_id">{{ dataService.homeTeam()?.name }}</ion-select-option>
+														<ion-select-option [value]="game.away_team_id">{{ dataService.awayTeam()?.name }}</ion-select-option>
 													</ion-select>
-													<ion-select label="Player" #playerId [value]="play.player ? play.player.playerId : null">
+													<ion-select label="Player" #playerId [value]="play.player_id">
 														<ion-select-option [value]="null">Null</ion-select-option>
 														@for (item of dataService.players(); track item.id) {
-															@if (item.teamId == teamId.value) {
-																<ion-select-option [value]="item.id">{{ item.number }} {{ item.firstName }} {{ item.lastName }}</ion-select-option>
+															@if (item.team_id == teamId.value) {
+																<ion-select-option [value]="item.id">{{ item.number }} {{ item.first_name }} {{ item.last_name }}</ion-select-option>
 															}
 														}
 													</ion-select>
@@ -774,31 +774,31 @@
 							}
 						}
 						@else if (periods.value == 'overtime'){
-							@if (play.period! > 4 || (play.turboStatsData != null && !play.turboStatsData!.includes('P1') && !play.turboStatsData!.includes('P2') && !play.turboStatsData!.includes('P3') && !play.turboStatsData!.includes('P4'))) {
-								<ion-item [button]="!play.turboStatsData && !play.sgLegacyData" id="playTrigger{{play.id}}">
-									@if (play.turboStatsData) {
-										<ion-label>{{play.turboStatsData}}</ion-label>
-									} @else if (play.sgLegacyData) {
+							@if (play.period! > 4 || (play.turbo_stats_data != null && !play.turbo_stats_data!.includes('P1') && !play.turbo_stats_data!.includes('P2') && !play.turbo_stats_data!.includes('P3') && !play.turbo_stats_data!.includes('P4'))) {
+								<ion-item [button]="!play.turbo_stats_data && !play.sg_legacy_data" id="playTrigger{{play.id}}">
+									@if (play.turbo_stats_data) {
+										<ion-label>{{play.turbo_stats_data}}</ion-label>
+									} @else if (play.sg_legacy_data) {
 										<ion-label>
-											{{play.id}} | {{play.sgLegacyData}} | {{actions.get(play.action)}} | P{{play.period}} | {{play.score}} | {{play.gameClock}} | {{play.timeStamp | date: 'shortTime'}}
+											{{play.id}} | {{play.sg_legacy_data}} | {{actions.get(play.action)}} | P{{play.period}} | {{play.score}} | {{play.game_clock}} | {{play.time_stamp | date: 'shortTime'}}
 										</ion-label>
 									} @else {
 										<ion-label>
-											{{play.id}} | {{play.team?.name}} | {{play.player?.number}} {{play.player?.firstName}} {{play.player?.lastName}} | {{actions.get(play.action)}} | P{{play.period}} | {{play.score}} | {{play.gameClock}} | {{play.timeStamp | date: 'shortTime'}}
+											{{play.id}} | {{getPlayDescription(play)}} | {{actions.get(play.action)}} | P{{play.period}} | {{play.score}} | {{play.game_clock}} | {{play.time_stamp | date: 'shortTime'}}
 										</ion-label>
 
 										<ion-popover trigger="playTrigger{{play.id}}">
 											<ng-template>
 												<ion-content class="ion-padding">
-													<ion-select label="Team" [value]="play.team?.teamId" #teamId>
-														<ion-select-option [value]="game.homeTeam.teamId">{{ game.homeTeam.teamName }}</ion-select-option>
-														<ion-select-option [value]="game.awayTeam.teamId">{{ game.awayTeam.teamName }}</ion-select-option>
+													<ion-select label="Team" [value]="play.team_id" #teamId>
+														<ion-select-option [value]="game.home_team_id">{{ dataService.homeTeam()?.name }}</ion-select-option>
+														<ion-select-option [value]="game.away_team_id">{{ dataService.awayTeam()?.name }}</ion-select-option>
 													</ion-select>
-													<ion-select label="Player" #playerId [value]="play.player ? play.player.playerId : null">
+													<ion-select label="Player" #playerId [value]="play.player_id">
 														<ion-select-option [value]="null">Null</ion-select-option>
 														@for (item of dataService.players(); track item.id) {
-															@if (item.teamId == teamId.value) {
-																<ion-select-option [value]="item.id">{{ item.number }} {{ item.firstName }} {{ item.lastName }}</ion-select-option>
+															@if (item.team_id == teamId.value) {
+																<ion-select-option [value]="item.id">{{ item.number }} {{ item.first_name }} {{ item.last_name }}</ion-select-option>
 															}
 														}
 													</ion-select>
@@ -835,10 +835,10 @@
 				<ion-toolbar>
 					<ion-segment color="medium" mode="md" [(ngModel)]="statsTab">
 						<ion-segment-button value="home">
-							<ion-label color="{{homeColor()}}">{{game.homeTeam.teamName}}</ion-label>
+							<ion-label color="{{homeColor()}}">{{dataService.homeTeam()?.name}}</ion-label>
 						</ion-segment-button>
 						<ion-segment-button value="away">
-							<ion-label color="{{awayColor()}}">{{game.awayTeam.teamName}}</ion-label>
+							<ion-label color="{{awayColor()}}">{{dataService.awayTeam()?.name}}</ion-label>
 						</ion-segment-button>
 					</ion-segment>
 				</ion-toolbar>
@@ -877,8 +877,8 @@
 	<ion-modal trigger="addHomePlayer" #addHomePlayerModal [backdropDismiss]="false">
 		<ng-template>
 			<app-add-player
-				[teamId]="game.homeTeam.teamId"
-				[isMale]="game.homeTeam.isMale"
+				[teamId]="game.home_team_id"
+				[isMale]="dataService.homeTeam()!.is_male"
 				[players]="dataService.players()"
 				[stats]="dataService.stats()"
 				(playerAdded)="dataService.addPlayer($event)"
@@ -891,8 +891,8 @@
 	<ion-modal trigger="addAwayPlayer" #addAwayPlayerModal [backdropDismiss]="false">
 		<ng-template>
 			<app-add-player
-				[teamId]="game.awayTeam.teamId"
-				[isMale]="game.awayTeam.isMale"
+				[teamId]="game.away_team_id"
+				[isMale]="dataService.awayTeam()!.is_male"
 				[players]="dataService.players()"
 				[stats]="dataService.stats()"
 				(playerAdded)="dataService.addPlayer($event)"
