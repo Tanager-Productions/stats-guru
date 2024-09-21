@@ -1,66 +1,66 @@
-<ion-header *ngIf="isWin" mode="ios" class="ion-no-border">
-    <ion-toolbar data-tauri-drag-region class="drag" color="tertiary">
-      <ion-buttons slot="start" *ngIf="showPopover">
-        <ion-button class="no-drag" id="click-trigger">
-          <ion-icon slot="icon-only" name="person-circle"></ion-icon>
-        </ion-button>
-      </ion-buttons>
-      <ion-title data-tauri-drag-region class="no-select">Stats Guru</ion-title>
-      <ion-buttons slot="end" class="no-drag">
-		<ion-button *ngIf="sync.syncing">
-		  {{ sync.syncingMessage }}
-		  <ion-icon class="syncing" slot="end" name="sync"></ion-icon>
-		</ion-button>
-        <ion-button (click)="minimize()" class="hover">
-          <ion-icon slot="icon-only" name="remove"></ion-icon>
-        </ion-button>
-        <ion-button (click)="maximize()" class="hover">
-          <ion-icon slot="icon-only" name="square-outline"></ion-icon>
-        </ion-button>
-        <ion-button (click)="close()" class="hover-danger">
-          <ion-icon slot="icon-only" name="close"></ion-icon>
-        </ion-button>
-      </ion-buttons>
-    </ion-toolbar>
-    <ng-container [ngTemplateOutlet]="template"></ng-container>
-</ion-header>
-
-<ion-header mode="ios" *ngIf="!isWin" class="drag">
-  <ion-toolbar data-tauri-drag-region color="tertiary">
-    <ion-buttons slot="end" *ngIf="showPopover">
-      <ion-button *ngIf="sync.syncing">
-		{{ sync.syncingMessage }}
-        <ion-icon class="syncing" slot="end" name="sync"></ion-icon>
-      </ion-button>
-      <ion-button class="no-drag" id="click-trigger">
-        <ion-icon slot="icon-only" name="person-circle"></ion-icon>
-      </ion-button>
-    </ion-buttons>
-    <ion-title data-tauri-drag-region class="no-select">Stats Guru</ion-title>
-  </ion-toolbar>
-  <ng-container [ngTemplateOutlet]="template"></ng-container>
-</ion-header>
-
-<ion-popover *ngIf="showPopover()" trigger="click-trigger" [dismissOnSelect]="true">
-  <ng-template>
-    <ion-content>
-      <ion-list lines="full">
-        <ion-list-header>
-          <ion-label>
-            <h2>{{server.user?.fullName || server.user?.email || 'USER NOT FOUND'}}</h2>
-			<p>Next sync in {{ sync.timeRemaining | date:'mm:ss' }}</p>
-          </ion-label>
-        </ion-list-header>
-        <ion-item button="true" href="https://dbm.thegrindsession.com" target="_blank" detail="false">DBM</ion-item>
-		<ion-button (click)="startSync()">
-			<ion-icon name="sync-sharp"></ion-icon> Sync Now
-		</ion-button>
-        <ion-item button="true" detail="false" (click)="navigateToLogin()">Log Out</ion-item>
-      </ion-list>
-    </ion-content>
-  </ng-template>
-</ion-popover>
-
-<ng-template #template>
+<ion-header mode="ios" class="ion-no-border" [ngClass]="{drag: !isWin}">
+	<ion-toolbar data-tauri-drag-region color="tertiary" [ngClass]="{drag: isWin}">
+		@if (isWin() === true) {
+			@if (showPopover()) {
+				<ion-buttons slot="start">
+					<ng-template [ngTemplateOutlet]="po"></ng-template>
+				</ion-buttons>
+			}
+			<ion-title data-tauri-drag-region class="no-select">Stats Guru</ion-title>
+			<ion-buttons slot="end" class="no-drag">
+				@if (sync.syncing()) {
+					<ion-button>
+					  {{ sync.syncingMessage() }}
+					  <ion-icon class="syncing" slot="end" name="sync"></ion-icon>
+					</ion-button>
+				}
+			  <ion-button (click)="minimize()" class="hover">
+				<ion-icon slot="icon-only" name="remove"></ion-icon>
+			  </ion-button>
+			  <ion-button (click)="maximize()" class="hover">
+				<ion-icon slot="icon-only" name="square-outline"></ion-icon>
+			  </ion-button>
+			  <ion-button (click)="close()" class="hover-danger">
+				<ion-icon slot="icon-only" name="close"></ion-icon>
+			  </ion-button>
+			</ion-buttons>
+		} @else if (isWin() === false) {
+			<ion-buttons slot="end">
+				@if (sync.syncing()) {
+					<ion-button>
+					  {{ sync.syncingMessage() }}
+					  <ion-icon class="syncing" slot="end" name="sync"></ion-icon>
+					</ion-button>
+				}
+				@if (showPopover()) {
+					<ng-template [ngTemplateOutlet]="po"></ng-template>
+				}
+			</ion-buttons>
+			<ion-title data-tauri-drag-region class="no-select">Stats Guru</ion-title>
+		}
+	</ion-toolbar>
 	<ng-content></ng-content>
+</ion-header>
+
+<ng-template #po>
+	<ion-button class="no-drag" id="click-trigger">
+	  <ion-icon slot="icon-only" name="person-circle"></ion-icon>
+	</ion-button>
+	<ion-popover trigger="click-trigger" [dismissOnSelect]="true">
+		<ng-template>
+		  <ion-content>
+			<ion-list lines="full">
+			  <ion-list-header>
+				<ion-label>
+				  <h2>{{username()}}</h2>
+				  <p>Next sync in {{ sync.timeRemaining() | date:'mm:ss' }}</p>
+				</ion-label>
+			  </ion-list-header>
+			  <ion-item button="true" href="https://dbm.thegrindsession.com" target="_blank" detail="false">DBM</ion-item>
+			  <ion-item button="true" (click)="startSync()" detail="false">Sync Now</ion-item>
+			  <ion-item button="true" detail="false" (click)="navigateToLogin()">Log Out</ion-item>
+			</ion-list>
+		  </ion-content>
+		</ng-template>
+	</ion-popover>
 </ng-template>

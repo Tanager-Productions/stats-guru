@@ -12,7 +12,8 @@ import { defaultGame } from 'src/app/app.utils';
 	templateUrl: './add-games.component.html',
 	styleUrls: ['./add-games.component.scss'],
 	standalone: true,
-	imports: [IonicModule, FormsModule, NgFor, NgIf]
+	imports: [IonicModule, FormsModule, NgFor, NgIf],
+	host: { class: 'page' }
 })
 export class AddGamesComponent {
 	protected common = inject(CommonService);

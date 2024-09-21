@@ -37,14 +37,15 @@ export class GamesComponent {
 	public common = inject(CommonService);
 	private router = inject(Router);
 	public grid = viewChild(AgGridAngular);
-	public filterEventId: number | null = 0;
 	public gameStats: ColDef<HomePageGame>[] = [
-		{ field: 'gameDay', headerName: 'Date' },
+		{ field: 'gameDay', headerName: 'Day' },
+		{ field: 'gameTime', headerName: 'Time' },
 		{ field: 'gameDate', headerName: 'Date' },
 		{ field: 'homeTeamName', headerName: 'Home Team' },
-		{ field: 'homeTeamScore', headerName: 'Score' },
-		{ field: 'awayTeamName', headerName: 'Home Team' },
-		{ field: 'awayTeamScore', headerName: 'Score' },
+		{ field: 'homeTeamScore', headerName: 'Home Final' },
+		{ field: 'awayTeamName', headerName: 'Away Team' },
+		{ field: 'awayTeamScore', headerName: 'Away Final' },
+		{ field: 'eventTitle', headerName: 'Event', valueFormatter: params => params.value || '-' }
 	]
 
 	public windowResize = toSignal(fromEvent(window, 'resize').pipe(
@@ -58,23 +59,11 @@ export class GamesComponent {
 		grid?.api.sizeColumnsToFit();
 	})
 
-	public gridOption = {
-		onRowClicked: (event: any) => this.routeToPage(event)
-	}
-
-	async ngOnInit() {
+	ngOnInit() {
 		if (this.server.isOnline()) {
-			await this.sync.beginSync(true);
+			this.sync.beginSync(true);
 		} else {
 			this.common.initializeService();
-		}
-	}
-
-	public setData() {
-		if (this.filterEventId != 0) {
-			return this.common.homePageGames().filter(t => t.eventId == this.filterEventId);
-		} else {
-			return this.common.homePageGames();
 		}
 	}
 

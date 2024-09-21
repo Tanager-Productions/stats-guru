@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { ApiService } from '../api/api.service';
 import { BehaviorSubject, Subscription, filter, finalize, interval, lastValueFrom, map, repeat, takeWhile } from 'rxjs';
 import { CommonService } from '../common/common.service';
@@ -26,15 +26,15 @@ export class SyncService {
 	);
 	private initialSyncComplete = new BehaviorSubject<boolean>(false);
 	private timerSubscription?: Subscription;
-	public timeRemaining?: number;
 	public gameCastInProgress = false;
-	public syncing = false;
-	public syncingMessage = '';
+	public timeRemaining = signal<number | null>(null);
+	public syncing = signal(false);
+	public syncingMessage = signal('');
 
 	public async beginSync(isInitial = false) {
 		if (!this.gameCastInProgress) {
-			this.syncing = true;
-			this.syncingMessage = 'Syncing with server...';
+			this.syncing.set(true);
+			this.syncingMessage.set('Syncing with server...');
 			try {
 				const data = await database.getSyncTables();
 				await lastValueFrom(this.api.data.sync(data));
@@ -46,12 +46,12 @@ export class SyncService {
 			} catch (error) {
 				console.log(error);
 			}
-			this.syncingMessage = '';
+			this.syncingMessage.set('');
 			if (isInitial) {
 				this.initialSyncComplete.next(true);
 				this.setTimer();
 			}
-			this.syncing = false;
+			this.syncing.set(false);
 			this.common.initializeService();
 		}
 	}
@@ -76,11 +76,11 @@ export class SyncService {
 		if (this.timerSubscription) {
 			this.timerSubscription.unsubscribe();
 		}
-		this.timerSubscription = this.timeRemaining$.subscribe(t => this.timeRemaining = t);
+		this.timerSubscription = this.timeRemaining$.subscribe(t => this.timeRemaining.set(t));
 	}
 
 	private async getData() {
-		this.syncingMessage = 'Fetching data from server...';
+		this.syncingMessage.set('Fetching data from server...');
 		const response = (await lastValueFrom(this.api.data.getCurrentSeason()))[0];
 		await database.transaction('rw', [
 			'seasons',
@@ -91,29 +91,29 @@ export class SyncService {
 			'plays',
 			'stats'
 		], () => {
-			this.syncingMessage = 'Adding latest season...';
+			this.syncingMessage.set('Adding latest season...');
 			database.seasons.add({
 				year: response.year,
 				conferences: response.conferences,
 				created_on: response.created_on
 			});
 
-			this.syncingMessage = 'Adding teams...';
+			this.syncingMessage.set('Adding teams...');
 			database.teams.bulkAdd(response.teams);
 
-			this.syncingMessage = 'Adding events...';
+			this.syncingMessage.set('Adding events...');
 			database.events.bulkAdd(response.events);
 
-			this.syncingMessage = 'Adding players...';
+			this.syncingMessage.set('Adding players...');
 			database.players.bulkAdd(response.players.map(t => ({ ...t, sync_state: SyncState.Unchanged })));
 
-			this.syncingMessage = 'Adding games...';
+			this.syncingMessage.set('Adding games...');
 			database.games.bulkAdd(response.games.map(t => ({ ...t, sync_state: SyncState.Unchanged })));
 
-			this.syncingMessage = 'Adding plays...';
+			this.syncingMessage.set('Adding plays...');
 			database.plays.bulkAdd(response.games.flatMap(t => t.plays).map(t => ({ ...t, sync_state: SyncState.Unchanged })));
 
-			this.syncingMessage = 'Adding stats...';
+			this.syncingMessage.set('Adding stats...');
 			database.stats.bulkAdd(response.games.flatMap(t => t.stats).map(t => ({ ...t, sync_state: SyncState.Unchanged })));
 		});
 	}

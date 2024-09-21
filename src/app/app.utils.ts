@@ -60,7 +60,7 @@ export const defaultGame: Game = {
 
 export const defaultStat: Stat = {
   game_id: '',
-  player_id: 0,
+  player_id: '',
   minutes: 0,
   assists: 0,
   rebounds: 0,

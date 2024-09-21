@@ -1,44 +1,12 @@
 <app-header>
-	<ion-toolbar color="primary">
+	<ion-toolbar mode="md" color="primary">
 		<ion-breadcrumbs>
 			<ion-breadcrumb>Games</ion-breadcrumb>
 		</ion-breadcrumbs>
 		<ion-buttons slot="end">
-			<ion-button id="filter">
-				<ion-icon slot="icon-only" name="funnel"></ion-icon>
-			</ion-button>
-			<ion-popover [dismissOnSelect]="true" trigger="filter">
-				<ng-template>
-					<ion-content>
-						<ion-list lines="full">
-							<ion-list-header>
-								Filter by Event
-							</ion-list-header>
-							<ion-radio-group [(ngModel)]="filterEventId">
-								<ion-item>
-									<ion-radio [value]="0">All</ion-radio>
-								</ion-item>
-								<ion-item>
-									<ion-radio [value]="null">Unassigned</ion-radio>
-								</ion-item>
-								@for (item of common.events(); track $index) {
-									<ion-item>
-										<ion-radio [value]="item.id">{{item.title}}</ion-radio>
-									</ion-item>
-								}
-							</ion-radio-group>
-						</ion-list>
-					</ion-content>
-				</ng-template>
-			</ion-popover>
 			<ion-button id="addPopoverButton">
 				<ion-icon slot="icon-only" name="add"></ion-icon>
 			</ion-button>
-			<ion-popover trigger="addPopoverButton" #addPopover>
-				<ng-template>
-					<app-add-games (dismiss)="addPopover.dismiss()"></app-add-games>
-				</ng-template>
-			</ion-popover>
 		</ion-buttons>
 	</ion-toolbar>
 </app-header>
@@ -49,10 +17,16 @@
 		style="width: 100%; height: 100%;"
 		[columnDefs]="gameStats"
 		[defaultColDef]="{sortable: true, filter: true, editable: true}"
-		[rowData]="setData()"
+		[rowData]="common.homePageGames()"
 		[rowSelection]="'single'"
 		[pagination]="false"
 		[suppressCellFocus]="true"
-		[gridOptions] ="this.gridOption">
+		(rowClicked)="routeToPage($event)">
 	</ag-grid-angular>
 </ion-content>
+
+<ion-modal trigger="addPopoverButton" #addModal>
+	<ng-template>
+		<app-add-games (dismiss)="addModal.dismiss()"/>
+	</ng-template>
+</ion-modal>

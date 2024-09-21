@@ -55,7 +55,7 @@ export type ChangePeriodTotalsConfig = {
 }
 
 const mapStatToBoxScore = (stat: Stat, players: Player[]): BoxScore => {
-	const player = players.find(t => t.id == stat.player_id)!;
+	const player = players.find(t => t.sync_id == stat.player_id)!;
 	return {
 		number: player.number,
 		name: `${player.first_name} ${player.last_name}`,
@@ -159,12 +159,12 @@ export class GamecastService {
 		}
 	});
 
-	public selectedPlayerId = signal<number | null>(null);
+	public selectedPlayerId = signal<string | null>(null);
 
 	public selectedPlayer = computed(() => {
 		const players = this.players();
 		const player_id = this.selectedPlayerId();
-		return players.find(t => t.id === player_id);
+		return players.find(t => t.sync_id === player_id);
 	});
 
 	public selectedPlayerStat = computed(() => {
@@ -177,14 +177,14 @@ export class GamecastService {
 		const players = this.players();
 		const stats = this.stats();
 		const game = untracked(this.game);
-		return players.filter(t => t.team_id == game?.home_team_id && stats.find(s => s.player_id == t.id)?.on_court);
+		return players.filter(t => t.team_id == game?.home_team_id && stats.find(s => s.player_id == t.sync_id)?.on_court);
 	});
 
 	public awayPlayersOnCourt = computed(() => {
 		const players = this.players();
 		const stats = this.stats();
 		const game = untracked(this.game);
-		return players.filter(t => t.team_id == game?.away_team_id && stats.find(s => s.player_id == t.id)?.on_court);
+		return players.filter(t => t.team_id == game?.away_team_id && stats.find(s => s.player_id == t.sync_id)?.on_court);
 	});
 
 	public homeTeamPlayers = computed(() => {
@@ -192,7 +192,7 @@ export class GamecastService {
 		const stats = this.stats();
 		const game = untracked(this.game);
 		return sortBy(players.filter(t => t.team_id == game?.home_team_id), t => {
-			const numberOverride = stats.find(x => x.player_id == t.id)?.player_number;
+			const numberOverride = stats.find(x => x.player_id == t.sync_id)?.player_number;
 			return Number(numberOverride ?? t.number) || 0;
 		});
 	});
@@ -202,7 +202,7 @@ export class GamecastService {
 		const stats = this.stats();
 		const game = untracked(this.game);
 		return sortBy(players.filter(t => t.team_id == game?.away_team_id), t => {
-			const numberOverride = stats.find(x => x.player_id == t.id)?.player_number;
+			const numberOverride = stats.find(x => x.player_id == t.sync_id)?.player_number;
 			return Number(numberOverride ?? t.number) || 0;
 		});
 	});
@@ -218,10 +218,10 @@ export class GamecastService {
 		const stats = this.stats();
 		return {
 			homeBoxScore: stats
-				.filter(t => homeTeamPlayers.find(p => p.id == t.player_id))
+				.filter(t => homeTeamPlayers.find(p => p.sync_id == t.player_id))
 				.map(t => mapStatToBoxScore(t, homeTeamPlayers)),
 			awayBoxScore: stats
-				.filter(t => awayTeamPlayers.find(p => p.id == t.player_id))
+				.filter(t => awayTeamPlayers.find(p => p.sync_id == t.player_id))
 				.map(t => mapStatToBoxScore(t, awayTeamPlayers))
 		}
 	});
@@ -261,12 +261,12 @@ export class GamecastService {
 
 		await this.setTeamPlayers(game);
 
-		let stats = await database.stats.where({ gameId: gameId }).toArray();
+		let stats = await database.stats.where({ game_id: gameId }).toArray();
 		for (let player of players) {
-			if (!stats.find(t => t.player_id == player.id)) {
+			if (!stats.find(t => t.player_id == player.sync_id)) {
 				stats.push({
 					...defaultStat,
-					player_id: player.id,
+					player_id: player.sync_id,
 					game_id: game.sync_id,
 					sync_state: SyncState.Added
 				});
@@ -275,7 +275,7 @@ export class GamecastService {
 		this.statsSrc.set(stats);
 
 		const plays = (await database.plays
-			.where({ gameId: gameId })
+			.where({ game_id: gameId })
 			.and(t => t.sync_state != SyncState.Deleted)
 			.sortBy('id'))
 			.reverse();
@@ -343,8 +343,8 @@ export class GamecastService {
 		this.playersSrc.update(players => [...players, player]);
 		this.statsSrc.update(stats => [...stats, {
 			...defaultStat,
-			player_id: id,
-			gameId: this.game()!.id,
+			player_id: newPlyaer.sync_id,
+			game_id: this.game()!.sync_id,
 			sync_state: SyncState.Added
 		}]);
 	}
@@ -364,7 +364,7 @@ export class GamecastService {
 	}
 
 	public updateStat(options: { player?: Player, updateFn: (stat: Stat) => void }) {
-		const player_id = options.player ? options.player.id : this.selectedPlayerId();
+		const player_id = options.player ? options.player.sync_id : this.selectedPlayerId();
 		if (player_id == null) {
 			throw 'What exactly are you trying to do?';
 		} else {
@@ -384,7 +384,7 @@ export class GamecastService {
 				const newStat = {
 					...defaultStat,
 					sync_state: SyncState.Added,
-					gameId: game.id,
+					game_id: game.sync_id,
 					player_id: player_id
 				};
 				options.updateFn(newStat);
@@ -404,7 +404,7 @@ export class GamecastService {
 
 	public togglePlayerHidden(player: Player) {
 		this.statsSrc.update(stats => stats.map(stat => {
-			if (stat.player_id == player.id) {
+			if (stat.player_id == player.sync_id) {
 				database.transaction('rw', 'stats', () => {
 					database.stats.update({ player_id: stat.player_id, game_id: stat.game_id }, { 'player_hidden': !stat.player_hidden });
 				});
@@ -517,7 +517,7 @@ export class GamecastService {
 			game_clock: game.clock
 		}
 		database.transaction('rw', 'plays', async () => {
-			const existing = await database.plays.get({ gameId: game.id, id: play.id });
+			const existing = await database.plays.get({ game_id: game.id, id: play.id });
 			if (existing && existing.sync_state != SyncState.Added) {
 				play.sync_state = SyncState.Modified;
 			}
@@ -590,7 +590,7 @@ export class GamecastService {
 		this.playsSrc.update(plays => plays.slice(1));
 		database.transaction('rw', 'plays', async () => {
 			if (play.sync_state == SyncState.Added) {
-				database.plays.where({ gameId: play.game_id, id: play.id }).delete();
+				database.plays.where({ game_id: play.game_id, id: play.id }).delete();
 			} else {
 				database.plays.update(play, { sync_state: SyncState.Deleted });
 			}

@@ -8,19 +8,25 @@ export const isLoggedIn: CanActivateFn = () => {
 	const router = inject(Router);
 	const applicationKey = api.auth.getCredential(Credentials.ApplicationKey);
 	if (applicationKey) {
-		if (api.user || !api.isOnline()) {
+		if (api.user()) {
 			return of(true);
 		} else {
-			return api.auth.generateApiToken(applicationKey).pipe(
-				switchMap(token => {
-					api.auth.storeCredential(Credentials.ApiToken, token);
-					return api.auth.fetchUser().pipe(map(user => {
-						api.user = user;
-						return true;
-					}))
-				}),
-				catchError(() => of(router.createUrlTree(['/login'])))
-			);
+			return api.ping$.pipe(switchMap(online => {
+				if (!online) {
+					return of(true);
+				} else {
+					return api.auth.generateApiToken(applicationKey).pipe(
+						switchMap(token => {
+							api.auth.storeCredential(Credentials.ApiToken, token);
+							return api.auth.fetchUser().pipe(map(user => {
+								api.user.set(user);
+								return true;
+							}))
+						}),
+						catchError(() => of(router.createUrlTree(['/login'])))
+					);
+				}
+			}))
 		}
 	} else {
 		return of(router.createUrlTree(['/login']));

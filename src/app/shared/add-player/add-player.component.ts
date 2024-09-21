@@ -29,7 +29,7 @@ export class AddPlayerComponent {
 		const players = this.players();
 		const stats = this.stats();
 		return players.map(player => {
-			const stat = stats.find(t => t.player_id == player.id);
+			const stat = stats.find(t => t.player_id == player.sync_id);
 			return { stat, player };
 		})
 	});

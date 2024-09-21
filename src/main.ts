@@ -1,5 +1,5 @@
 import { importProvidersFrom } from '@angular/core';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { appIntercptors } from './app/app.interceptors';
 import { AppComponent } from './app/app.component';
 import { IonicModule } from '@ionic/angular';
@@ -13,8 +13,6 @@ bootstrapApplication(AppComponent, {
 	providers: [
 		importProvidersFrom(AgGridModule, BrowserModule, IonicModule.forRoot({ mode: 'md' }), HammerModule),
 		provideRouter(routes),
-		provideHttpClient(withInterceptors(appIntercptors))
+		provideHttpClient(withInterceptors(appIntercptors), withFetch())
 	]
 }).catch(err => console.error(err));
-
-

@@ -44,7 +44,7 @@ export type Player = {
 
 export interface Stat {
 	game_id: string;
-	player_id: number;
+	player_id: string;
 	minutes: number;
 	assists: number;
 	rebounds: number;

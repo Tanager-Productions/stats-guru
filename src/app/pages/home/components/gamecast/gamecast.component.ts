@@ -15,6 +15,7 @@ import { InputChangeEventDetail, IonPopover, IonicModule } from '@ionic/angular'
 import { IonInputCustomEvent } from '@ionic/core';
 import { BoxScore, GamecastService } from 'src/app/services/gamecast/gamecast.service';
 import { GAME_ACTIONS_MAP, GameActions, Play, Player, SyncState } from 'src/app/app.types';
+import { HeaderComponent } from 'src/app/shared/header/header.component';
 
 type AutoComplete = 'rebound' | 'assist' | 'missed' | 'turnover' | null;
 
@@ -35,7 +36,8 @@ type AutoComplete = 'rebound' | 'assist' | 'missed' | 'turnover' | null;
 		AddPlayerComponent,
 		EditPeriodTotalComponent,
 		SlicePipe,
-		DatePipe
+		DatePipe,
+		HeaderComponent
 	],
 	host: { class: 'page' },
 })
@@ -192,7 +194,7 @@ export class GamecastComponent {
 		po.dismiss();
 	}
 
-	public findStat(playerid: number) {
+	public findStat(playerid: string) {
 		return this.dataService.stats().find(t => t.player_id == playerid);
 	}
 
@@ -252,14 +254,14 @@ export class GamecastComponent {
 		this.sixthPlayer.set(null);
 	}
 
-	public selectPlayer(player_id: number) {
+	public selectPlayer(player_id: string) {
 		const { players, selectedPlayer, game } = this.dataService;
 		this.previousPlayerWasHome = players().find(t => t.id == selectedPlayer()?.id)?.team_id == game()?.home_team_id;
 		if (this.currentPlayersOnCourt() != null) {
-			const player = players().find(t => t.id == player_id);
+			const player = players().find(t => t.sync_id == player_id);
 			this.subOut(player!);
 		} else {
-			if (selectedPlayer()?.id == player_id) {
+			if (selectedPlayer()?.sync_id == player_id) {
 				this.dataService.selectedPlayerId.set(null);
 			} else {
 				this.dataService.selectedPlayerId.set(player_id);
@@ -284,7 +286,7 @@ export class GamecastComponent {
 	}
 
   public removeFromCourt(player: Player) {
-		if (this.dataService.selectedPlayerId() == player.id) {
+		if (this.dataService.selectedPlayerId() == player.sync_id) {
 			this.dataService.selectedPlayerId.set(null);
 		}
 		this.dataService.updateStat({

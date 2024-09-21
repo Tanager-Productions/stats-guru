@@ -1,8 +1,9 @@
-import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { HttpBackend, HttpClient } from '@angular/common/http';
+import { inject, Injectable, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { catchError, concat, fromEvent, map, merge, of, withLatestFrom } from 'rxjs';
-import { DataDto, Game, Play, Player, Stat } from 'src/app/app.types';
+import { catchError, concat, map, of, switchMap, timer } from 'rxjs';
+import { DataDto, Game, Play, Player, Stat, SyncState } from 'src/app/app.types';
+import { environment } from 'src/environments/environment';
 
 export enum Credentials {
 	ApplicationKey = "statsGuruKey",
@@ -12,7 +13,7 @@ export enum Credentials {
 export type User = {
 	guid: string,
 	email: string,
-	fullName: string | null
+	full_name: string | null
 }
 
 @Injectable({
@@ -20,38 +21,48 @@ export type User = {
 })
 export class ApiService {
 	private http = inject(HttpClient);
-	private networkStatus$ = merge(
-		fromEvent(window, 'online').pipe(map(() => true)),
-		fromEvent(window, 'offline').pipe(map(() => false))
-	);
-	private ping$ = this.http.get(`ping`, { responseType: 'text' }).pipe(
+	private backend = inject(HttpBackend);
+	public ping$ = timer(0, 300000).pipe(
+		switchMap(() => this.http.get("ping", { responseType: 'text' })),
 		map(() => true),
 		catchError(() => of(false))
 	);
-	private online$ = this.networkStatus$.pipe(
-		withLatestFrom(this.ping$),
-		map(([online, ping]) => online && ping)
-	)
-	public isOnline = toSignal(this.online$, { initialValue: true });
-	public user?: User;
+	public isOnline = toSignal(this.ping$, { initialValue: false });
+	public user = signal<User | null>(null);
 
 	readonly auth = {
 		getCredential: (key: Credentials) => localStorage.getItem(key),
 		storeCredential: (key: Credentials, value: string) => localStorage.setItem(key, value),
-		fetchUser: () => this.http.get<User>(`rpc/get_current_user`),
-		generateApiToken: (p_app_key: string) => this.http.post<string>(`rpc/generate_api_token`, { p_app_key })
+		fetchUser: () => this.http.get<User[]>(`rpc/get_current_user`).pipe(map(res => res[0])),
+		generateApiToken: (p_app_key: string) => new HttpClient(this.backend).post<string>(`${environment.serverUrl}/rpc/generate_api_token`, { p_app_key })
 	} as const
 
 	readonly data = {
-		sync: (tables: [Player[], Game[], Stat[], Play[]]) => {
+		sync: (tables: [(Player & { sync_state: SyncState })[], (Game & { sync_state: SyncState })[], (Stat & { sync_state: SyncState })[], (Play & { sync_state: SyncState })[]]) => {
 			const headers = {
 				"Prefer": "resolution=merge-duplicates"
 			}
+			const players = tables[0]
+				.filter(t => t.sync_state == SyncState.Added || t.sync_state == SyncState.Modified)
+				.map(({ sync_state, ...player }) => player);
+			const games = tables[1]
+				.filter(t => t.sync_state == SyncState.Added || t.sync_state == SyncState.Modified)
+				.map(({ sync_state, stats, plays, home_team_tol, away_team_tol, home_final, away_final, ...game }) => game);
+			const stats = tables[2]
+				.filter(t => t.sync_state == SyncState.Added || t.sync_state == SyncState.Modified)
+				.map(({ sync_state, points, rebounds, eff, ...stat }) => stat);
+			const deletedPlays = tables[3]
+				.filter(t => t.sync_state == SyncState.Deleted)
+				.map(({ sync_state, ...play }) => play);
+			const upsertPlays = tables[3]
+				.filter(t => t.sync_state == SyncState.Added || t.sync_state == SyncState.Modified)
+				.map(({ sync_state, ...play }) => play);
 			return concat(
-				this.http.post(`players?on_conflict=sync_id`, tables[0], { headers }),
-				this.http.post(`games?on_conflict=sync_id`, tables[1], { headers }),
-				this.http.post(`stats`, tables[2], { headers }),
-				this.http.post(`plays`, tables[3], { headers })
+				players.length ? this.http.post(`players?on_conflict=sync_id`, players, { headers }) : of(true),
+				games.length ? this.http.post(`games?on_conflict=sync_id`, games, { headers }) : of(true),
+				stats.length ? this.http.post(`stats`, stats, { headers }) : of(true),
+				//deletedPlays.length ? this.http.delete(`plays`) : of(true),
+				upsertPlays.length ? this.http.post(`plays`, upsertPlays, { headers }) : of(true)
 			)
 		},
 		getCurrentSeason: () => this.http.get<DataDto>(`seasons?order=year.desc&limit=1&select=*,games(*,stats(*),plays(*)),players(*),teams(*),events(*)`),

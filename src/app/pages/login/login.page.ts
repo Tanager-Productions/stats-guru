@@ -26,8 +26,9 @@ export class LoginPage {
 	async register() {
 		this.loading = true;
 		try {
-			await lastValueFrom(this.server.auth.generateApiToken(this.key))
+			const token = await lastValueFrom(this.server.auth.generateApiToken(this.key))
 			this.server.auth.storeCredential(Credentials.ApplicationKey, this.key);
+			this.server.auth.storeCredential(Credentials.ApiToken, token);
 			this.router.navigateByUrl('/home');
 		} catch (error) {
 			(await this.toastCtrl.create({ message: 'Invalid Application Key', color: 'danger', duration: 2500 })).present();

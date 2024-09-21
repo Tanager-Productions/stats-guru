@@ -1,6 +1,6 @@
 @if (dataService.game(); as game) {
-	<ion-header>
-	  <ion-toolbar color="primary">
+	<app-header>
+	  <ion-toolbar mode="md" color="primary">
 		<ion-breadcrumbs>
 		  <ion-breadcrumb routerLink="/home/games">Games</ion-breadcrumb>
 		  <ion-breadcrumb>Gamecast: {{ dataService.homeTeam()?.name }} VS {{ dataService.awayTeam()?.name }} ({{dataService.homeTeam()?.is_male ? 'Mens' : 'Womens'}})</ion-breadcrumb>
@@ -18,7 +18,7 @@
 			<ion-button id="color-trigger">
 				<ion-icon slot="icon-only" name="brush"></ion-icon>
 			</ion-button>
-			<ion-button (click)="this.showPlayers.set(!this.showPlayers())">
+			<ion-button (click)="showPlayers.set(!showPlayers())">
 				<ion-icon slot="icon-only" name="people-outline"></ion-icon>
 			</ion-button>
 			<ion-button id="logsButton">
@@ -45,7 +45,7 @@
 			}
 		</ion-buttons>
 	  </ion-toolbar>
-	  <ion-toolbar color="dark" class="clickable" id="playsModalTrigger">
+	  <ion-toolbar mode="md" color="dark" class="clickable" id="playsModalTrigger">
 		<div style="display: flex; flex-direction: column; padding: 8px;">
 			@for (play of dataService.plays() | slice:0:3; track play.id) {
 				@if (play.turbo_stats_data) {
@@ -62,7 +62,7 @@
 			}
 		</div>
 	  </ion-toolbar>
-	</ion-header>
+	</app-header>
 
 	<ion-content class="ion-no-padding" color="light">
 		<ion-grid style="width: 100%">
@@ -70,11 +70,11 @@
 				<ion-col class="player-col" size="0.9">
 					@if (showPlayers()) {
 						<div style="display:flex">
-							<ion-button color="{{homeColor()}}" [style.fontSize.px]="1" (click)="this.fontSize = this.fontSize + 2" size="small"><ion-icon name="arrow-up-outline"></ion-icon></ion-button>
-							<ion-button color="{{homeColor()}}" [style.fontSize.px]="1" (click)="this.fontSize = this.fontSize - 2" size="small"><ion-icon name="arrow-down-outline"></ion-icon></ion-button>
+							<ion-button color="{{homeColor()}}" [style.fontSize.px]="1" (click)="fontSize = fontSize + 2" size="small"><ion-icon name="arrow-up-outline"></ion-icon></ion-button>
+							<ion-button color="{{homeColor()}}" [style.fontSize.px]="1" (click)="fontSize = fontSize - 2" size="small"><ion-icon name="arrow-down-outline"></ion-icon></ion-button>
 						</div>
 						@for (player of dataService.homeTeamPlayers(); track player.id) {
-							@if (!dataService.hiddenPlayerIds().includes(player.id) && player.number != '-1') {
+							@if (!dataService.hiddenPlayerIds().includes(player.sync_id) && player.number != '-1') {
 								<ion-button
 									size="small"
 									[fill]="dataService.homePlayersOnCourt().includes(player) ? 'outline' : 'clear'"
@@ -82,11 +82,11 @@
 									color="{{homeColor()}}"
 									(click)="addToCourt('home', player)"
 									[style.fontSize.px]="fontSize">
-									{{this.findStat(player.id)?.player_number ? this.findStat(player.id)?.player_number : player.number}}
+									{{findStat(player.sync_id)?.player_number ? findStat(player.sync_id)?.player_number : player.number}}
 								</ion-button>
 								<ion-popover trigger="context-menu-trigger{{$index}}" [showBackdrop]="false" triggerAction="context-menu">
 									<ng-template>
-										<app-edit-player [player]="player" [stat]="this.findStat(player.id)" (savePlayer)="dataService.updatePlayer(player)"></app-edit-player>
+										<app-edit-player [player]="player" [stat]="findStat(player.sync_id)" (savePlayer)="dataService.updatePlayer(player)"></app-edit-player>
 									</ng-template>
 								</ion-popover>
 							}
@@ -115,7 +115,7 @@
 															id="homeCurrentFouls"
 															(ionChange)="dataService.updateCurrentFouls('home', $event)"
 															[placeholder]="0"
-															[value]="this.game.home_current_fouls">
+															[value]="game.home_current_fouls">
 														</ion-input>
 													</div>
 													<div class="input">
@@ -127,7 +127,7 @@
 															id="homePartialTOL"
 															(ionChange)="dataService.updatePartialTOLs('home', $event)"
 															[placeholder]="0"
-															[value]="this.game.home_partial_tol">
+															[value]="game.home_partial_tol">
 														</ion-input>
 													</div>
 													<div class="input">
@@ -139,7 +139,7 @@
 															id="homeFullTOL"
 															(ionChange)="dataService.updateFullTOLs('home', $event)"
 															[placeholder]="0"
-															[value]="this.game.home_full_tol">
+															[value]="game.home_full_tol">
 														</ion-input>
 													</div>
 												</div>
@@ -210,26 +210,26 @@
 													<ion-button
 														size="large"
 														style="border-radius: 50px; --padding-start: 0px; --padding-end: 0px;"
-														[ngClass]="{'selectedButton': dataService.selectedPlayerId() == player.id}"
+														[ngClass]="{'selectedButton': dataService.selectedPlayerId() == player.sync_id}"
 														color="{{homeColor()}}"
 														fill="clear"
 														shape="round"
 														expand="block"
-														(tap)="selectPlayer(player.id)">
+														(tap)="selectPlayer(player.sync_id)">
 														<ion-label>T</ion-label>
 													</ion-button>
 												} @else {
 													<ion-button
 														size="large"
 														style="border-radius: 50px; --padding-start: 0px; --padding-end: 0px;"
-														[ngClass]="{'selectedButton': dataService.selectedPlayerId() == player.id}"
+														[ngClass]="{'selectedButton': dataService.selectedPlayerId() == player.sync_id}"
 														color="{{homeColor()}}"
 														fill="clear"
 														shape="round"
 														expand="block"
-														(tap)="selectPlayer(player.id)"
+														(tap)="selectPlayer(player.sync_id)"
 														(doubleTap)="removeFromCourt(player)">
-														<ion-label>{{this.findStat(player.id)?.player_number ? this.findStat(player.id)?.player_number : player.number}}</ion-label>
+														<ion-label>{{findStat(player.sync_id)?.player_number ? findStat(player.sync_id)?.player_number : player.number}}</ion-label>
 													</ion-button>
 												}
 											</ion-col>
@@ -407,7 +407,7 @@
 															id="awayCurrentFouls"
 															(ionChange)="dataService.updateCurrentFouls('away', $event)"
 															[placeholder]="0"
-															[value]="this.game.away_current_fouls">
+															[value]="game.away_current_fouls">
 														</ion-input>
 													</div>
 													<div class="input">
@@ -419,7 +419,7 @@
 															id="awayPartialTOL"
 															(ionChange)="dataService.updatePartialTOLs('away', $event)"
 															[placeholder]="0"
-															[value]="this.game.away_partial_tol">
+															[value]="game.away_partial_tol">
 														</ion-input>
 													</div>
 													<div class="input">
@@ -431,7 +431,7 @@
 															id="awayFullTOL"
 															(ionChange)="dataService.updateFullTOLs('away', $event)"
 															[placeholder]="0"
-															[value]="this.game.away_full_tol">
+															[value]="game.away_full_tol">
 														</ion-input>
 													</div>
 												</div>
@@ -502,24 +502,24 @@
 													<ion-button
 														size="large"
 														style="border-radius: 50px; --padding-start: 0px; --padding-end: 0px;"
-														[ngClass]="{'selectedButton': dataService.selectedPlayerId() == player.id}"
+														[ngClass]="{'selectedButton': dataService.selectedPlayerId() == player.sync_id}"
 														color="{{awayColor()}}" fill="clear"
 														shape="round"
 														expand="block"
-														(tap)="selectPlayer(player.id)">
+														(tap)="selectPlayer(player.sync_id)">
 														<ion-label>T</ion-label>
 													</ion-button>
 												} @else {
 													<ion-button
 														size="large"
 														style="border-radius: 50px; --padding-start: 0px; --padding-end: 0px;"
-														[ngClass]="{'selectedButton': dataService.selectedPlayerId() == player.id}"
+														[ngClass]="{'selectedButton': dataService.selectedPlayerId() == player.sync_id}"
 														color="{{awayColor()}}" fill="clear"
 														shape="round"
 														expand="block"
-														(tap)="selectPlayer(player.id)"
+														(tap)="selectPlayer(player.sync_id)"
 														(doubleTap)="removeFromCourt(player)">
-														<ion-label>{{this.findStat(player.id)?.player_number ? this.findStat(player.id)?.player_number : player.number}}</ion-label>
+														<ion-label>{{findStat(player.sync_id)?.player_number ? findStat(player.sync_id)?.player_number : player.number}}</ion-label>
 													</ion-button>
 												}
 											</ion-col>
@@ -542,11 +542,11 @@
 				<ion-col class="player-col" size="0.9">
 					@if (showPlayers()) {
 						<div style="display:flex">
-							<ion-button color="{{awayColor()}}" [style.fontSize.px]="1" (click)="this.fontSize = this.fontSize + 2" size="small"><ion-icon name="arrow-up-outline"></ion-icon></ion-button>
-							<ion-button color="{{awayColor()}}" [style.fontSize.px]="1" (click)="this.fontSize = this.fontSize - 2" size="small"><ion-icon name="arrow-down-outline"></ion-icon></ion-button>
+							<ion-button color="{{awayColor()}}" [style.fontSize.px]="1" (click)="fontSize = fontSize + 2" size="small"><ion-icon name="arrow-up-outline"></ion-icon></ion-button>
+							<ion-button color="{{awayColor()}}" [style.fontSize.px]="1" (click)="fontSize = fontSize - 2" size="small"><ion-icon name="arrow-down-outline"></ion-icon></ion-button>
 						</div>
 						@for (player of dataService.awayTeamPlayers(); track player.id) {
-							@if (player.number != '-1' && !dataService.hiddenPlayerIds().includes(player.id)) {
+							@if (player.number != '-1' && !dataService.hiddenPlayerIds().includes(player.sync_id)) {
 								<ion-button
 									size="small"
 									[fill]="dataService.awayPlayersOnCourt().includes(player) ? 'outline' : 'clear'"
@@ -554,11 +554,11 @@
 									id="context-menu-trigger-away{{$index}}"
 									(click)="addToCourt('away', player)"
 									[style.fontSize.px]="fontSize">
-									{{this.findStat(player.id)?.player_number ? this.findStat(player.id)?.player_number : player.number}}
+									{{findStat(player.sync_id)?.player_number ? findStat(player.sync_id)?.player_number : player.number}}
 								</ion-button>
 								<ion-popover trigger="context-menu-trigger-away{{$index}}" [showBackdrop]="false" triggerAction="context-menu">
 									<ng-template>
-										<app-edit-player [player]="player" [stat]="this.findStat(player.id)" (savePlayer)="dataService.updatePlayer(player)"></app-edit-player>
+										<app-edit-player [player]="player" [stat]="findStat(player.sync_id)" (savePlayer)="dataService.updatePlayer(player)"></app-edit-player>
 									</ng-template>
 								</ion-popover>
 							}

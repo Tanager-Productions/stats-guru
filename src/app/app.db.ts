@@ -10,7 +10,7 @@ export class StatsGuruDb extends Dexie {
   events!: Table<Event, number>;
   games!: Table<Game & { sync_state: SyncState }, number>;
   plays!: Table<Play & { sync_state: SyncState }, { game_id: string, id: number }>;
-  stats!: Table<Stat & { sync_state: SyncState }, { game_id: string, player_id: number }>;
+  stats!: Table<Stat & { sync_state: SyncState }, { game_id: string, player_id: string }>;
   players!: Table<Player & { sync_state: SyncState }, number>;
 
   constructor() {
