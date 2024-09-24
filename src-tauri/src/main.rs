@@ -10,7 +10,7 @@ fn main() {
 			.targets([LogTarget::LogDir, LogTarget::Stdout, LogTarget::Webview])
 			.rotation_strategy(RotationStrategy::KeepAll)
 			.timezone_strategy(TimezoneStrategy::UseLocal)
-			.level(LevelFilter::Error).build())
+			.level(LevelFilter::Debug).build())
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }
