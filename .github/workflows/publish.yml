@@ -24,11 +24,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: setup node
-        uses: actions/setup-node@v4
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4.0.3
         with:
-          node-version: lts/*
-          cache: 'npm' # Set this to npm, yarn or pnpm.
+          node-version: 20
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
