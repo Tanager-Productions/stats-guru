@@ -13,7 +13,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { debounceTime, distinctUntilChanged, fromEvent } from 'rxjs';
 import { ApiService } from 'src/app/services/api/api.service';
 import { HeaderComponent } from 'src/app/shared/header/header.component';
-import { checkUpdate, installUpdate } from '@tauri-apps/api/updater'
+import { checkUpdate, installUpdate, onUpdaterEvent } from '@tauri-apps/api/updater'
 import { relaunch } from '@tauri-apps/api/process'
 import { environment } from 'src/environments/environment';
 
@@ -42,6 +42,7 @@ export class GamesComponent {
 	public common = inject(CommonService);
 	private router = inject(Router);
 	public grid = viewChild(AgGridAngular);
+	private unlisten?: () => void;
 	public gameStats: ColDef<HomePageGame>[] = [
 		{ field: 'gameDay', headerName: 'Day' },
 		{ field: 'gameTime', headerName: 'Time' },
@@ -72,6 +73,10 @@ export class GamesComponent {
 		}
 	}
 
+	ngOnDestroy() {
+		if (this.unlisten) this.unlisten()
+	}
+
 	private async syncAndUpdate() {
 		try {
 			await this.sync.beginSync(true);
@@ -85,6 +90,9 @@ export class GamesComponent {
 			toast.present();
 		}
 		if (environment.production) {
+			this.unlisten = await onUpdaterEvent(({ error, status }) => {
+				console.debug('Updater event', error, status)
+			})
 			const { shouldUpdate, manifest } = await checkUpdate();
 			if (shouldUpdate) {
 				const dialog = await this.alertController.create({
