@@ -6,13 +6,16 @@ import { Router } from '@angular/router';
 import { AddGamesComponent } from '../../../../shared/add-games/add-games.component';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule } from '@ionic/angular';
+import { AlertController, IonicModule, ToastController } from '@ionic/angular';
 import { AgGridAngular, AgGridModule } from 'ag-grid-angular';
 import { ColDef } from 'ag-grid-community';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { debounceTime, distinctUntilChanged, fromEvent } from 'rxjs';
 import { ApiService } from 'src/app/services/api/api.service';
 import { HeaderComponent } from 'src/app/shared/header/header.component';
+import { checkUpdate, installUpdate } from '@tauri-apps/api/updater'
+import { relaunch } from '@tauri-apps/api/process'
+import { environment } from 'src/environments/environment';
 
 @Component({
 	selector: 'app-games',
@@ -32,7 +35,9 @@ import { HeaderComponent } from 'src/app/shared/header/header.component';
 	host: { class: 'page' }
 })
 export class GamesComponent {
-	private server = inject(ApiService)
+	private alertController = inject(AlertController);
+	private toastController = inject(ToastController);
+	private server = inject(ApiService);
 	private sync = inject(SyncService);
 	public common = inject(CommonService);
 	private router = inject(Router);
@@ -59,11 +64,43 @@ export class GamesComponent {
 		grid?.api.sizeColumnsToFit();
 	})
 
-	ngOnInit() {
+	ngAfterViewInit() {
 		if (this.server.isOnline()) {
-			this.sync.beginSync(true);
+			this.syncAndUpdate();
 		} else {
 			this.common.initializeService();
+		}
+	}
+
+	private async syncAndUpdate() {
+		try {
+			await this.sync.beginSync(true);
+		} catch (error) {
+			console.log(error);
+			const toast = await this.toastController.create({
+				message: 'Failed to sync data',
+				duration: 3000,
+				color: 'danger'
+			});
+			toast.present();
+		}
+		if (environment.production) {
+			const { shouldUpdate, manifest } = await checkUpdate();
+			if (shouldUpdate) {
+				const dialog = await this.alertController.create({
+					header: 'Update Available',
+					message: `Version ${manifest?.version} is available. Do you want to install it?`,
+					buttons: [
+						{ text: 'No', role: 'cancel' },
+						{ text: 'Yes', handler: async () => {
+							console.log(`Installing update ${manifest?.version}, ${manifest?.date}, ${manifest?.body}`)
+							await installUpdate();
+							await relaunch();
+						}}
+					]
+				});
+				dialog.present();
+			}
 		}
 	}
 

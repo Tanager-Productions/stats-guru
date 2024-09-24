@@ -82,9 +82,9 @@
     "updater": {
       "active": true,
       "endpoints": [
-        "https://statsguru.s3.amazonaws.com/release.json"
+        "https://statsguru.s3.amazonaws.com/latest.json"
       ],
-      "dialog": true,
+      "dialog": false,
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQ3RDEwQUU4RUU3MzU0MDAKUldRQVZIUHU2QXJSMS82a2lHNCtRb212bEd5RGhrZUF4ZmsxeDJTWWtKY1B1WkhZNk9YQ0RxOWQK"
     },
     "windows": [
