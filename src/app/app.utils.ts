@@ -1,6 +1,6 @@
 import { Game, Player, Stat } from "./app.types";
 
-export const defaultPlayer: Player = {
+export const defaultPlayer = (): Player => ({
   id: 0,
   first_name: "John",
   last_name: "Doe",
@@ -17,9 +17,9 @@ export const defaultPlayer: Player = {
   weight: null,
   age: null,
   sync_id: crypto.randomUUID()
-};
+});
 
-export const defaultGame: Game = {
+export const defaultGame = (): Game => ({
 	id: 0,
 	home_team_id: 0,
 	away_team_id: 0,
@@ -56,7 +56,7 @@ export const defaultGame: Game = {
 	stats: [],
 	plays: [],
 	sync_id: crypto.randomUUID()
-};
+});
 
 export const defaultStat: Stat = {
   game_id: '',

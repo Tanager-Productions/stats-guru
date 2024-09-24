@@ -36,7 +36,7 @@ export class AddPlayerComponent {
 
 	public addToTeam() {
 		this.playerAdded.emit({
-			...defaultPlayer,
+			...defaultPlayer(),
 			sync_state: SyncState.Added,
 			first_name: this.newPlayerFirstName,
 			last_name: this.newPlayerLastName,

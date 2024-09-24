@@ -1,7 +1,7 @@
 import { HttpBackend, HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { catchError, concat, map, of, switchMap, timer } from 'rxjs';
+import { catchError, concat, lastValueFrom, map, of, switchMap, timer, withLatestFrom } from 'rxjs';
 import { DataDto, Game, Play, Player, Stat, SyncState } from 'src/app/app.types';
 import { environment } from 'src/environments/environment';
 
@@ -44,10 +44,10 @@ export class ApiService {
 			}
 			const players = tables[0]
 				.filter(t => t.sync_state == SyncState.Added || t.sync_state == SyncState.Modified)
-				.map(({ sync_state, ...player }) => player);
+				.map(({ sync_state, id, ...player }) => player);
 			const games = tables[1]
 				.filter(t => t.sync_state == SyncState.Added || t.sync_state == SyncState.Modified)
-				.map(({ sync_state, stats, plays, home_team_tol, away_team_tol, home_final, away_final, ...game }) => game);
+				.map(({ sync_state, id, stats, plays, home_team_tol, away_team_tol, home_final, away_final, ...game }) => game);
 			const stats = tables[2]
 				.filter(t => t.sync_state == SyncState.Added || t.sync_state == SyncState.Modified)
 				.map(({ sync_state, points, rebounds, eff, ...stat }) => stat);
@@ -58,7 +58,14 @@ export class ApiService {
 				.filter(t => t.sync_state == SyncState.Added || t.sync_state == SyncState.Modified)
 				.map(({ sync_state, ...play }) => play);
 			return concat(
-				players.length ? this.http.post(`players?on_conflict=sync_id`, players, { headers }) : of(true),
+				players.length ? this.http.post<Player[]>(`players?on_conflict=sync_id`, players, { headers: { "Prefer": "resolution=merge-duplicates,return=representation" } }).pipe(
+					withLatestFrom(this.http.get<{ year: number }[]>(`seasons?order=year.desc&limit=1&select=year`).pipe(
+						map(res => res[0].year)
+					)),
+					switchMap(res => {
+						return this.http.post(`season_players`, res[0].map(t => ({season_id: res[1], player_id: t.id, created_on: new Date().toJSON()})), { headers: { "Prefer": "resolution=ignore-duplicates" } })
+					})
+				) : of(true),
 				games.length ? this.http.post(`games?on_conflict=sync_id`, games, { headers }) : of(true),
 				stats.length ? this.http.post(`stats`, stats, { headers }) : of(true),
 				//deletedPlays.length ? this.http.delete(`plays`) : of(true),

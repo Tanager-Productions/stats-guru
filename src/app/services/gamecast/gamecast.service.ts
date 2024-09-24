@@ -18,13 +18,13 @@ const calculateStatColumns = (model: Stat) => {
 	model.eff = model.points + model.rebounds + assists + steals + blocks - (field_goals_attempted - field_goals_made) - (free_throws_attempted - free_throws_made) - turnovers;
 }
 
-const newTeamPlayer: Player & { sync_state: SyncState } = {
-	...defaultPlayer,
+const newTeamPlayer = (): (Player & { sync_state: SyncState }) => ({
+	...defaultPlayer(),
 	sync_state: SyncState.Added,
 	first_name: 'team',
 	last_name: 'team',
 	number: '-1'
-}
+})
 
 export type BoxScore = {
 	number: string;
@@ -261,7 +261,7 @@ export class GamecastService {
 
 		await this.setTeamPlayers(game);
 
-		let stats = await database.stats.where({ game_id: gameId }).toArray();
+		let stats = await database.stats.where({ game_id: game.sync_id }).toArray();
 		for (let player of players) {
 			if (!stats.find(t => t.player_id == player.sync_id)) {
 				stats.push({
@@ -275,7 +275,7 @@ export class GamecastService {
 		this.statsSrc.set(stats);
 
 		const plays = (await database.plays
-			.where({ game_id: gameId })
+			.where({ game_id: game.sync_id })
 			.and(t => t.sync_state != SyncState.Deleted)
 			.sortBy('id'))
 			.reverse();
@@ -296,7 +296,7 @@ export class GamecastService {
 
 		if (!homeTeamPlayer) {
 			homeTeamPlayer = {
-				...newTeamPlayer,
+				...newTeamPlayer(),
 				is_male: this.homeTeam()!.is_male,
 				team_id: game.home_team_id
 			}
@@ -305,7 +305,7 @@ export class GamecastService {
 
 		if (!awayTeamPlayer) {
 			awayTeamPlayer = {
-				...newTeamPlayer,
+				...newTeamPlayer(),
 				is_male: this.awayTeam()!.is_male,
 				team_id: game.away_team_id
 			}
@@ -328,22 +328,13 @@ export class GamecastService {
 	}
 
 	public async addPlayer(player: Player & { sync_state: SyncState }) {
-		const newPlyaer = {
-			...defaultPlayer,
-			id: undefined!,
-			sync_state: SyncState.Added,
-			first_name: player.first_name,
-			last_name: player.last_name,
-			isMale: player.is_male,
-			number: player.number,
-			team_id: player.team_id
-		};
-		const id = await database.transaction('rw', 'players', () => database.players.add(newPlyaer));
+		const { id: _, ...rest } = player;
+		const id = await database.transaction('rw', 'players', () => database.players.add(rest));
 		player.id = id;
 		this.playersSrc.update(players => [...players, player]);
 		this.statsSrc.update(stats => [...stats, {
 			...defaultStat,
-			player_id: newPlyaer.sync_id,
+			player_id: player.sync_id,
 			game_id: this.game()!.sync_id,
 			sync_state: SyncState.Added
 		}]);
