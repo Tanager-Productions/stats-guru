@@ -631,7 +631,7 @@
 														<ion-select-option [value]="null">Null</ion-select-option>
 														@for (item of dataService.players(); track item.id) {
 															@if (item.team_id == teamId.value) {
-																<ion-select-option [value]="item.id">{{ item.number }} {{ item.first_name }} {{ item.last_name }}</ion-select-option>
+																<ion-select-option [value]="item.sync_id">{{ item.number }} {{ item.first_name }} {{ item.last_name }}</ion-select-option>
 															}
 														}
 													</ion-select>
@@ -673,7 +673,7 @@
 														<ion-select-option [value]="null">Null</ion-select-option>
 														@for (item of dataService.players(); track item.id) {
 															@if (item.team_id == teamId.value) {
-																<ion-select-option [value]="item.id">{{ item.number }} {{ item.first_name }} {{ item.last_name }}</ion-select-option>
+																<ion-select-option [value]="item.sync_id">{{ item.number }} {{ item.first_name }} {{ item.last_name }}</ion-select-option>
 															}
 														}
 													</ion-select>
@@ -714,7 +714,7 @@
 														<ion-select-option [value]="null">Null</ion-select-option>
 														@for (item of dataService.players(); track item.id) {
 															@if (item.team_id == teamId.value) {
-																<ion-select-option [value]="item.id">{{ item.number }} {{ item.first_name }} {{ item.last_name }}</ion-select-option>
+																<ion-select-option [value]="item.sync_id">{{ item.number }} {{ item.first_name }} {{ item.last_name }}</ion-select-option>
 															}
 														}
 													</ion-select>
@@ -756,7 +756,7 @@
 														<ion-select-option [value]="null">Null</ion-select-option>
 														@for (item of dataService.players(); track item.id) {
 															@if (item.team_id == teamId.value) {
-																<ion-select-option [value]="item.id">{{ item.number }} {{ item.first_name }} {{ item.last_name }}</ion-select-option>
+																<ion-select-option [value]="item.sync_id">{{ item.number }} {{ item.first_name }} {{ item.last_name }}</ion-select-option>
 															}
 														}
 													</ion-select>
@@ -798,7 +798,7 @@
 														<ion-select-option [value]="null">Null</ion-select-option>
 														@for (item of dataService.players(); track item.id) {
 															@if (item.team_id == teamId.value) {
-																<ion-select-option [value]="item.id">{{ item.number }} {{ item.first_name }} {{ item.last_name }}</ion-select-option>
+																<ion-select-option [value]="item.sync_id">{{ item.number }} {{ item.first_name }} {{ item.last_name }}</ion-select-option>
 															}
 														}
 													</ion-select>

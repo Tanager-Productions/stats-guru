@@ -74,7 +74,7 @@ export interface Play {
 	game_id: string;
 	turbo_stats_data: string | null;
 	sg_legacy_data: string | null;
-	player_id: number | null;
+	player_id: string | null;
 	team_id: number | null;
 	action: GameActions;
 	period: number | null;

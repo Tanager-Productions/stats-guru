@@ -500,7 +500,7 @@ export class GamecastService {
 			sg_legacy_data: null,
 			sync_state: SyncState.Added,
 			period: game.period,
-			player_id: selectedPlayer && (action != GameActions.FullTO && action != GameActions.PartialTO) ? selectedPlayer.id : null,
+			player_id: selectedPlayer && (action != GameActions.FullTO && action != GameActions.PartialTO) ? selectedPlayer.sync_id : null,
 			team_id: team == 'home' ? game.home_team_id : game.away_team_id,
 			score: `${game.home_final} - ${game.away_final}`,
 			time_stamp: new Date().toJSON(),
@@ -607,7 +607,7 @@ export class GamecastService {
 
 	private undoAction(play: Play) {
 		const game = { ...this.game()! };
-		const player = this.players().find(t => t.id == play.player_id);
+		const player = this.players().find(t => t.sync_id == play.player_id);
 		if (play.action == GameActions.Assist) {
 			this.updateStat({
 				player: player,
@@ -807,7 +807,7 @@ export class GamecastService {
 
 	private redoAction(play: Play) {
 		const game = { ...this.game()! };
-		const player = this.players().find(t => t.id == play.player_id);
+		const player = this.players().find(t => t.sync_id == play.player_id);
 		let updateFn: (stat: Stat) => void = () => { };
 		if (play.action == GameActions.Assist) {
 			updateFn = stat => stat.assists++

@@ -563,7 +563,7 @@ export class GamecastComponent {
 		}
 	}
 
-	public updatePlay(play: Play & { sync_state: SyncState }, teamId: number, player_id: number | null, action: GameActions) {
+	public updatePlay(play: Play & { sync_state: SyncState }, teamId: number, player_id: string | null, action: GameActions) {
 		this.dataService.updatePlay({
 			...play,
 			team_id: teamId,
@@ -574,7 +574,7 @@ export class GamecastComponent {
 
 	public getPlayDescription(play: Play) {
 		const team = play.team_id == this.dataService.game()!.home_team_id ? this.dataService.homeTeam() : this.dataService.awayTeam();
-		const player = this.dataService.players().find(t => t.id == play.player_id);
+		const player = this.dataService.players().find(t => t.sync_id == play.player_id);
 		return `${team?.name} | ${player?.number} ${player?.first_name} ${player?.last_name}`;
 	}
 }
