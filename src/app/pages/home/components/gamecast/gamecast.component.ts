@@ -418,7 +418,6 @@ export class GamecastComponent {
 	public addRebound(team: 'home' | 'away', offensive: boolean) {
 		let player = this.dataService.selectedPlayer();
 		if (player) {
-			this.autocomplete.set('missed');
 			this.dataService.updateStat({
 				updateFn: stat => {
 					stat.rebounds++;
