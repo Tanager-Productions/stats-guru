@@ -57,7 +57,7 @@ export type ChangePeriodTotalsConfig = {
 const mapStatToBoxScore = (stat: Stat, players: Player[]): BoxScore => {
 	const player = players.find(t => t.sync_id == stat.player_id)!;
 	return {
-		number: player.number,
+		number: (stat.player_number != null && stat.player_number != '') ? stat.player_number! : player.number,
 		name: `${player.first_name} ${player.last_name}`,
 		player_id: player.id,
 		assists: stat.assists,
@@ -219,10 +219,12 @@ export class GamecastService {
 		return {
 			homeBoxScore: stats
 				.filter(t => homeTeamPlayers.find(p => p.sync_id == t.player_id))
-				.map(t => mapStatToBoxScore(t, homeTeamPlayers)),
+				.map(t => mapStatToBoxScore(t, homeTeamPlayers))
+				.sort((m, n) => Number(m.number) - Number(n.number)),
 			awayBoxScore: stats
 				.filter(t => awayTeamPlayers.find(p => p.sync_id == t.player_id))
 				.map(t => mapStatToBoxScore(t, awayTeamPlayers))
+				.sort((m, n) => Number(m.number) - Number(n.number))
 		}
 	});
 

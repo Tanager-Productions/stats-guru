@@ -629,9 +629,9 @@
 													</ion-select>
 													<ion-select label="Player" #playerId [value]="play.player_id">
 														<ion-select-option [value]="null">Null</ion-select-option>
-														@for (item of dataService.players(); track item.id) {
+														@for (item of mapPlayerToBoxScore(teamId.value, game); track item.id) {
 															@if (item.team_id == teamId.value) {
-																<ion-select-option [value]="item.sync_id">{{ item.number }} {{ item.first_name }} {{ item.last_name }}</ion-select-option>
+																<ion-select-option [value]="item.sync_id">{{ item.player_number ==null ? item.number : item.player_number }} {{ item.first_name }} {{ item.last_name }}</ion-select-option>
 															}
 														}
 													</ion-select>
@@ -689,7 +689,8 @@
 									}
 								</ion-item>
 							}
-						} @else if (periods.value == '3') {
+						}
+						@else if (periods.value == '3') {
 							@if (play.period == 3 || play.turbo_stats_data?.includes('P3')){
 								<ion-item [button]="!play.turbo_stats_data && !play.sg_legacy_data" id="playTrigger{{play.id}}">
 									@if (play.turbo_stats_data) {
@@ -854,7 +855,7 @@
 						[rowSelection]="'single'"
 						[pagination]="false"
 						[suppressCellFocus]="true"
-						[pinnedBottomRowData]="[dataService.boxScoreTotals().homeTotals]"
+						[pinnedBottomRowData]="[dataService.boxScoreTotals().homeTotals, dataService.boxScore().homeBoxScore[0]]"
 						(cellEditingStopped)="editingStopped($event)">
 					</ag-grid-angular>
 				} @else {
@@ -867,7 +868,7 @@
 						[rowSelection]="'single'"
 						[pagination]="false"
 						[suppressCellFocus]="true"
-						[pinnedBottomRowData]="[dataService.boxScoreTotals().awayTotals]"
+						[pinnedBottomRowData]="[dataService.boxScoreTotals().awayTotals, dataService.boxScore().awayBoxScore[0]]"
 						(cellEditingStopped)="editingStopped($event)">
 					</ag-grid-angular>
 				}

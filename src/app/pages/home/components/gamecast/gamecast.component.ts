@@ -14,7 +14,7 @@ import { NgClass, SlicePipe, DatePipe } from '@angular/common';
 import { InputChangeEventDetail, IonPopover, IonicModule } from '@ionic/angular';
 import { IonInputCustomEvent } from '@ionic/core';
 import { BoxScore, GamecastService } from 'src/app/services/gamecast/gamecast.service';
-import { GAME_ACTIONS_MAP, GameActions, Play, Player, SyncState } from 'src/app/app.types';
+import { Game, GAME_ACTIONS_MAP, GameActions, Play, Player, SyncState } from 'src/app/app.types';
 import { HeaderComponent } from 'src/app/shared/header/header.component';
 
 type AutoComplete = 'rebound' | 'assist' | 'missed' | 'turnover' | null;
@@ -572,8 +572,40 @@ export class GamecastComponent {
 	}
 
 	public getPlayDescription(play: Play) {
+		var numberToDisplay;
 		const team = play.team_id == this.dataService.game()!.home_team_id ? this.dataService.homeTeam() : this.dataService.awayTeam();
 		const player = this.dataService.players().find(t => t.sync_id == play.player_id);
-		return `${team?.name} | ${player?.number} ${player?.first_name} ${player?.last_name}`;
+		if (player?.team_id == this.dataService.game()!.home_team_id) {
+			numberToDisplay = this.dataService.boxScore().homeBoxScore.find(t => t.player_id == player!.id)?.number;
+		} else {
+			numberToDisplay = this.dataService.boxScore().awayBoxScore.find(t => t.player_id == player!.id)?.number;
+		}
+		return `${team?.name} | ${numberToDisplay} ${player?.first_name} ${player?.last_name}`;
+	}
+
+	public mapPlayerToBoxScore(team_id: number, game: Game) {
+		if (game.home_team_id == team_id) {
+			const mergedArray = this.dataService.players().map(player1 => {
+				const boxscore = this.dataService.boxScore().homeBoxScore.find(player => player.player_id === player1.id);
+				if(boxscore != undefined) {
+					return { ...player1, player_number: boxscore!.number };
+				}else {
+					return { ...player1, player_number: null }
+				}
+			});
+			return mergedArray;
+		} else if (game.away_team_id == team_id) {
+			const mergedArray = this.dataService.players().map(player1 => {
+				const boxscore = this.dataService.boxScore().awayBoxScore.find(player => player.player_id === player1.id);
+				if(boxscore != undefined) {
+					return { ...player1, player_number: boxscore!.number};
+				}else {
+					return{ ...player1, player_number: null }
+				}
+			});
+			return mergedArray;
+		} else {
+			return null;
+		}
 	}
 }
