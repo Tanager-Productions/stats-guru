@@ -94,7 +94,7 @@ export class GamecastComponent {
 	];
 
 	//Displaying Auto-Complete Options:
-	private previousPlayerWasHome = false;
+	private previousPlayerWasHome: boolean[] = [];
 	public autocomplete: WritableSignal<AutoComplete> = signal(null);
 	public currentPlayersOnCourt: WritableSignal<Player[] | null> = signal(null);
 	public sixthPlayer: WritableSignal<Player | null> = signal(null);
@@ -110,10 +110,12 @@ export class GamecastComponent {
 			}
 			switch (autocomplete) {
 				case 'rebound':
-					if ((this.previousPlayerWasHome && team == 'home') || (!this.previousPlayerWasHome && team == 'away')) {
+					if ((this.previousPlayerWasHome[0] && team == 'home') || (!this.previousPlayerWasHome[0] && team == 'away')) {
 						this.addRebound(team, true);
-					} else if ((this.previousPlayerWasHome && team == 'away') || (!this.previousPlayerWasHome && team == 'home')) {
+						this.previousPlayerWasHome = [];
+					} else if ((this.previousPlayerWasHome[0] && team == 'away') || (!this.previousPlayerWasHome[0] && team == 'home')) {
 						this.addRebound(team, false);
+						this.previousPlayerWasHome = [];
 					}
 					break;
 				case 'assist':
@@ -256,7 +258,6 @@ export class GamecastComponent {
 
 	public selectPlayer(player_id: string) {
 		const { players, selectedPlayer, game } = this.dataService;
-		this.previousPlayerWasHome = players().find(t => t.id == selectedPlayer()?.id)?.team_id == game()?.home_team_id;
 		if (this.currentPlayersOnCourt() != null) {
 			const player = players().find(t => t.sync_id == player_id);
 			this.subOut(player!);
@@ -265,13 +266,13 @@ export class GamecastComponent {
 				this.dataService.selectedPlayerId.set(null);
 			} else {
 				this.dataService.selectedPlayerId.set(player_id);
+				this.previousPlayerWasHome.push(players().find(t => t.id == selectedPlayer()?.id)?.team_id == game()?.home_team_id);
 			}
 		}
 	}
 
 	public deselectPlayer(player_id: number) {
 		const { selectedPlayer } = this.dataService;
-		this.previousPlayerWasHome = false;
 		if (selectedPlayer()?.id == player_id) {
 			this.dataService.selectedPlayerId.set(null);
 		}

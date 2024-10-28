@@ -68,7 +68,7 @@ export class ApiService {
 				) : of(true),
 				games.length ? this.http.post(`games?on_conflict=sync_id`, games, { headers }) : of(true),
 				stats.length ? this.http.post(`stats`, stats, { headers }) : of(true),
-				//deletedPlays.length ? this.http.delete(`plays`) : of(true),
+				deletedPlays.length ?  this.http.post(`rpc/bulk_delete_plays`, { p_deleted_plays: deletedPlays }) : of(true),
 				upsertPlays.length ? this.http.post(`plays`, upsertPlays, { headers }) : of(true)
 			)
 		},
