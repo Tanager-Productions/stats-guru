@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
 import { ModalController, IonicModule } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
-import { ChangePeriodTotalsConfig } from 'src/app/services/gamecast/gamecast.service';
+import { ChangePeriodTotalsConfig } from 'src/app/pages/gamecast/service/gamecast.service';
 import { Game, SyncState } from 'src/app/app.types';
 
 @Component({

@@ -3,7 +3,7 @@ import { CommonService, HomePageGame } from 'src/app/services/common/common.serv
 import { SyncService } from 'src/app/services/sync/sync.service';
 import { RouterLink } from '@angular/router';
 import { Router } from '@angular/router';
-import { AddGamesComponent } from '../../../../shared/add-games/add-games.component';
+import { AddGamesComponent } from 'src/app/shared/add-games/add-games.component';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AlertController, IonicModule, ToastController } from '@ionic/angular';

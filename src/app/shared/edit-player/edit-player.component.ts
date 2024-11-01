@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, input, model, output } from
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { Player, Stat, SyncState } from 'src/app/app.types';
-import { GamecastService } from 'src/app/services/gamecast/gamecast.service';
+import { GamecastService } from 'src/app/pages/gamecast/service/gamecast.service';
 @Component({
 	selector: 'app-edit-player',
 	templateUrl: './edit-player.component.html',
