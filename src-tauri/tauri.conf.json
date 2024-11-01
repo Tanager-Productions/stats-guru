@@ -4,7 +4,7 @@
     "beforeBuildCommand": "npm run build",
     "beforeDevCommand": "npm start",
     "devPath": "http://localhost:1200",
-    "distDir": "../dist/stats-guru"
+    "distDir": "../dist/stats-guru/browser"
   },
   "package": {
     "productName": "Stats Guru",
