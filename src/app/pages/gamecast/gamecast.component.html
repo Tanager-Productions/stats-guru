@@ -2,7 +2,7 @@
 	<app-header>
 	  <ion-toolbar mode="md" color="primary">
 		<ion-breadcrumbs>
-		  <ion-breadcrumb routerLink="/home/games">Games</ion-breadcrumb>
+		  <ion-breadcrumb routerLink="/games">Games</ion-breadcrumb>
 		  <ion-breadcrumb>Gamecast: {{ dataService.homeTeam()?.name }} VS {{ dataService.awayTeam()?.name }} ({{dataService.homeTeam()?.is_male ? 'Mens' : 'Womens'}})</ion-breadcrumb>
 		</ion-breadcrumbs>
 		<ion-buttons slot="end">
@@ -21,23 +21,6 @@
 			<ion-button (click)="showPlayers.set(!showPlayers())">
 				<ion-icon slot="icon-only" name="people-outline"></ion-icon>
 			</ion-button>
-			<ion-button id="logsButton">
-				<ion-icon name="help" slot="icon-only"></ion-icon>
-			</ion-button>
-			<ion-popover trigger="logsButton" #popover>
-				<ng-template>
-					<ion-content class="ion-padding">
-						<ion-label>If you're experiencing issues, send the games error logs to the server.</ion-label>
-						<ion-button expand="block" (click)="sendLogs(popover)">
-							@if (sendingLogs) {
-								<ion-spinner name="dots"></ion-spinner>
-							} @else {
-								Send logs to server
-							}
-						</ion-button>
-					</ion-content>
-				</ng-template>
-			</ion-popover>
 			@if (game.complete) {
 				<ion-button fill="solid" color="success" (click)='dataService.toggleGameComplete()'>Complete</ion-button>
 			} @else {

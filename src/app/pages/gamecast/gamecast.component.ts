@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, WritableSignal, effect, inject, model, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, input, model, numberAttribute, signal, untracked } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription, interval, lastValueFrom } from 'rxjs';
 import { CellEditingStoppedEvent, ColDef } from 'ag-grid-community';
@@ -16,6 +16,7 @@ import { IonInputCustomEvent } from '@ionic/core';
 import { BoxScore, GamecastService } from 'src/app/pages/gamecast/service/gamecast.service';
 import { Game, GAME_ACTIONS_MAP, GameActions, Play, Player, SyncState } from 'src/app/app.types';
 import { HeaderComponent } from 'src/app/shared/header/header.component';
+import { database } from 'src/app/app.db';
 
 type AutoComplete = 'rebound' | 'assist' | 'missed' | 'turnover' | null;
 
@@ -50,11 +51,11 @@ export class GamecastComponent {
 
 	//config
 	public fontSize = 16;
-	private gameId!:number;
-  private timerSubscription?: Subscription;
-  private timerDuration!: number;
-  public timerRunning: boolean = false;
-	private initSub?:Subscription;
+	public gameId = input.required<number, string>({ transform: numberAttribute });
+	private timerSubscription?: Subscription;
+	private timerDuration!: number;
+	public timerRunning: boolean = false;
+	private initSub?: Subscription;
 	public actions = GAME_ACTIONS_MAP;
 	public sendingLogs = false;
 	public homeColor = model('blue');
@@ -73,32 +74,32 @@ export class GamecastComponent {
 	//boxscore modal
 	public statsTab: 'home' | 'away' = 'home';
 	public teamStats: ColDef<BoxScore>[] = [
-		{field: 'number', headerName: 'NUM', pinned: true, editable: false, width: 110},
-		{field: 'name', editable: false, pinned: true},
-		{field: 'points', headerName: 'PTS', width: 80, editable: false},
-		{field: 'rebounds', headerName: 'REB', width: 80, editable: false},
-		{field: 'assists', headerName: 'AST', width: 80},
-		{field: 'steals', headerName: 'STL', width: 80},
-		{field: 'blocks', headerName: 'BLK', width: 80},
-		{field: 'field_goals_made', headerName: 'FGM', width: 90},
-		{field: 'field_goals_attempted', headerName: 'FGA', width: 80},
-		{field: 'threes_made', headerName: '3FGM', width: 90},
-		{field: 'threes_attempted', headerName: '3FGA', width: 90},
-		{field: 'free_throws_made', headerName: 'FTM', width: 80},
-		{field: 'free_throws_attempted', headerName: 'FTA', width: 80},
-		{field: 'offensive_rebounds', headerName: 'OREB', width: 90},
-		{field: 'defensive_rebounds', headerName: 'DREB', width: 90},
-		{field: 'turnovers', headerName: 'TO', width: 80},
-		{field: 'fouls', headerName: 'FOUL', width: 90},
-		{field: 'plus_or_minus', headerName: '+/-', width: 80},
+		{ field: 'number', headerName: 'NUM', pinned: true, editable: false, width: 110 },
+		{ field: 'name', editable: false, pinned: true },
+		{ field: 'points', headerName: 'PTS', width: 80, editable: false },
+		{ field: 'rebounds', headerName: 'REB', width: 80, editable: false },
+		{ field: 'assists', headerName: 'AST', width: 80 },
+		{ field: 'steals', headerName: 'STL', width: 80 },
+		{ field: 'blocks', headerName: 'BLK', width: 80 },
+		{ field: 'field_goals_made', headerName: 'FGM', width: 90 },
+		{ field: 'field_goals_attempted', headerName: 'FGA', width: 80 },
+		{ field: 'threes_made', headerName: '3FGM', width: 90 },
+		{ field: 'threes_attempted', headerName: '3FGA', width: 90 },
+		{ field: 'free_throws_made', headerName: 'FTM', width: 80 },
+		{ field: 'free_throws_attempted', headerName: 'FTA', width: 80 },
+		{ field: 'offensive_rebounds', headerName: 'OREB', width: 90 },
+		{ field: 'defensive_rebounds', headerName: 'DREB', width: 90 },
+		{ field: 'turnovers', headerName: 'TO', width: 80 },
+		{ field: 'fouls', headerName: 'FOUL', width: 90 },
+		{ field: 'plus_or_minus', headerName: '+/-', width: 80 },
 	];
 
 	//Displaying Auto-Complete Options:
 	private previousPlayerWasHome: boolean[] = [];
-	public autocomplete: WritableSignal<AutoComplete> = signal(null);
-	public currentPlayersOnCourt: WritableSignal<Player[] | null> = signal(null);
-	public sixthPlayer: WritableSignal<Player | null> = signal(null);
-	public showPlayers: WritableSignal<boolean> = signal(true);
+	public autocomplete = signal<AutoComplete | null>(null);
+	public currentPlayersOnCourt = signal<Player[] | null>(null);
+	public sixthPlayer = signal<Player | null>(null);
+	public showPlayers = signal(true);
 	private autocompleteEffect = effect(() => {
 		const selectedPlayer = this.dataService.selectedPlayer();
 		const autocomplete = untracked(this.autocomplete);
@@ -131,7 +132,7 @@ export class GamecastComponent {
 			this.deselectPlayer(selectedPlayer.id);
 			this.autocomplete.set(null);
 		}
-	}, { allowSignalWrites: true });
+	});
 
 	//plus_or_minus
 	private homeTeamPlusOrMinus = 0;
@@ -143,57 +144,43 @@ export class GamecastComponent {
 	//gamecast
 	private interval: any;
 
-  ngOnInit() {
+	async ngOnInit() {
 		this.sync.gameCastInProgress = true;
-		this.route.params.subscribe(async params => {
-			this.gameId = Number(params['gameId']);
-			await this.dataService.setGame(this.gameId);
-			this.clock.set(this.dataService.game()!.clock);
-			if (this.api.isOnline()) {
-				this.interval = setInterval(async () => await this.send(), 15000);
-			}
-		});
-  }
+		await this.dataService.setGame(this.gameId());
+		this.clock.set(this.dataService.game()!.clock);
+		if (this.api.isOnline()) {
+			this.interval = setInterval(async () => await this.send(), 15000);
+		}
+	}
 
-  async ngOnDestroy() {
+	async ngOnDestroy() {
 		this.initSub?.unsubscribe();
-    this.stopTimer();
+		this.stopTimer();
 		clearInterval(this.interval);
 		this.dataService.destroy();
 		await this.send();
 		this.sync.gameCastInProgress = false;
-  }
+	}
 
-  public changeColor(color: string) {
+	public changeColor(color: string) {
 		if (this.colorTeam == 'home') {
 			this.homeColor.set(color)
 		} else {
 			this.awayColor.set(color)
 		}
-  }
+	}
 
 	private async send() {
 		try {
 			await lastValueFrom(this.api.data.sync([
-				this.dataService.players(),
-				[this.dataService.game()!],
-				this.dataService.stats(),
-				this.dataService.plays()
+				await database.players.where('id').anyOf(this.dataService.players().map(t => t.id)).toArray(),
+				[(await database.games.get(this.gameId()))!],
+				await database.stats.where('game_id').equals(this.dataService.game()!.sync_id).toArray(),
+				await database.plays.where('game_id').equals(this.dataService.game()!.sync_id).toArray()
 			]));
 		} catch (error) {
 			console.error("GameCast had errors!", error);
 		}
-	}
-
-	public async sendLogs(po: IonPopover) {
-		this.sendingLogs = true;
-		try {
-			await this.sync.sendLogsToServer(this.gameId);
-		} catch (error) {
-			console.error('Failed to submit logs', error)
-		}
-		this.sendingLogs = false;
-		po.dismiss();
 	}
 
 	public findStat(playerid: string) {
@@ -225,18 +212,18 @@ export class GamecastComponent {
 				}
 			});
 		}
-  }
+	}
 
 	public addToCourt(team: 'home' | 'away', player: Player) {
 		const playersOnCourt = team == 'home' ? this.dataService.homePlayersOnCourt() : this.dataService.awayPlayersOnCourt();
-		if(!playersOnCourt.find(t => t.id == player.id)){
+		if (!playersOnCourt.find(t => t.id == player.id)) {
 			if (playersOnCourt.length < 6) {
 				this.dataService.updateStat({
 					player: player,
 					updateFn: stat => stat.on_court = true
 				});
 			}
-			if(playersOnCourt.length == 6) {
+			if (playersOnCourt.length == 6) {
 				this.currentPlayersOnCourt.set(team == 'home' ? this.dataService.homePlayersOnCourt() : this.dataService.awayPlayersOnCourt());
 				this.sixthPlayer.set(player);
 			}
@@ -244,7 +231,7 @@ export class GamecastComponent {
 	}
 
 	public subOut(player: Player & { sync_state: SyncState }) {
-		const team = this.dataService.homePlayersOnCourt().includes(player)? 'home' : 'away';
+		const team = this.dataService.homePlayersOnCourt().includes(player) ? 'home' : 'away';
 		this.removeFromCourt(player);
 		this.addToCourt(team, this.sixthPlayer()!);
 		this.currentPlayersOnCourt.set(null);
@@ -279,14 +266,14 @@ export class GamecastComponent {
 	}
 
 	public clearAllPlayersOnCourt(team: 'home' | 'away') {
-		if(team =='home') {
-			this.dataService.homePlayersOnCourt().forEach(t => { if(t.number !='-1') {this.removeFromCourt(t);}	})
+		if (team == 'home') {
+			this.dataService.homePlayersOnCourt().forEach(t => { if (t.number != '-1') { this.removeFromCourt(t); } })
 		} else {
-			this.dataService.awayPlayersOnCourt().forEach(t => { if(t.number !='-1') {this.removeFromCourt(t);}	})
+			this.dataService.awayPlayersOnCourt().forEach(t => { if (t.number != '-1') { this.removeFromCourt(t); } })
 		}
 	}
 
-  public removeFromCourt(player: Player) {
+	public removeFromCourt(player: Player) {
 		if (this.dataService.selectedPlayerId() == player.sync_id) {
 			this.dataService.selectedPlayerId.set(null);
 		}
@@ -294,9 +281,9 @@ export class GamecastComponent {
 			player: player,
 			updateFn: stat => stat.on_court = false
 		});
-  }
+	}
 
-  public addPoints(team: 'home' | 'away', points: number, missed: boolean = false) {
+	public addPoints(team: 'home' | 'away', points: number, missed: boolean = false) {
 		if (this.dataService.selectedPlayer() === undefined) {
 			throw 'No player selected!!'
 		}
@@ -363,13 +350,13 @@ export class GamecastComponent {
 			this.autocomplete.set('assist');
 		}
 		this.deselectPlayer(this.dataService.selectedPlayer()!.id);
-  }
+	}
 
 	public dismissAutocomplete() {
 		this.autocomplete.set(null);
 	}
 
-  public addFoul(team: 'home' | 'away') {
+	public addFoul(team: 'home' | 'away') {
 		let player = this.dataService.selectedPlayer();
 		if (player) {
 			this.stopTimer();
@@ -380,13 +367,13 @@ export class GamecastComponent {
 			});
 			this.deselectPlayer(player.id);
 		}
-  }
+	}
 
-  public addTimeout(team: 'home' | 'away', partial: boolean) {
+	public addTimeout(team: 'home' | 'away', partial: boolean) {
 		this.stopTimer();
 		this.dataService.addTimeoutToGame(team, partial);
 		this.dataService.addPlay(team, partial ? GameActions.PartialTO : GameActions.FullTO);
-  }
+	}
 
 	public addSteal(team: 'home' | 'away') {
 		let player = this.dataService.selectedPlayer();
@@ -458,14 +445,14 @@ export class GamecastComponent {
 	}
 
 	public toggleTimer() {
-    if (this.timerRunning) {
-      this.stopTimer();
-    } else {
-      this.startTimer();
-    }
-  }
+		if (this.timerRunning) {
+			this.stopTimer();
+		} else {
+			this.startTimer();
+		}
+	}
 
-  private startTimer() {
+	private startTimer() {
 		const game = this.dataService.game()!;
 		const clock = this.clock();
 		const resetFouls = game.settings?.reset_fouls;
@@ -502,16 +489,16 @@ export class GamecastComponent {
 			let times = clock.split(':');
 			this.timerDuration = Number(times[0].startsWith('0') ? times[0].charAt(1) : times[0]) * 60 + Number(times[1].startsWith('0') ? times[1].charAt(1) : times[1]);
 		}
-    this.timerRunning = true;
-    this.timerSubscription = interval(1000).subscribe(() => {
-      if (this.timerDuration > 0) {
-        this.timerDuration--;
-        this.clock.set(this.getClock());
-      } else {
-        this.stopTimer();
-      }
-    });
-  }
+		this.timerRunning = true;
+		this.timerSubscription = interval(1000).subscribe(() => {
+			if (this.timerDuration > 0) {
+				this.timerDuration--;
+				this.clock.set(this.getClock());
+			} else {
+				this.stopTimer();
+			}
+		});
+	}
 
 	private getClock() {
 		const minutes = Math.floor(this.timerDuration / 60);
@@ -526,12 +513,12 @@ export class GamecastComponent {
 		}
 	}
 
-  private stopTimer() {
-    this.timerRunning = false;
+	private stopTimer() {
+		this.timerRunning = false;
 		this.timerSubscription?.unsubscribe();
 		this.calculatePlusOrMinus();
 		this.calculateMinutes();
-  }
+	}
 
 	private calculatePlusOrMinus() {
 		const game = this.dataService.game()!;
@@ -543,11 +530,11 @@ export class GamecastComponent {
 	}
 
 	private calculateMinutes() {
-		if(this.clockStarted) {
+		if (this.clockStarted) {
 			let timeSpent = ((Number(this.clockStarted!.substring(0, 2)) * 60) + Number(this.clockStarted!.substring(3, 5))) - ((Number(this.clock().substring(0, 2)) * 60) + Number(this.clock().substring(3, 5)));
 			const minutes = Math.floor(timeSpent / 60);
 			const seconds = timeSpent % 60;
-			let timePlayerStay = minutes + (Math.floor((seconds/60) * 100) / 100);
+			let timePlayerStay = minutes + (Math.floor((seconds / 60) * 100) / 100);
 			this.dataService.homePlayersOnCourt().forEach((player) => {
 				this.dataService.updateStat({
 					player: player,
@@ -577,9 +564,9 @@ export class GamecastComponent {
 		const team = play.team_id == this.dataService.game()!.home_team_id ? this.dataService.homeTeam() : this.dataService.awayTeam();
 		const player = this.dataService.players().find(t => t.sync_id == play.player_id);
 		if (player?.team_id == this.dataService.game()!.home_team_id) {
-			numberToDisplay = this.dataService.boxScore().homeBoxScore.find(t => t.player_id == player!.id)?.number;
+			numberToDisplay = this.dataService.boxScore().homeBoxScore.find(t => t.player_id == player?.id)?.number;
 		} else {
-			numberToDisplay = this.dataService.boxScore().awayBoxScore.find(t => t.player_id == player!.id)?.number;
+			numberToDisplay = this.dataService.boxScore().awayBoxScore.find(t => t.player_id == player?.id)?.number;
 		}
 		return `${team?.name} | ${numberToDisplay} ${player?.first_name} ${player?.last_name}`;
 	}
@@ -588,9 +575,9 @@ export class GamecastComponent {
 		if (game.home_team_id == team_id) {
 			const mergedArray = this.dataService.players().map(player1 => {
 				const boxscore = this.dataService.boxScore().homeBoxScore.find(player => player.player_id === player1.id);
-				if(boxscore != undefined) {
+				if (boxscore != undefined) {
 					return { ...player1, player_number: boxscore!.number };
-				}else {
+				} else {
 					return { ...player1, player_number: null }
 				}
 			});
@@ -598,10 +585,10 @@ export class GamecastComponent {
 		} else if (game.away_team_id == team_id) {
 			const mergedArray = this.dataService.players().map(player1 => {
 				const boxscore = this.dataService.boxScore().awayBoxScore.find(player => player.player_id === player1.id);
-				if(boxscore != undefined) {
-					return { ...player1, player_number: boxscore!.number};
-				}else {
-					return{ ...player1, player_number: null }
+				if (boxscore != undefined) {
+					return { ...player1, player_number: boxscore!.number };
+				} else {
+					return { ...player1, player_number: null }
 				}
 			});
 			return mergedArray;

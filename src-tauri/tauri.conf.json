@@ -4,11 +4,11 @@
     "beforeBuildCommand": "npm run build",
     "beforeDevCommand": "npm start",
     "devPath": "http://localhost:1200",
-    "distDir": "../dist/stats-guru/browser"
+    "distDir": "../dist/stats-guru"
   },
   "package": {
     "productName": "Stats Guru",
-    "version": "2.1.0"
+    "version": "2.1.1"
   },
   "tauri": {
     "allowlist": {

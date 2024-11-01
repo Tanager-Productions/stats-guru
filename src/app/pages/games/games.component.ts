@@ -1,10 +1,8 @@
 import { ChangeDetectionStrategy, Component, effect, inject, untracked, viewChild } from '@angular/core';
 import { CommonService, HomePageGame } from 'src/app/services/common/common.service';
 import { SyncService } from 'src/app/services/sync/sync.service';
-import { RouterLink } from '@angular/router';
 import { Router } from '@angular/router';
 import { AddGamesComponent } from 'src/app/shared/add-games/add-games.component';
-import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AlertController, IonicModule, ToastController } from '@ionic/angular';
 import { AgGridAngular, AgGridModule } from 'ag-grid-angular';
@@ -27,8 +25,6 @@ import { environment } from 'src/environments/environment';
 		IonicModule,
 		FormsModule,
 		AddGamesComponent,
-		RouterLink,
-		DatePipe,
 		AgGridModule,
 		HeaderComponent
 	],
@@ -62,7 +58,7 @@ export class GamesComponent {
 	private windowResizeEffect = effect(() => {
 		this.windowResize();
 		const grid = untracked(this.grid);
-		grid?.api.sizeColumnsToFit();
+		grid?.api?.sizeColumnsToFit();
 	})
 
 	ngAfterViewInit() {
@@ -114,7 +110,7 @@ export class GamesComponent {
 
 	public routeToPage(event: any) {
 		if (event.node.selected) {
-			this.router.navigateByUrl("/home/gamecast/" + event.data.gameId);
+			this.router.navigateByUrl("/games/" + event.data.gameId);
 		}
 	}
 }

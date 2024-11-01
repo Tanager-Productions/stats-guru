@@ -177,14 +177,20 @@ export class GamecastService {
 		const players = this.players();
 		const stats = this.stats();
 		const game = untracked(this.game);
-		return players.filter(t => t.team_id == game?.home_team_id && stats.find(s => s.player_id == t.sync_id)?.on_court);
+		return sortBy(players.filter(t => t.team_id == game?.home_team_id && stats.find(s => s.player_id == t.sync_id)?.on_court), t => {
+			const numberOverride = stats.find(x => x.player_id == t.sync_id)?.player_number;
+			return Number(numberOverride ?? t.number) || 0;
+		});
 	});
 
 	public awayPlayersOnCourt = computed(() => {
 		const players = this.players();
 		const stats = this.stats();
 		const game = untracked(this.game);
-		return players.filter(t => t.team_id == game?.away_team_id && stats.find(s => s.player_id == t.sync_id)?.on_court);
+		return sortBy(players.filter(t => t.team_id == game?.away_team_id && stats.find(s => s.player_id == t.sync_id)?.on_court), t => {
+			const numberOverride = stats.find(x => x.player_id == t.sync_id)?.player_number;
+			return Number(numberOverride ?? t.number) || 0;
+		});
 	});
 
 	public homeTeamPlayers = computed(() => {
@@ -561,20 +567,30 @@ export class GamecastService {
 		this.gameSrc.set(game);
 	}
 
-	public updatePlusOrMinus(homePOMToAdd: number, awayPOMToAdd: number) {
+	public async updatePlusOrMinus(homePOMToAdd: number, awayPOMToAdd: number) {
 		const game = this.game()!;
-		database.transaction('rw', 'stats', () => {
-			database.stats
-				.where('player_id')
-				.anyOf(this.homePlayersOnCourt().map(t => t.id))
-				.and(t => t.game_id == game.sync_id)
-				.modify(stat => { stat.plus_or_minus += homePOMToAdd });
-			database.stats
-				.where('player_id')
-				.anyOf(this.awayPlayersOnCourt().map(t => t.id))
-				.and(t => t.game_id == game.sync_id)
-				.modify(stat => { stat.plus_or_minus += awayPOMToAdd })
-		});
+		const homeStats = await database.stats
+			.where('player_id')
+			.anyOf(this.homePlayersOnCourt().map(t => t.sync_id))
+			.and(t => t.game_id == game.sync_id)
+			.toArray()
+		for (let stat of homeStats) {
+			this.updateStat({
+				player: this.players().find(t => t.sync_id == stat.player_id)!,
+				updateFn: stat => stat.plus_or_minus += homePOMToAdd
+			});
+		}
+		const awayStats = await database.stats
+			.where('player_id')
+			.anyOf(this.awayPlayersOnCourt().map(t => t.sync_id))
+			.and(t => t.game_id == game.sync_id)
+			.toArray()
+		for (let stat of awayStats) {
+			this.updateStat({
+				player: this.players().find(t => t.sync_id == stat.player_id)!,
+				updateFn: stat => stat.plus_or_minus += awayPOMToAdd
+			});
+		}
 	}
 
 	public removeLastPlay() {

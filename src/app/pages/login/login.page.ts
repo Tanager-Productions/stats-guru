@@ -3,7 +3,6 @@ import { ToastController, IonicModule } from '@ionic/angular';
 import { ApiService, Credentials } from '../../services/api/api.service';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { NgIf } from '@angular/common';
 import { lastValueFrom } from 'rxjs';
 import { HeaderComponent } from 'src/app/shared/header/header.component';
 
@@ -12,7 +11,7 @@ import { HeaderComponent } from 'src/app/shared/header/header.component';
 	templateUrl: './login.page.html',
 	styleUrls: ['./login.page.scss'],
 	standalone: true,
-	imports: [IonicModule, NgIf, FormsModule, HeaderComponent],
+	imports: [IonicModule, FormsModule, HeaderComponent],
 	host: { class: 'page' }
 })
 export class LoginPage {
@@ -29,7 +28,7 @@ export class LoginPage {
 			const token = await lastValueFrom(this.server.auth.generateApiToken(this.key))
 			this.server.auth.storeCredential(Credentials.ApplicationKey, this.key);
 			this.server.auth.storeCredential(Credentials.ApiToken, token);
-			this.router.navigateByUrl('/home');
+			this.router.navigateByUrl('/games');
 		} catch (error) {
 			(await this.toastCtrl.create({ message: 'Invalid Application Key', color: 'danger', duration: 2500 })).present();
 		}
