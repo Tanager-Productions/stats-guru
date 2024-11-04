@@ -58,9 +58,9 @@ export class GamecastComponent {
 	private initSub?: Subscription;
 	public actions = GAME_ACTIONS_MAP;
 	public sendingLogs = false;
-	public homeColor = model('blue');
-	public awayColor = model('red');
-	public missedColor = model('missed');
+	public homeColor = signal('blue');
+	public awayColor = signal('red');
+	public missedColor = signal('missed');
 	public colorTeam: 'home' | 'away' = 'home';
 	public clock = model("00:00");
 	private clockEffect = effect(() => {
