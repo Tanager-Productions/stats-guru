@@ -5,6 +5,8 @@ import { database } from 'src/app/app.db';
 import { sortBy } from 'lodash';
 import { Stat, Player, SyncState, Play, Game, GameActions, Team } from 'src/app/app.types';
 import { defaultPlayer, defaultStat } from 'src/app/app.utils';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { filter, map, skip, switchMap } from 'rxjs';
 
 const calculateStatColumns = (model: Stat) => {
 	const {
@@ -125,6 +127,8 @@ const sumBoxScores = (boxScores: BoxScore[]): BoxScore => {
 	}, total);
 }
 
+type AutoComplete = 'rebound' | 'assist' | 'missed' | 'turnover' | null;
+
 @Injectable({
 	providedIn: 'root'
 })
@@ -166,6 +170,22 @@ export class GamecastService {
 		const player_id = this.selectedPlayerId();
 		return players.find(t => t.sync_id === player_id);
 	});
+
+	public autoComplete = signal<AutoComplete | null>(null);
+	public autoComplete$ = toObservable(this.autoComplete);
+	public selectedPlayer$ = toObservable(this.selectedPlayer);
+	public autoCompleteEffect$ = this.autoComplete$.pipe(
+		filter(t => t !== null),
+		switchMap(ac => {
+			const previousPlayer = this.selectedPlayer();
+			return this.selectedPlayer$.pipe(
+				skip(1),
+				map(nextPlayer => ({
+					ac, nextPlayer, previousPlayer
+				}))
+			);
+		}
+	));
 
 	public selectedPlayerStat = computed(() => {
 		const stats = this.stats();

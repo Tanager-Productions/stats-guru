@@ -18,8 +18,6 @@ import { Game, GAME_ACTIONS_MAP, GameActions, Play, Player, SyncState } from 'sr
 import { HeaderComponent } from 'src/app/shared/header/header.component';
 import { database } from 'src/app/app.db';
 
-type AutoComplete = 'rebound' | 'assist' | 'missed' | 'turnover' | null;
-
 @Component({
 	selector: 'app-gamecast',
 	templateUrl: './gamecast.component.html',
@@ -44,7 +42,6 @@ type AutoComplete = 'rebound' | 'assist' | 'missed' | 'turnover' | null;
 })
 export class GamecastComponent {
 	//inject
-	private route = inject(ActivatedRoute);
 	private api = inject(ApiService);
 	protected sync = inject(SyncService);
 	protected dataService = inject(GamecastService);
@@ -95,44 +92,9 @@ export class GamecastComponent {
 	];
 
 	//Displaying Auto-Complete Options:
-	private previousPlayerWasHome: boolean[] = [];
-	public autocomplete = signal<AutoComplete | null>(null);
 	public currentPlayersOnCourt = signal<Player[] | null>(null);
 	public sixthPlayer = signal<Player | null>(null);
 	public showPlayers = signal(true);
-	private autocompleteEffect = effect(() => {
-		const selectedPlayer = this.dataService.selectedPlayer();
-		const autocomplete = untracked(this.autocomplete);
-		if (selectedPlayer && autocomplete) {
-			const game = untracked(this.dataService.game);
-			let team: 'home' | 'away' = 'away';
-			if (selectedPlayer.team_id === game?.home_team_id) {
-				team = 'home';
-			}
-			switch (autocomplete) {
-				case 'rebound':
-					if ((this.previousPlayerWasHome[0] && team == 'home') || (!this.previousPlayerWasHome[0] && team == 'away')) {
-						this.addRebound(team, true);
-						this.previousPlayerWasHome = [];
-					} else if ((this.previousPlayerWasHome[0] && team == 'away') || (!this.previousPlayerWasHome[0] && team == 'home')) {
-						this.addRebound(team, false);
-						this.previousPlayerWasHome = [];
-					}
-					break;
-				case 'assist':
-					this.addAssist(team);
-					break;
-				case 'missed':
-					this.addPoints(team, 2, true);
-					break;
-				case 'turnover':
-					this.addTurnover(team);
-					break;
-			}
-			this.deselectPlayer(selectedPlayer.id);
-			this.autocomplete.set(null);
-		}
-	});
 
 	//plus_or_minus
 	private homeTeamPlusOrMinus = 0;
@@ -143,6 +105,37 @@ export class GamecastComponent {
 
 	//gamecast
 	private interval: any;
+
+	constructor() {
+		this.dataService.autoCompleteEffect$.subscribe(res => {
+			if (this.dataService.autoComplete() !== null) {
+				const game = this.dataService.game();
+				console.log(game);
+				console.log(res);
+				let team: 'home' | 'away' = res.nextPlayer?.team_id === game?.home_team_id ? 'home' : 'away';
+				switch (res.ac) {
+					case 'rebound':
+						const previousPlayerWasHome = res.previousPlayer?.team_id === game?.home_team_id;
+						if ((previousPlayerWasHome && team == 'home') || (!previousPlayerWasHome && team == 'away')) {
+							this.addRebound(team, true);
+						} else if ((previousPlayerWasHome && team == 'away') || (!previousPlayerWasHome && team == 'home')) {
+							this.addRebound(team, false);
+						}
+						break;
+					case 'assist':
+						this.addAssist(team);
+						break;
+					case 'missed':
+						this.addPoints(team, 2, true);
+						break;
+					case 'turnover':
+						this.addTurnover(team);
+						break;
+				}
+				this.dataService.autoComplete.set(null)
+			}
+		})
+	}
 
 	async ngOnInit() {
 		this.sync.gameCastInProgress = true;
@@ -244,7 +237,8 @@ export class GamecastComponent {
 	}
 
 	public selectPlayer(player_id: string) {
-		const { players, selectedPlayer, game } = this.dataService;
+		const { players, selectedPlayer } = this.dataService;
+
 		if (this.currentPlayersOnCourt() != null) {
 			const player = players().find(t => t.sync_id == player_id);
 			this.subOut(player!);
@@ -253,15 +247,7 @@ export class GamecastComponent {
 				this.dataService.selectedPlayerId.set(null);
 			} else {
 				this.dataService.selectedPlayerId.set(player_id);
-				this.previousPlayerWasHome.push(players().find(t => t.id == selectedPlayer()?.id)?.team_id == game()?.home_team_id);
 			}
-		}
-	}
-
-	public deselectPlayer(player_id: number) {
-		const { selectedPlayer } = this.dataService;
-		if (selectedPlayer()?.id == player_id) {
-			this.dataService.selectedPlayerId.set(null);
 		}
 	}
 
@@ -345,15 +331,14 @@ export class GamecastComponent {
 		}
 
 		if (missed) {
-			this.autocomplete.set('rebound')
+			this.dataService.autoComplete.set('rebound')
 		} else if (!missed) {
-			this.autocomplete.set('assist');
+			this.dataService.autoComplete.set('assist');
 		}
-		this.deselectPlayer(this.dataService.selectedPlayer()!.id);
 	}
 
 	public dismissAutocomplete() {
-		this.autocomplete.set(null);
+		this.dataService.autoComplete.set(null);
 	}
 
 	public addFoul(team: 'home' | 'away') {
@@ -365,7 +350,6 @@ export class GamecastComponent {
 			this.dataService.updateStat({
 				updateFn: stat => stat.fouls++
 			});
-			this.deselectPlayer(player.id);
 		}
 	}
 
@@ -382,8 +366,7 @@ export class GamecastComponent {
 			this.dataService.updateStat({
 				updateFn: stat => stat.steals++
 			});
-			this.autocomplete.set('turnover');
-			this.deselectPlayer(player.id);
+			this.dataService.autoComplete.set('turnover');
 		}
 	}
 
@@ -400,7 +383,7 @@ export class GamecastComponent {
 	public addPassback(team: 'home' | 'away', made: boolean) {
 		this.addRebound(team, true);
 		setTimeout(() => this.addPoints(team, 2, !made), 300);
-		this.autocomplete.set(null);
+		this.dataService.autoComplete.set(null);
 	}
 
 	public addRebound(team: 'home' | 'away', offensive: boolean) {
@@ -428,8 +411,7 @@ export class GamecastComponent {
 			this.dataService.updateStat({
 				updateFn: stat => stat.blocks++
 			});
-			this.autocomplete.set('missed');
-			this.deselectPlayer(player.id);
+			this.dataService.autoComplete.set('missed');
 		}
 	}
 
@@ -440,7 +422,6 @@ export class GamecastComponent {
 			this.dataService.updateStat({
 				updateFn: stat => stat.turnovers++
 			});
-			this.deselectPlayer(player.id);
 		}
 	}
 

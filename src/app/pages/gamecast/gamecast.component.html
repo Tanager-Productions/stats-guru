@@ -315,7 +315,7 @@
 									<ion-row style="height: 10%; align-items: center;">
 										<ion-col size="1"></ion-col>
 										<ion-col size="10">
-											@if (autocomplete(); as ac) {
+											@if (dataService.autoComplete(); as ac) {
 												@switch (ac) {
 													@case ('assist') {
 														<ion-item color="light" lines="none">
