@@ -14,6 +14,7 @@ import { HeaderComponent } from 'src/app/shared/header/header.component';
 import { checkUpdate, installUpdate, onUpdaterEvent } from '@tauri-apps/api/updater'
 import { relaunch } from '@tauri-apps/api/process'
 import { environment } from 'src/environments/environment';
+import { LoadingController } from '@ionic/angular';
 
 @Component({
 	selector: 'app-games',
@@ -33,6 +34,7 @@ import { environment } from 'src/environments/environment';
 export class GamesComponent {
 	private alertController = inject(AlertController);
 	private toastController = inject(ToastController);
+	private loadingController = inject(LoadingController);
 	private server = inject(ApiService);
 	private sync = inject(SyncService);
 	public common = inject(CommonService);
@@ -49,7 +51,7 @@ export class GamesComponent {
 		{ field: 'awayTeamScore', headerName: 'Away Final' },
 		{ field: 'eventTitle', headerName: 'Event', valueFormatter: params => params.value || '-' }
 	]
-
+	public isLoading = false;
 	public windowResize = toSignal(fromEvent(window, 'resize').pipe(
 		debounceTime(200),
 		distinctUntilChanged()
@@ -75,7 +77,12 @@ export class GamesComponent {
 
 	private async syncAndUpdate() {
 		try {
+			const loading = await this.loadingController.create({
+				message: 'Please wait...'
+			});
+			loading.present();
 			await this.sync.beginSync(true);
+			loading.dismiss();
 		} catch (error) {
 			console.log(error);
 			const toast = await this.toastController.create({
@@ -108,6 +115,40 @@ export class GamesComponent {
 		}
 	}
 
+	// async showLoading() {
+	// 	// Step 1: Create the loading indicator
+	// 	const loading = await this.loadingController.create({
+	// 		message: 'Please wait...',   // Message displayed below the spinner
+	// 		spinner: 'crescent',         // Style of spinner (crescent, dots, etc.)
+	// 		duration: 10000              // Optional: automatically dismiss after 10 seconds
+	// 	});
+
+	// 	// Step 2: Present the loading indicator
+	// 	await loading.present();
+
+	// 	// (Optional) Check if the loading is presented successfully
+	// 	const { role } = await loading.onDidDismiss();
+	// 	console.log('Loading dismissed with role:', role);
+	// }
+
+	// async performTaskWithLoading() {
+	// 	// Step 1: Show the loading indicator
+	// 	const loading = await this.loadingController.create({
+	// 		message: 'Loading data...',
+	// 		spinner: 'bubbles'
+	// 	});
+	// 	await loading.present(); // Shows the loading indicator
+
+	// 	try {
+	// 		// Step 2: Perform your async task here
+	// 		await this.someAsyncOperation();
+	// 	} catch (error) {
+	// 		console.error('Error occurred:', error);
+	// 	} finally {
+	// 		// Step 3: Dismiss the loading indicator when done
+	// 		await loading.dismiss();
+	// 	}
+	// }
 	public routeToPage(event: any) {
 		if (event.node.selected) {
 			this.router.navigateByUrl("/games/" + event.data.gameId);
