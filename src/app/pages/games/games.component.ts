@@ -77,12 +77,7 @@ export class GamesComponent {
 
 	private async syncAndUpdate() {
 		try {
-			const loading = await this.loadingController.create({
-				message: 'Please wait...'
-			});
-			loading.present();
 			await this.sync.beginSync(true);
-			loading.dismiss();
 		} catch (error) {
 			console.log(error);
 			const toast = await this.toastController.create({

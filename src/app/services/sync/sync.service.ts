@@ -6,6 +6,7 @@ import { join, appLogDir } from '@tauri-apps/api/path';
 import { readTextFile } from '@tauri-apps/api/fs'
 import { database } from 'src/app/app.db';
 import { SyncState } from 'src/app/app.types';
+import { LoadingController } from '@ionic/angular';
 
 @Injectable({
 	providedIn: 'root'
@@ -13,6 +14,7 @@ import { SyncState } from 'src/app/app.types';
 export class SyncService {
 	private api = inject(ApiService);
 	private common = inject(CommonService);
+	private loadingController = inject(LoadingController);
 	private seconds = 600; //10 minutes
 	private timeRemaining$ = interval(1000).pipe(
 		map(n => (this.seconds - n) * 1000),
@@ -33,6 +35,10 @@ export class SyncService {
 
 	public async beginSync(isInitial = false) {
 		if (!this.gameCastInProgress) {
+					const loading = await this.loadingController.create({
+			message: 'Please wait...'
+		});
+		loading.present();
 			this.syncing.set(true);
 			this.syncingMessage.set('Syncing with server...');
 			try {
@@ -53,6 +59,7 @@ export class SyncService {
 			}
 			this.syncing.set(false);
 			this.common.initializeService();
+			loading.dismiss();
 		}
 	}
 
