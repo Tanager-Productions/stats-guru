@@ -110,8 +110,6 @@ export class GamecastComponent {
 		this.dataService.autoCompleteEffect$.subscribe(res => {
 			if (this.dataService.autoComplete() !== null) {
 				const game = this.dataService.game();
-				console.log(game);
-				console.log(res);
 				let team: 'home' | 'away' = res.nextPlayer?.team_id === game?.home_team_id ? 'home' : 'away';
 				switch (res.ac) {
 					case 'rebound':
@@ -269,7 +267,7 @@ export class GamecastComponent {
 		});
 	}
 
-	public addPoints(team: 'home' | 'away', points: number, missed: boolean = false) {
+	public addPoints(team: 'home' | 'away', points: number, missed: boolean = false, auto: boolean = true) {
 		if (this.dataService.selectedPlayer() === undefined) {
 			throw 'No player selected!!'
 		}
@@ -330,10 +328,12 @@ export class GamecastComponent {
 			});
 		}
 
-		if (missed) {
-			this.dataService.autoComplete.set('rebound')
-		} else if (!missed) {
-			this.dataService.autoComplete.set('assist');
+		if(auto) {
+			if (missed) {
+				this.dataService.autoComplete.set('rebound')
+			} else if (!missed) {
+				this.dataService.autoComplete.set('assist');
+			}
 		}
 	}
 
@@ -382,7 +382,11 @@ export class GamecastComponent {
 
 	public addPassback(team: 'home' | 'away', made: boolean) {
 		this.addRebound(team, true);
-		setTimeout(() => this.addPoints(team, 2, !made), 300);
+		if (made) {
+			setTimeout(() => this.addPoints(team, 2, !made, false), 300);
+		} else {
+			setTimeout(() => this.addPoints(team, 2, !made), 300);
+		}
 		this.dataService.autoComplete.set(null);
 	}
 
@@ -444,6 +448,7 @@ export class GamecastComponent {
 			this.dataService.updatePeriod(game.period + 1);
 			if (game.period < numOfQuaters) {
 				this.timerDuration = game.settings?.minutes_per_period! * 60;
+			  this.clockStarted = '0' + game.settings?.minutes_per_period + ':00'
 				if (game.period != 0) {
 					if (resetFouls == 1) {
 						this.dataService.resetFouls();
@@ -462,6 +467,7 @@ export class GamecastComponent {
 				}
 			} else {
 				this.timerDuration = game.settings?.minutes_per_overtime! * 60;
+				this.clockStarted = '0' + game.settings?.minutes_per_overtime + ':00'
 				if (resetFouls != 0) {
 					this.dataService.resetFouls();
 				}

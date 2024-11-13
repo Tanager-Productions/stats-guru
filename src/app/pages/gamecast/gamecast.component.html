@@ -132,7 +132,7 @@
 									<ion-grid>
 										<ion-row>
 											<ion-col>
-												<ion-button expand="block" color="{{homeColor()}}" (click)="addPoints('home', 1)">+1</ion-button>
+												<ion-button expand="block" color="{{homeColor()}}" (click)="addPoints('home', 1, false, false)">+1</ion-button>
 											</ion-col>
 											<ion-col>
 												<ion-button expand="block" color="{{homeColor()}}" (click)="addPoints('home', 3)">+3</ion-button>
@@ -424,7 +424,7 @@
 									<ion-grid>
 										<ion-row>
 											<ion-col>
-												<ion-button expand="block" color="{{awayColor()}}" (click)="addPoints('away', 1)">+1</ion-button>
+												<ion-button expand="block" color="{{awayColor()}}" (click)="addPoints('away', 1, false, false)">+1</ion-button>
 											</ion-col>
 											<ion-col>
 												<ion-button expand="block" color="{{awayColor()}}" (click)="addPoints('away', 3)">+3</ion-button>
