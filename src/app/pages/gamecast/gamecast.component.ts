@@ -145,12 +145,12 @@ export class GamecastComponent {
 	}
 
 	async ngOnDestroy() {
+		this.sync.gameCastInProgress = false;
 		this.initSub?.unsubscribe();
 		this.stopTimer();
 		clearInterval(this.interval);
 		this.dataService.destroy();
 		await this.send();
-		this.sync.gameCastInProgress = false;
 	}
 
 	public changeColor(color: string) {

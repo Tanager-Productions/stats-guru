@@ -15,13 +15,13 @@ export class SyncService {
 	private api = inject(ApiService);
 	private common = inject(CommonService);
 	private loadingController = inject(LoadingController);
-	private seconds = 600; //10 minutes
+	private seconds = 30; //10 minutes
 	private timeRemaining$ = interval(1000).pipe(
 		map(n => (this.seconds - n) * 1000),
 		takeWhile(n => n >= 0),
-		finalize(() => {
+		finalize(async () => {
 			if (this.gameCastInProgress == false) {
-				this.beginSync();
+				await this.beginSync();
 			}
 		}),
 		repeat()
@@ -34,11 +34,11 @@ export class SyncService {
 	public syncingMessage = signal('');
 
 	public async beginSync(isInitial = false) {
-		if (!this.gameCastInProgress) {
-					const loading = await this.loadingController.create({
-			message: 'Please wait...'
-		});
-		loading.present();
+		if (this.gameCastInProgress == false && this.syncing() == false) {
+			const loading = await this.loadingController.create({
+				message: 'Please wait...'
+			});
+			loading.present();
 			this.syncing.set(true);
 			this.syncingMessage.set('Syncing with server...');
 			try {
