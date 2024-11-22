@@ -15,7 +15,7 @@ export class SyncService {
 	private api = inject(ApiService);
 	private common = inject(CommonService);
 	private loadingController = inject(LoadingController);
-	private seconds = 30; //10 minutes
+	private seconds = 600; //10 minutes
 	private timeRemaining$ = interval(1000).pipe(
 		map(n => (this.seconds - n) * 1000),
 		takeWhile(n => n >= 0),
